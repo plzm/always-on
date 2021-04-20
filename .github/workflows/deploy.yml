@@ -87,7 +87,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/key-vault.json
-          parameters: ./templates/key-vault.parameters.json location=${{env.AZURE_LOCATION}} keyVaultName=${{env.KEY_VAULT_NAME}}
+          parameters: ./templates/key-vault.parameters.json location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
 
       - name: Azure logout
         run: |

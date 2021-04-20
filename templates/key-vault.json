@@ -13,6 +13,13 @@
 				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
 			}
 		},
+        "tenantId": {
+            "type": "string",
+			"metadata": {
+				"displayName": "Azure AD Tenant ID",
+				"description": ""
+			}
+        },
 		"keyVaultName": {
 			"type": "string",
 			"defaultValue": ""

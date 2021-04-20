@@ -5,6 +5,9 @@
         "location": {
             "value": ""
         },
+        "tenantId": {
+            "value": ""
+        },
         "keyVaultName": {
             "value": ""
         },
