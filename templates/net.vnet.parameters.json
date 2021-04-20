@@ -5,11 +5,17 @@
         "location": {
             "value": ""
         },
-        "nsgName": {
+        "vnetName": {
             "value": ""
         },
-        "nsgRuleInbound100Src": {
+        "vnetPrefix": {
             "value": ""
+        },
+        "enableDdosProtection": {
+            "value": "true"
+        },
+        "enableVmProtection": {
+            "value": "false"
         }
     }
 }
