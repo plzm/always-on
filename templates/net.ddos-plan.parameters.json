@@ -5,10 +5,7 @@
         "location": {
             "value": ""
         },
-        "nsgName": {
-            "value": ""
-        },
-        "nsgRuleInbound100Src": {
+        "ddosProtectionPlanName": {
             "value": ""
         }
     }
