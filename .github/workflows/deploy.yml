@@ -5,13 +5,17 @@ on:
     types: [labeled]
 
 env:
-  AZURE_RESOURCE_GROUP: 'always-on-2'
+  AZURE_RESOURCE_GROUP: 'always-on-3'
   AZURE_LOCATION: '"East US"'
-  NSG_NAME: 'aa-eus'
+  NSG_NAME: 'ao-eus'
   NSG_IN_SRC: '75.68.47.183'
-  DDOS_PLAN_NAME: 'aa-ddos'
-  VNET_NAME: 'aa-eus'
+  DDOS_PLAN_NAME: 'ao-ddos'
+  VNET_NAME: 'ao-eus'
   VNET_PREFIX: '10.0.0.0/16'
+  SUBNET_NAME_APPGW: "AppGw"
+  SUBNET_PREFIX_APPGW: "10.0.1.0/24"
+  SUBNET_NAME_APP: "App"
+  SUBNET_PREFIX_APP: "10.0.2.0/24"
 
 jobs:
   deploy-azure-resources:
@@ -57,6 +61,24 @@ jobs:
           template: ./templates/net.vnet.json
           parameters: |
             ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+
+      - name: Deploy AppGW Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.subnet.json
+          parameters: |
+            ./templates/net.vnet.subnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
+
+      - name: Deploy App Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.subnet.json
+          parameters: |
+            ./templates/net.vnet.subnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME}}
 
       - name: Azure logout
         run: |
