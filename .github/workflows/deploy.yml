@@ -1,0 +1,29 @@
+name: Deploy Azure environment
+
+on: 
+  pull_request:
+    types: [labeled]
+
+env:
+  AZURE_RESOURCE_GROUP: always-on-eus
+  AZURE_LOCATION: '"East US"'
+
+jobs:
+  deploy-azure-resources:
+    runs-on: ubuntu-latest
+
+    if: contains(github.event.pull_request.labels.*.name, 'deploy')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Azure resource group
+        if: success()
+        run: |
+          az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
