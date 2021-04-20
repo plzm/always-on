@@ -28,26 +28,26 @@ jobs:
         with:
           creds: ${{secrets.AZURE_CREDENTIALS}}
 
-      - name: Create Azure resource group
-        if: success()
-        run: |
-          az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
+      #- name: Create Azure resource group
+      #  if: success()
+      #  run: |
+      #    az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
 
-      - name: Deploy NSG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.nsg.json
-          parameters: ./templates/net.nsg.parameters.json location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+      #- name: Deploy NSG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/net.nsg.json
+      #    parameters: ./templates/net.nsg.parameters.json location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
-      - name: Deploy DDoS Plan
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.ddos-plan.json
-          parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      #- name: Deploy DDoS Plan
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/net.ddos-plan.json
+      #    parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Deploy VNet
         if: success()
@@ -56,7 +56,7 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.json
           parameters: |
-            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} 
+            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} |
             vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Azure logout
