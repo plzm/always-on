@@ -12,7 +12,7 @@
             "value": ""
         },
         "enableDdosProtection": {
-            "value": false
+            "value": true
         },
         "enableVmProtection": {
             "value": false
