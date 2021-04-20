@@ -25,6 +25,14 @@
 			"type": "bool",
 			"defaultValue": false
 		},
+		"ddosProtectionPlanResourceGroup": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"ddosProtectionPlanName": {
+			"type": "string",
+			"defaultValue": ""
+		},
 		"enableVmProtection": {
 			"type": "bool",
 			"defaultValue": false
@@ -53,6 +61,14 @@
 					"dnsServers": []
 				},
 				"enableDdosProtection": "[parameters('enableDdosProtection')]",
+                "ddosProtectionPlan":"[
+					if
+					(
+						or(empty(trim(parameters('ddosProtectionPlanResourceGroup'))), empty(trim(parameters('ddosProtectionPlanName')))),
+						json('null'),
+						createObject('id', resourceId(parameters('ddosProtectionPlanResourceGroup'), 'Microsoft.Network/ddosProtectionPlans', parameters('ddosProtectionPlanName')))
+					)
+				]",
 				"enableVmProtection": "[parameters('enableVmProtection')]"
 			}
 		}

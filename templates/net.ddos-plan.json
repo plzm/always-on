@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Azure region"
+            }
+        },
+        "ddosProtectionPlanName": {
+            "type": "string",
+            "defaultValue": ""
+        }
+	},
+    "variables": {
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+        "apiVersionNet": "2020-11-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/ddosProtectionPlans",
+            "apiVersion": "[variables('apiVersionNet')]",
+            "name": "[parameters('ddosProtectionPlanName')]",
+            "location": "[parameters('location')]",
+			"tags": "[variables('resourceTags')]"
+        }
+	]
+}

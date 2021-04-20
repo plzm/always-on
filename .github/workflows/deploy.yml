@@ -5,10 +5,11 @@ on:
     types: [labeled]
 
 env:
-  AZURE_RESOURCE_GROUP: 'always-on-eus'
+  AZURE_RESOURCE_GROUP: 'always-on-2'
   AZURE_LOCATION: '"East US"'
   NSG_NAME: 'aa-eus'
   NSG_IN_SRC: '75.68.47.183'
+  DDOS_PLAN_NAME: 'aa-ddos'
   VNET_NAME: 'aa-eus'
   VNET_PREFIX: '10.0.0.0/16'
 
@@ -40,13 +41,22 @@ jobs:
           template: ./templates/net.nsg.json
           parameters: ./templates/net.nsg.parameters.json location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
+      - name: Deploy DDoS Plan
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.ddos-plan.json
+          parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+
       - name: Deploy VNet
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.json
-          parameters: ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}}
+          parameters: |
+            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Azure logout
         run: |

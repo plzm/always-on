@@ -12,7 +12,13 @@
             "value": ""
         },
         "enableDdosProtection": {
-            "value": false
+            "value": true
+        },
+        "ddosProtectionPlanResourceGroup": {
+            "value": ""
+        },
+        "ddosProtectionPlanName": {
+            "value": ""
         },
         "enableVmProtection": {
             "value": false
