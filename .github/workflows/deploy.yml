@@ -5,8 +5,12 @@ on:
     types: [labeled]
 
 env:
-  AZURE_RESOURCE_GROUP: always-on-eus
+  AZURE_RESOURCE_GROUP: 'always-on-eus'
   AZURE_LOCATION: '"East US"'
+  NSG_NAME: 'aa-eus'
+  NSG_IN_SRC: '75.68.47.183'
+  VNET_NAME: 'aa-eus'
+  VNET_PREFIX: '10.0.0.0/16'
 
 jobs:
   deploy-azure-resources:
@@ -21,9 +25,29 @@ jobs:
       - name: Azure login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{secrets.AZURE_CREDENTIALS}}
 
       - name: Create Azure resource group
         if: success()
         run: |
           az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
+
+      - name: Deploy NSG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.nsg.json
+          parameters: ./templates/net.nsg.parameters.json location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+
+      - name: Deploy VNet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.json
+          parameters: ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}}
+
+      - name: Azure logout
+        run: |
+          az logout
