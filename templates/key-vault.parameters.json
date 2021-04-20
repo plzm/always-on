@@ -12,19 +12,19 @@
             "value": "Standard"
         },
         "enabledForDeployment": {
-            "value": null
+            "value": false
         },
         "enabledForDiskEncryption": {
-            "value": null
+            "value": false
         },
         "enabledForTemplateDeployment": {
-            "value": null
+            "value": false
         },
         "enableSoftDelete": {
-            "value": null
+            "value": false
         },
         "softDeleteRetentionInDays": {
-            "value": null
+            "value": 7
         }
     }
 }
