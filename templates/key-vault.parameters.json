@@ -1,0 +1,30 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": ""
+        },
+        "keyVaultName": {
+            "value": ""
+        },
+        "skuName": {
+            "value": "Standard"
+        },
+        "enabledForDeployment": {
+            "value": null
+        },
+        "enabledForDiskEncryption": {
+            "value": null
+        },
+        "enabledForTemplateDeployment": {
+            "value": null
+        },
+        "enableSoftDelete": {
+            "value": null
+        },
+        "softDeleteRetentionInDays": {
+            "value": null
+        }
+    }
+}

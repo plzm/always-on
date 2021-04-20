@@ -1,0 +1,76 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"location": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
+			}
+		},
+		"keyVaultName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"skuName": {
+			"type": "string",
+			"defaultValue": "Standard",
+			"allowedValues": [
+				"Standard",
+				"Premium"
+			]
+		},
+		"enabledForDeployment": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"enabledForDiskEncryption": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"enabledForTemplateDeployment": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"enableSoftDelete": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"softDeleteRetentionInDays": {
+			"type": "int",
+			"defaultValue": 7
+		}
+	},
+	"variables": {
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+		"apiVersionKeyVault": "2019-09-01"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.KeyVault/vaults",
+			"apiVersion": "[variables('apiVersionKeyVault')]",
+			"name": "[parameters('keyVaultName')]",
+			"location": "[parameters('location')]",
+			"tags": "[variables('resourceTags')]",
+			"properties": {
+				"sku": {
+					"family": "A",
+					"name": "[parameters('skuName')]"
+				},
+				"enabledForDeployment": "[parameters('enabledForDeployment')]",
+				"enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
+				"enabledForTemplateDeployment": "[parameters('enabledForTemplateDeployment')]",
+				"enableSoftDelete": "[parameters('enableSoftDelete')]",
+				"softDeleteRetentionInDays": "[parameters('softDeleteRetentionInDays')]",
+				"accessPolicies": []
+			}
+		}
+	]
+}
