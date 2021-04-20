@@ -16,6 +16,7 @@ env:
   SUBNET_PREFIX_APPGW: "10.0.1.0/24"
   SUBNET_NAME_APP: "App"
   SUBNET_PREFIX_APP: "10.0.2.0/24"
+  KEY_VAULT_NAME: 'ao-kv-eus'
 
 jobs:
   deploy-azure-resources:
@@ -79,6 +80,14 @@ jobs:
           template: ./templates/net.vnet.subnet.json
           parameters: |
             ./templates/net.vnet.subnet.parameters.json vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME}}
+
+      - name: Deploy Key Vault
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/key-vault.json
+          parameters: ./templates/key-vault.parameters.json location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
 
       - name: Azure logout
         run: |
