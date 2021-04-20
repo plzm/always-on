@@ -56,9 +56,8 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.json
           parameters: |
-            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}}
-            vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} 
-            enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} 
+            vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Azure logout
         run: |
