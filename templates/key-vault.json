@@ -67,6 +67,7 @@
 			"location": "[parameters('location')]",
 			"tags": "[variables('resourceTags')]",
 			"properties": {
+				"tenantId": "[parameters('tenantId')]",
 				"sku": {
 					"family": "A",
 					"name": "[parameters('skuName')]"
