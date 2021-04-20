@@ -21,9 +21,21 @@ jobs:
       - name: Azure login
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{secrets.AZURE_CREDENTIALS}}
 
       - name: Create Azure resource group
         if: success()
         run: |
           az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
+
+      - name: Deploy NSG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: /templates/net.nsg.json
+          parameters: /templates/net.nsg.parameters.json
+
+      - name: Azure logout
+        run: |
+          az logout
