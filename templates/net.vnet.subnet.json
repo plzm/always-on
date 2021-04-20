@@ -16,7 +16,7 @@
 		},
 		"nsgResourceGroup": {
 			"type": "string",
-			"defaultValue": "[resourceGroup().name]"
+			"defaultValue": ""
 		},
 		"nsgName": {
 			"type": "string",
