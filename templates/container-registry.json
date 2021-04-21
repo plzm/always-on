@@ -1,0 +1,166 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"location": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
+			}
+		},
+		"registryName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"skuName": {
+			"type": "string",
+			"defaultValue": "Standard",
+			"allowedValues": [
+				"Basic",
+				"Standard",
+				"Premium"
+			]
+		},
+		"replicationLocations": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Premium registry replication regions",
+				"description": "If Premium SKU, comma-delimited list of Azure regions in which to replicate registry. Include the container registry deploy region specified in location param."
+			}
+		},
+		"zoneRedundancy": {
+			"type": "string",
+			"defaultValue": "Enabled",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			]
+		}
+	},
+	"variables": {
+		"replicationLocations": "[if(equals(toLower(trim(parameters('skuName'))), 'premium'), split(parameters('replicationLocations'), ','), json('[]'))]",
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+		"apiVersionRegistry": "2020-11-01-preview"
+	},
+	"resources": [
+        {
+            "type": "Microsoft.ContainerRegistry/registries",
+			"apiVersion": "[variables('apiVersionRegistry')]",
+            "name": "[parameters('registryName')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('skuName')]",
+                "tier": "[parameters('skuName')]"
+            },
+			"tags": "[variables('resourceTags')]",
+            "properties": {
+                "adminUserEnabled": false,
+                "networkRuleSet": {
+                    "defaultAction": "Allow",
+                    "virtualNetworkRules": [],
+                    "ipRules": []
+                },
+                "policies": {
+                    "quarantinePolicy": {
+                        "status": "disabled"
+                    },
+                    "trustPolicy": {
+                        "type": "Notary",
+                        "status": "disabled"
+                    },
+                    "retentionPolicy": {
+                        "days": 7,
+                        "status": "disabled"
+                    }
+                },
+                "encryption": {
+                    "status": "disabled"
+                },
+                "dataEndpointEnabled": false,
+                "publicNetworkAccess": "Enabled",
+                "networkRuleBypassOptions": "AzureServices",
+                "zoneRedundancy": "Enabled",
+                "anonymousPullEnabled": false
+            }
+        },
+        {
+            "type": "Microsoft.ContainerRegistry/registries/replications",
+			"copy": {
+				"name": "replicationLocationsLoop",
+				"count": "[
+					if
+					(
+						or(empty(trim(parameters('replicationLocations'))), empty(variables('replicationLocations'))),
+						0,
+						length(variables('replicationLocations'))
+					)
+				]"
+			},
+			"apiVersion": "[variables('apiVersionRegistry')]",
+            "name": "[concat(parameters('registryName'), '/', variables('replicationLocations')[copyIndex()])]",
+            "location": "[variables('replicationLocations')[copyIndex()]]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+            ],
+            "properties": {
+                "regionEndpointEnabled": true,
+                "zoneRedundancy": "[parameters('zoneRedundancy')]"
+            }
+        },
+        {
+            "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+			"apiVersion": "[variables('apiVersionRegistry')]",
+            "name": "[concat(parameters('registryName'), '/_repositories_admin')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+            ],
+            "properties": {
+                "description": "Can perform all read, write and delete operations on the registry",
+                "actions": [
+                    "repositories/*/metadata/read",
+                    "repositories/*/metadata/write",
+                    "repositories/*/content/read",
+                    "repositories/*/content/write",
+                    "repositories/*/content/delete"
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+			"apiVersion": "[variables('apiVersionRegistry')]",
+            "name": "[concat(parameters('registryName'), '/_repositories_pull')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+            ],
+            "properties": {
+                "description": "Can pull any repository of the registry",
+                "actions": [
+                    "repositories/*/content/read"
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ContainerRegistry/registries/scopeMaps",
+			"apiVersion": "[variables('apiVersionRegistry')]",
+            "name": "[concat(parameters('registryName'), '/_repositories_push')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ContainerRegistry/registries', parameters('registryName'))]"
+            ],
+            "properties": {
+                "description": "Can push to any repository of the registry",
+                "actions": [
+                    "repositories/*/content/read",
+                    "repositories/*/content/write"
+                ]
+            }
+        }
+	]
+}
