@@ -41,7 +41,7 @@
         },
         "autoInflateMaxTUs": {
             "type": "int",
-            "minValue": "[parameters('capacity')]",
+            "minValue": 1,
             "maxValue": 20,
             "defaultValue": 20
         },
