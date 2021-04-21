@@ -12,16 +12,18 @@ env:
   DDOS_PLAN_NAME: 'ao-ddos'
   VNET_NAME: 'ao-eus'
   VNET_PREFIX: '10.0.0.0/16'
-  SUBNET_NAME_APPGW: "AppGw"
-  SUBNET_PREFIX_APPGW: "10.0.1.0/24"
-  SUBNET_NAME_APP: "App"
-  SUBNET_PREFIX_APP: "10.0.2.0/24"
+  SUBNET_NAME_APPGW: 'AppGw'
+  SUBNET_PREFIX_APPGW: '10.0.1.0/24'
+  SUBNET_NAME_APP: 'App'
+  SUBNET_PREFIX_APP: '10.0.2.0/24'
   KEY_VAULT_NAME: 'ao-kv-eus'
   REGISTRY_NAME: 'pzaocr'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
-  LA_WORKSPACE_NAME: "ao-la-eus"
-  APP_INSIGHTS_NAME_BE: "ao-be-eus"
-  APP_INSIGHTS_NAME_FE: "ao-fe-eus"
+  LA_WORKSPACE_NAME: 'ao-la-eus'
+  APP_INSIGHTS_NAME_BE: 'ao-be-eus'
+  APP_INSIGHTS_NAME_FE: 'ao-fe-eus'
+  EVENT_HUB_NS_NAME: 'ao-eh-eus'
+  EVENT_HUB_CAPACITY: '2'
 
 jobs:
   deploy-azure-resources:
@@ -125,6 +127,14 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/monitor.app-insights.json
           parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_FE}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
+
+      - name: Deploy Event Hub
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/event-hub.json
+          parameters: location=${{env.AZURE_LOCATION}} namespaceName=${{env.EVENT_HUB_NS_NAME}} capacity=${{env.EVENT_HUB_CAPACITY}}
 
       - name: Azure logout
         run: |
