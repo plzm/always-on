@@ -90,12 +90,12 @@
                 },
                 "copy": [
                     {
-                        "name": "locations",
+                        "name": "locationsLoop",
                         "count": "[length(variables('locationTuples'))]",
                         "input": {
-                            "locationName": "[split(variables('locationTuples')[copyIndex()], ':')[0]]",
-                            "failoverPriority": "[if(parameters('enableMultipleWriteLocations'), 0, copyIndex())]",
-                            "isZoneRedundant": "[split(variables('locationTuples')[copyIndex()], ':')[1]]"
+                            "locationName": "[split(variables('locationTuples')[copyIndex('locationsLoop')], ':')[0]]",
+                            "failoverPriority": "[if(parameters('enableMultipleWriteLocations'), 0, copyIndex('locationsLoop'))]",
+                            "isZoneRedundant": "[split(variables('locationTuples')[copyIndex('locationsLoop')], ':')[1]]"
                         }
                     }
                 ],
