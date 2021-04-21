@@ -25,7 +25,12 @@ env:
   EVENT_HUB_NS_NAME: 'ao-eh-eus'
   EVENT_HUB_CAPACITY: '2'
   COSMOS_DB_ACCT_NAME: 'ao-cdb-pz'
-  COSMOS_DB_LOCATIONS: "eastus:true,westus:false"
+  COSMOS_DB_LOCATIONS: 'eastus:true,westus:false'
+  COSMOS_DB_DATABASE_NAME: 'db3'
+  COSMOS_DB_DATABASE_THROUGHPUT: '1000'
+  COSMOS_DB_CONTAINER_NAME: 'c1'
+  COSMOS_DB_CONTAINER_THROUGHPUT: '1000'
+  COSMOS_DB_PARTITION_KEY: '/partitionKey'
 
 jobs:
   deploy-azure-resources:
@@ -146,29 +151,21 @@ jobs:
       #    template: ./templates/cosmos-db.account.json
       #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} locationTuples=${{env.COSMOS_DB_LOCATIONS}}
 
-      - name: Deploy Cosmos DB Database
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/cosmos-db.sql-database.json
-          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=db11 provisionedThroughput=500
+      #- name: Deploy Cosmos DB Database
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/cosmos-db.sql.database.json
+      #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_THROUGHPUT}}
 
-      - name: Deploy Cosmos DB Database
+      - name: Deploy Cosmos DB Container
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/cosmos-db.sql-database.json
-          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=db12 autoscaleMaxThroughput=6000
-
-      - name: Deploy Cosmos DB Database
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/cosmos-db.sql-database.json
-          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=db13
+          template: ./templates/cosmos-db.sql.container.json
+          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath=${{env.COSMOS_DB_PARTITION_KEY}}
 
       - name: Azure logout
         run: |
