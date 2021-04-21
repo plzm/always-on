@@ -17,7 +17,7 @@ env:
   SUBNET_NAME_APP: "App"
   SUBNET_PREFIX_APP: "10.0.2.0/24"
   KEY_VAULT_NAME: 'ao-kv-eus'
-  REGISTRY_NAME: 'ao-cr'
+  REGISTRY_NAME: 'pzaocr'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
 
 jobs:
