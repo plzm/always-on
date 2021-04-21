@@ -97,7 +97,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/container-registry.json
-          parameters: location=${{env.AZURE_LOCATION}} registryName=${{env.REGISTRY_NAME}} keyVaultName=${{env.KEY_VAULT_NAME}} skuName=Premium replicationLocations=${{REGISTRY_REPLICATIONS}} zoneRedundancy=Enabled
+          parameters: location=${{env.AZURE_LOCATION}} registryName=${{env.REGISTRY_NAME}} keyVaultName=${{env.KEY_VAULT_NAME}} skuName=Premium replicationLocations=${{env.REGISTRY_REPLICATIONS}} zoneRedundancy=Enabled
 
       - name: Azure logout
         run: |
