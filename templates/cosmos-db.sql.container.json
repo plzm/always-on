@@ -114,7 +114,7 @@
                                 "name": "includedPaths",
                                 "count": "[length(variables('includedIndexingPaths'))]",
                                 "input": {
-                                    "": "[createObject('path', trim(variables('includedIndexingPaths')[copyIndex('includedPaths')]))]"
+                                    "path": "[trim(variables('includedIndexingPaths')[copyIndex('includedPaths')])]"
                                 }
                             }
                         ],
