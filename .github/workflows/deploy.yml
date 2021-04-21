@@ -20,8 +20,8 @@ env:
   REGISTRY_NAME: 'pzaocr'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
   LA_WORKSPACE_NAME: "ao-la-eus"
-  APP_INSIGHTS_NAME_BE: "ao-ai-be-eus"
-  APP_INSIGHTS_NAME_FE: "ao-ai-fe-eus"
+  APP_INSIGHTS_NAME_BE: "ao-be-eus"
+  APP_INSIGHTS_NAME_FE: "ao-fe-eus"
 
 jobs:
   deploy-azure-resources:
