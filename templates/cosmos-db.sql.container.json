@@ -130,7 +130,14 @@
                         "kind": "Hash"
                     },
                     "defaultTtl": "[parameters('defaultTtl')]",
-                    "analyticalStorageTtl": "[parameters('analyticalStorageTtl')]"
+                    "analyticalStorageTtl": "[
+                        if
+                        (
+                            equals(parameters('analyticalStorageTtl'), null()),
+                            json('null'),
+                            parameters('analyticalStorageTtl')
+                        )
+                    ]"
                 },
                 "options": "[
                     if
