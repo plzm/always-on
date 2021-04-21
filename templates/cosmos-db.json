@@ -17,6 +17,14 @@
             "type": "string",
             "defaultValue": ""
         },
+        "accountKind": {
+            "type": "string",
+            "defaultValue": "GlobalDocumentDB",
+            "allowedValues": [
+                "GlobalDocumentDB",
+                "MongoDB"
+            ]
+        },
 		"locationTuples": {
 			"type": "string",
 			"defaultValue": "",
@@ -74,7 +82,7 @@
             "apiVersion": "[variables('apiVersionCosmosDb')]",
             "name": "[parameters('cosmosDbAccountName')]",
             "location": "[parameters('location')]",
-            "kind": "GlobalDocumentDB",
+            "kind": "[parameters('accountKind')]",
 			"tags": "[variables('resourceTags')]",
             "properties": {
                 "databaseAccountOfferType": "Standard",
@@ -90,12 +98,12 @@
                 },
                 "copy": [
                     {
-                        "name": "locationsLoop",
+                        "name": "locations",
                         "count": "[length(variables('locationTuples'))]",
                         "input": {
-                            "locationName": "[split(variables('locationTuples')[copyIndex('locationsLoop')], ':')[0]]",
-                            "failoverPriority": "[if(parameters('enableMultipleWriteLocations'), 0, copyIndex('locationsLoop'))]",
-                            "isZoneRedundant": "[split(variables('locationTuples')[copyIndex('locationsLoop')], ':')[1]]"
+                            "locationName": "[split(variables('locationTuples')[copyIndex('locations')], ':')[0]]",
+                            "failoverPriority": "[if(parameters('enableMultipleWriteLocations'), 0, copyIndex('locations'))]",
+                            "isZoneRedundant": "[split(variables('locationTuples')[copyIndex('locations')], ':')[1]]"
                         }
                     }
                 ],

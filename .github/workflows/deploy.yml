@@ -24,8 +24,8 @@ env:
   APP_INSIGHTS_NAME_FE: 'ao-fe-eus'
   EVENT_HUB_NS_NAME: 'ao-eh-eus'
   EVENT_HUB_CAPACITY: '2'
-  COSMOS_DB_ACCT_NAME: 'pz-ao-cdb'
-  COSMOS_DB_LOCATIONS: "eastus:Enabled,westus:Disabled"
+  COSMOS_DB_ACCT_NAME: 'ao-cdb-pz'
+  COSMOS_DB_LOCATIONS: "eastus:true,westus:false"
 
 jobs:
   deploy-azure-resources:
