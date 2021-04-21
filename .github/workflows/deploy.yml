@@ -20,6 +20,8 @@ env:
   REGISTRY_NAME: 'pzaocr'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
   LA_WORKSPACE_NAME: "ao-la-eus"
+  APP_INSIGHTS_NAME_BE: "ao-ai-be-eus"
+  APP_INSIGHTS_NAME_FE: "ao-ai-fe-eus"
 
 jobs:
   deploy-azure-resources:
@@ -100,13 +102,21 @@ jobs:
       #    template: ./templates/container-registry.json
       #    parameters: location=${{env.AZURE_LOCATION}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.REGISTRY_REPLICATIONS}} zoneRedundancy=Enabled
 
-      - name: Deploy Log Analytics
+      #- name: Deploy Log Analytics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/monitor.log-analytics-workspace.json
+      #    parameters: location=${{env.AZURE_LOCATION}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+
+      - name: Deploy App Insights for Back End API
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/monitor.log-analytics-workspace.json
-          parameters: location=${{env.AZURE_LOCATION}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+          template: ./templates/monitor.app-insights.json
+          parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_BE}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
 
       - name: Azure logout
         run: |
