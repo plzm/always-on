@@ -120,6 +120,9 @@
                         ],
                         "excludedPaths": [
                             {
+                                "path": "/*"
+                            },
+                            {
                                 "path": "/\"_etag\"/?"
                             }
                         ]
