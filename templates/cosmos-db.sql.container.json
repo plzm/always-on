@@ -116,13 +116,6 @@
                                 "input": {
                                     "path": "[trim(variables('includedIndexingPaths')[copyIndex('includedPaths')])]"
                                 }
-                            },
-                            {
-                                "name": "excludedPaths",
-                                "count": "[length(variables('excludedIndexingPaths'))]",
-                                "input": {
-                                    "path": "[trim(variables('excludedIndexingPaths')[copyIndex('excludedPaths')])]"
-                                }
                             }
                         ]
                     },
