@@ -43,19 +43,6 @@
         }
     },
     "variables": {
-        "options": "[
-            if
-            (
-                and(equals(parameters('provisionedThroughput'), 0), equals(parameters('autoscaleMaxThroughput'), 0)),
-                json('null'),
-                if
-                (
-                    greaterOrEquals(parameters('autoscaleMaxThroughput'), 4000),
-                    createObject('autoscaleSettings', createObject('maxThroughput', parameters('autoscaleMaxThroughput'))),
-                    createObject('throughput', parameters('provisionedThroughput'))
-                )
-            )
-        ]",
         "resourceTags": {
             "Timestamp": "[parameters('timestamp')]"
         },
@@ -72,7 +59,19 @@
                 "resource": {
                     "id": "[parameters('databaseName')]"
                 },
-                "options": "[variables('options')]"
+                "options": "[
+                    if
+                    (
+                        and(equals(parameters('provisionedThroughput'), 0), equals(parameters('autoscaleMaxThroughput'), 0)),
+                        json('null'),
+                        if
+                        (
+                            greaterOrEquals(parameters('autoscaleMaxThroughput'), 4000),
+                            createObject('autoscaleSettings', createObject('maxThroughput', parameters('autoscaleMaxThroughput'))),
+                            createObject('throughput', parameters('provisionedThroughput'))
+                        )
+                    )
+                ]"
             }
         }
     ]
