@@ -89,7 +89,7 @@
         },
         "analyticalStorageTtl": {
             "type": "int",
-            "defaultValue": -1,
+            "defaultValue": null,
             "minValue": -1
         }
     },
