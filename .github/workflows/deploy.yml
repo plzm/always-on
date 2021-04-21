@@ -32,7 +32,7 @@ env:
   COSMOS_DB_CONTAINER_THROUGHPUT: '400'
   COSMOS_DB_PARTITION_KEY: '/partitionKey'
   COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
-  COSMOS_DB_EXCLUDED_INDEX: '/*,/\"_etag\"/?'
+  COSMOS_DB_EXCLUDED_INDEX: '/*'
 
 jobs:
   deploy-azure-resources:
