@@ -32,6 +32,7 @@ env:
   COSMOS_DB_CONTAINER_THROUGHPUT: '1000'
   COSMOS_DB_PARTITION_KEY: '/partitionKey'
   COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
+  COSMOS_DB_EXCLUDED_INDEX: '/*,/\"_etag\"/?'
 
 jobs:
   deploy-azure-resources:
@@ -166,7 +167,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/cosmos-db.sql.container.json
-          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath=${{env.COSMOS_DB_PARTITION_KEY}} includedIndexingPaths=${{env.COSMOS_DB_INCLUDED_INDEX}}
+          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath=${{env.COSMOS_DB_PARTITION_KEY}} includedIndexingPaths=${{env.COSMOS_DB_INCLUDED_INDEX}} excludedIndexingPaths=${{env.COSMOS_DB_EXCLUDED_INDEX}}
 
       - name: Azure logout
         run: |

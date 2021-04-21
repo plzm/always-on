@@ -116,14 +116,13 @@
                                 "input": {
                                     "path": "[trim(variables('includedIndexingPaths')[copyIndex('includedPaths')])]"
                                 }
-                            }
-                        ],
-                        "excludedPaths": [
-                            {
-                                "path": "/*"
                             },
                             {
-                                "path": "/\"_etag\"/?"
+                                "name": "excludedPaths",
+                                "count": "[length(variables('excludedIndexingPaths'))]",
+                                "input": {
+                                    "path": "[trim(variables('excludedIndexingPaths')[copyIndex('excludedPaths')])]"
+                                }
                             }
                         ]
                     },
