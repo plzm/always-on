@@ -114,22 +114,14 @@
                     "indexingPolicy": {
                         "automatic": "[parameters('automaticIndexing')]",
                         "indexingMode": "[parameters('indexingMode')]",
-                        "copy": [
+                        "includedPaths": [
                             {
-                                "name": "includedPaths",
-                                "count": "[length(variables('includedIndexingPaths'))]",
-                                "input": {
-                                    "": "[createObject('path', trim(variables('includedIndexingPaths')[copyIndex('includedPaths')]))]"
-                                }
+                                "path": "/*"
                             }
                         ],
-                        "copy": [
+                        "excludedPaths": [
                             {
-                                "name": "excludedPaths",
-                                "count": "[length(variables('excludedIndexingPaths'))]",
-                                "input": {
-                                    "": "[createObject('path', trim(variables('excludedIndexingPaths')[copyIndex('excludedPaths')]))]"
-                                }
+                                "path": "/\"_etag\"/?"
                             }
                         ]
                     },
