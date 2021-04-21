@@ -87,9 +87,13 @@
             "defaultValue": -1,
             "minValue": -1
         },
+        "enableAnalyticalStorage": {
+            "type": "bool",
+            "defaultValue": false
+        },
         "analyticalStorageTtl": {
             "type": "int",
-            "defaultValue": null,
+            "defaultValue": -1,
             "minValue": -1
         }
     },
@@ -133,9 +137,9 @@
                     "analyticalStorageTtl": "[
                         if
                         (
-                            equals(parameters('analyticalStorageTtl'), null()),
-                            json('null'),
-                            parameters('analyticalStorageTtl')
+                            parameters('enableAnalyticalStorage'),
+                            parameters('analyticalStorageTtl'),
+                            json('null')
                         )
                     ]"
                 },
