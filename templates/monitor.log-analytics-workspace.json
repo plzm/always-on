@@ -1,0 +1,85 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"location": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
+			}
+		},
+		"workspaceName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "retentionInDays": {
+            "type": "int",
+            "minValue": 30,
+            "maxValue": 730,
+            "defaultValue": 30
+        },
+		"skuName": {
+			"type": "string",
+			"defaultValue": "PerGB2018",
+			"allowedValues": [
+				"Free",
+				"Standard",
+				"Premium",
+                "PerNode",
+                "PerGB2018",
+                "Standalone",
+                "CapacityReservation"
+			]
+		},
+		"publicNetworkAccessForIngestion": {
+			"type": "string",
+			"defaultValue": "Enabled",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			]
+		},
+		"publicNetworkAccessForQuery": {
+			"type": "string",
+			"defaultValue": "Enabled",
+			"allowedValues": [
+				"Enabled",
+				"Disabled"
+			]
+		}
+	},
+	"variables": {
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+		"apiVersionLogAnalytics": "2020-10-01"
+	},
+	"resources": [
+        {
+            "type": "microsoft.operationalinsights/workspaces",
+            "apiVersion": "[variables('apiVersionLogAnalytics')]",
+            "name": "[parameters('workspaceName')]",
+            "location": "[parameters('location')]",
+            "tags": "[variables('resourceTags')]",
+            "properties": {
+                "sku": {
+                    "name": "[parameters('skuName')]"
+                },
+                "retentionInDays": "[parameters('retentionInDays')]",
+                "features": {
+                    "enableLogAccessUsingOnlyResourcePermissions": true
+                },
+                "workspaceCapping": {
+                    "dailyQuotaGb": -1
+                },
+                "publicNetworkAccessForIngestion": "[parameters('publicNetworkAccessForIngestion')]",
+                "publicNetworkAccessForQuery": "[parameters('publicNetworkAccessForQuery')]"
+            }
+        }
+	]
+}
