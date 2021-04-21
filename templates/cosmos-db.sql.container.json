@@ -86,15 +86,6 @@
             "type": "int",
             "defaultValue": -1,
             "minValue": -1
-        },
-        "enableAnalyticalStorage": {
-            "type": "bool",
-            "defaultValue": false
-        },
-        "analyticalStorageTtl": {
-            "type": "int",
-            "defaultValue": -1,
-            "minValue": -1
         }
     },
     "variables": {
@@ -133,15 +124,7 @@
                         "paths": [ "[parameters('partitionKeyPath')]" ],
                         "kind": "Hash"
                     },
-                    "defaultTtl": "[parameters('defaultTtl')]",
-                    "analyticalStorageTtl": "[
-                        if
-                        (
-                            parameters('enableAnalyticalStorage'),
-                            parameters('analyticalStorageTtl'),
-                            json('null')
-                        )
-                    ]"
+                    "defaultTtl": "[parameters('defaultTtl')]"
                 },
                 "options": "[
                     if
