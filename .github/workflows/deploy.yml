@@ -17,6 +17,8 @@ env:
   SUBNET_NAME_APP: "App"
   SUBNET_PREFIX_APP: "10.0.2.0/24"
   KEY_VAULT_NAME: 'ao-kv-eus'
+  REGISTRY_NAME: 'pzaocr'
+  REGISTRY_REPLICATIONS: 'eastus,westus2'
 
 jobs:
   deploy-azure-resources:
@@ -88,6 +90,14 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/key-vault.json
           parameters: ./templates/key-vault.parameters.json location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
+
+      - name: Deploy Container Registry
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/container-registry.json
+          parameters: location=${{env.AZURE_LOCATION}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.REGISTRY_REPLICATIONS}} zoneRedundancy=Enabled
 
       - name: Azure logout
         run: |
