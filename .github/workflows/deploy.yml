@@ -53,12 +53,6 @@ jobs:
         with:
           creds: ${{secrets.AZURE_CREDENTIALS}}
 
-      #- name: Var Test
-      #  if: success()
-      #  env:
-      #    BIG_VAR: "${{env.AZURE_LOCATION}} ${{env.AZURE_RESOURCE_GROUP}}"
-      #  run: echo "$BIG_VAR"
-
       - name: Deploy User-Assigned MI
         if: success()
         uses: azure/arm-deploy@v1
