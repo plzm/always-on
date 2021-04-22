@@ -175,7 +175,7 @@ jobs:
       - name: Var Test
         if: success()
         env:
-          FULL_SSH_KEY: "${{env.AZURE_LOCATION env.AZURE_RESOURCE_GROUP}}"
+          FULL_SSH_KEY: "${{env.AZURE_LOCATION}} ${{env.AZURE_RESOURCE_GROUP}}"
         run: echo "$FULL_SSH_KEY"
 
       - name: Deploy AKS Cluster
