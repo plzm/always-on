@@ -15,7 +15,7 @@
 		},
 		"k8sversion": {
 			"type": "string",
-			"defaultValue": ""
+			"defaultValue": "1.20.5"
 		},
 		"clusterName": {
 			"type": "string",
