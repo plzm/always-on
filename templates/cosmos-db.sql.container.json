@@ -109,12 +109,19 @@
                     "indexingPolicy": {
                         "automatic": "[parameters('automaticIndexing')]",
                         "indexingMode": "[parameters('indexingMode')]",
-                        "includedPaths": [
+                        "copy": [
                             {
-                                "path": "/*"
+                                "name": "includedPaths",
+                                "count": "[length(variables('includedIndexingPaths'))]",
+                                "input": {
+                                    "path": "[trim(variables('includedIndexingPaths')[copyIndex('includedPaths')])]"
+                                }
                             }
                         ],
                         "excludedPaths": [
+                            {
+                                "path": "/*"
+                            },
                             {
                                 "path": "/\"_etag\"/?"
                             }
