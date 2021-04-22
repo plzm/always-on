@@ -1,0 +1,78 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "timestamp": {
+            "type": "string",
+            "defaultValue": "[utcNow('u')]"
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Azure region"
+            }
+        },
+        "cosmosDbAccountName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "databaseName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "provisionedThroughput": {
+            "type": "int",
+            "defaultValue": 0,
+            "minValue": 0,
+            "maxValue": 1000000,
+            "metadata": {
+                "displayName": "Provisioned Throughput",
+                "description": "Set to >=400 to specify provisioned throughput for the database. Leave at 0 for autoscale or no provisioned throughput."
+            }
+        },
+        "autoscaleMaxThroughput": {
+            "type": "int",
+            "defaultValue": 0,
+            "minValue": 0,
+            "maxValue": 1000000,
+            "metadata": {
+                "displayName": "Autoscale Max Throughput",
+                "description": "Set to >=4000 to specify max autoscale throughput for the database. Leave at 0 for no autoscale."
+            }
+        }
+    },
+    "variables": {
+        "resourceTags": {
+            "Timestamp": "[parameters('timestamp')]"
+        },
+        "apiVersionCosmosDb": "2021-03-01-preview"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+            "apiVersion": "[variables('apiVersionCosmosDb')]",
+            "name": "[concat(parameters('cosmosDbAccountName'), '/', parameters('databaseName'))]",
+            "location": "[parameters('location')]",
+            "tags": "[variables('resourceTags')]",
+            "properties": {
+                "resource": {
+                    "id": "[parameters('databaseName')]"
+                },
+                "options": "[
+                    if
+                    (
+                        and(equals(parameters('provisionedThroughput'), 0), equals(parameters('autoscaleMaxThroughput'), 0)),
+                        json('null'),
+                        if
+                        (
+                            greaterOrEquals(parameters('autoscaleMaxThroughput'), 4000),
+                            createObject('autoscaleSettings', createObject('maxThroughput', parameters('autoscaleMaxThroughput'))),
+                            createObject('throughput', parameters('provisionedThroughput'))
+                        )
+                    )
+                ]"
+            }
+        }
+    ]
+}
