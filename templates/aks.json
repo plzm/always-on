@@ -1,0 +1,121 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"clusterName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"location": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
+			}
+		},
+		"dnsPrefix": {
+			"type": "string",
+			"metadata": {
+				"description": "Optional DNS prefix to use with hosted Kubernetes API server FQDN."
+			}
+		},
+		"osDiskSizeGB": {
+			"type": "int",
+			"defaultValue": 0,
+			"minValue": 0,
+			"maxValue": 1023,
+			"metadata": {
+				"description": "Disk size (in GB) to provision for each of the agent pool nodes. This value ranges from 0 to 1023. Specifying 0 will apply the default disk size for that nodeVmSize."
+			}
+		},
+		"nodeCount": {
+			"type": "int",
+			"defaultValue": 1,
+			"minValue": 1,
+			"maxValue": 50,
+			"metadata": {
+				"description": "The number of nodes for the cluster."
+			}
+		},
+		"nodeVmSize": {
+			"type": "string",
+			"defaultValue": "Standard_DS2_v2",
+			"metadata": {
+				"description": "The size of the Virtual Machine."
+			}
+		},
+		"nodeAdminUsername": {
+			"type": "string",
+			"metadata": {
+				"description": "User name for the Linux Virtual Machines."
+			}
+		},
+		"sshRSAPublicKey": {
+			"type": "string",
+			"metadata": {
+				"description": "Configure all linux machines with the SSH RSA public key string. Your key should include three parts, for example 'ssh-rsa AAAAB...snip...UcyupgH azureuser@linuxvm'"
+			}
+		},
+		"osType": {
+			"type": "string",
+			"defaultValue": "Linux",
+			"allowedValues": [
+				"Linux"
+			],
+			"metadata": {
+				"description": "The type of node operating system."
+			}
+		}
+	},
+	"variables": {
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+		"apiVersionAks": "2021-03-01"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.ContainerService/managedClusters",
+			"apiVersion": "[variables('apiVersionAks')]",
+			"name": "[parameters('clusterName')]",
+			"location": "[parameters('location')]",
+			"tags": "[variables('resourceTags')]",
+			"properties": {
+				"dnsPrefix": "[parameters('dnsPrefix')]",
+				"agentPoolProfiles": [
+					{
+						"name": "agentpool",
+						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+						"count": "[parameters('nodeCount')]",
+						"vmSize": "[parameters('nodeVmSize')]",
+						"osType": "[parameters('osType')]",
+						"storageProfile": "ManagedDisks"
+					}
+				],
+				"linuxProfile": {
+					"adminUsername": "[parameters('nodeAdminUsername')]",
+					"ssh": {
+						"publicKeys": [
+							{
+								"keyData": "[parameters('sshRSAPublicKey')]"
+							}
+						]
+					}
+				}
+			},
+			"identity": {
+				"type": "SystemAssigned"
+			}
+		}
+	],
+	"outputs": {
+		"controlPlaneFqdn": {
+			"type": "string",
+			"value": "[reference(parameters('clusterName')).fqdn]"
+		}
+	}
+}
