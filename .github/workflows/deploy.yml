@@ -175,12 +175,14 @@ jobs:
       - name: Deploy AKS Cluster
         if: success()
         env:
-          FULL_SSH_KEY: ${{secrets.SSH_KEY}}${{secrets.ADMIN_USERNAME}}
+          FULL_SSH_KEY: ${{env.AZURE_LOCATION}}" "${{env.AZURE_RESOURCE_GROUP}}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/aks.json
-          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey=$FULL_SSH_KEY
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey=${{secrets.SSH_KEY}}
+        run: |
+          echo "$FULL_SSH_KEY"
 
       - name: Azure logout
         run: |
