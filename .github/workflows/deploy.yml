@@ -180,7 +180,7 @@ jobs:
       - name: Test Var
         if: success()
         env:
-          FULL_SSH_KEY: ${{secrets.SSH_KEY env.LINUX_ADMIN_USERNAME}}
+          FULL_SSH_KEY: ${{secrets.SSH_KEY}}${{env.LINUX_ADMIN_USERNAME}}
         run: echo $FULL_SSH_KEY
 
       #- name: Azure logout
