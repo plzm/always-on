@@ -53,7 +53,7 @@
 		}
 	},
 	"variables": {
-		"apiVersionAuthRoleAssignment": "2020-10-01-preview"
+		"apiVersionAuthRoleAssignment": "2021-04-01-preview"
 	},
 	"resources": [
 		{
