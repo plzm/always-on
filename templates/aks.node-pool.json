@@ -106,8 +106,8 @@
 				"vmSize": "[parameters('nodeVmSize')]",
 				"count": "[variables('nodeCount')]",
 				"enableAutoScaling": "[parameters('enableNodeAutoscale')]",
-				"minCount": "[parameters('nodeCountMin')]",
-				"maxCount": "[parameters('nodeCountMax')]",
+				"minCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMin'), json('null'))]",
+				"maxCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMax'), json('null'))]",
 				"osType": "[parameters('osType')]",
 				"storageProfile": "ManagedDisks",
 				"osDiskSizeGB": "[parameters('osDiskSizeGB')]"
