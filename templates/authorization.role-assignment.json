@@ -18,6 +18,23 @@
 				"description": "See https://docs.microsoft.com/azure/role-based-access-control/built-in-roles"
 			}
 		},
+		"principalType": {
+			"type": "String",
+			"defaultValue": "MSI",
+			"allowedValues": [
+				"MSI",
+				"User",
+				"Group",
+				"ServicePrincipal",
+				"Application",
+				"DirectoryObjectOrGroup",
+				"DirectoryRoleTemplate",
+				"ForeignGroup",
+				"Everyone",
+				"Device",
+				"Unknown"
+			]
+		},
 		"principalId": {
 			"type": "String",
 			"defaultValue": "",
@@ -36,7 +53,7 @@
 		}
 	},
 	"variables": {
-		"apiVersionAuthRoleAssignment": "2020-04-01-preview"
+		"apiVersionAuthRoleAssignment": "2020-10-01-preview"
 	},
 	"resources": [
 		{
@@ -45,6 +62,7 @@
 			"apiVersion": "[variables('apiVersionAuthRoleAssignment')]",
 			"properties": {
 				"roleDefinitionId": "[parameters('roleDefinitionId')]",
+				"principalType": "[parameters('principalType')]",
 				"principalId": "[parameters('principalId')]",
 				"scope": "[parameters('scopeId')]"
 			}
