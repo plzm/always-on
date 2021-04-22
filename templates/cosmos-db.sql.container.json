@@ -48,7 +48,7 @@
         },
         "includedIndexingPaths": {
             "type": "string",
-            "defaultValue": "/*",
+            "defaultValue": "",
             "metadata": {
                 "displayName": "Included indexing paths",
                 "description": "Paths to index. By default, the whole document will be indexed. If specifying parts of doc, pass as comma-delimited string of paths. Example: /vin/?,/state/?,/model/?"
@@ -56,10 +56,10 @@
         },
         "excludedIndexingPaths": {
             "type": "string",
-            "defaultValue": "/\"_etag\"/?",
+            "defaultValue": "",
             "metadata": {
                 "displayName": "Excluded indexing paths",
-                "description": "Paths to exclude from index. By default, etag will be excluded.  If specifying parts of doc, pass as comma-delimited string of paths. Example: /*,/state/?,/model/?"
+                "description": "Paths to exclude from index. If specifying parts of doc, pass as comma-delimited string of paths. Example: /*,/state/?,/model/?"
             }
         },
         "provisionedThroughput": {
@@ -116,13 +116,14 @@
                                 "input": {
                                     "path": "[trim(variables('includedIndexingPaths')[copyIndex('includedPaths')])]"
                                 }
+                            }
+                        ],
+                        "excludedPaths": [
+                            {
+                                "path": "/*"
                             },
                             {
-                                "name": "excludedPaths",
-                                "count": "[length(variables('excludedIndexingPaths'))]",
-                                "input": {
-                                    "path": "[trim(variables('excludedIndexingPaths')[copyIndex('excludedPaths')])]"
-                                }
+                                "path": "/\"_etag\"/?"
                             }
                         ]
                     },
