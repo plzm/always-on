@@ -115,7 +115,7 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/authorization.role-assignment.json
           parameters: |
-            roleAssignmentName=${{env.UAMI_NAME}} roleDefinitionId=${{env.NETWORK_CONTRIB_ROLE_ID}} principalId=${{env.UAMI_PRINCIPAL_ID}} scopeId=${{env.VNET_RESOURCE_ID}}
+            roleDefinitionId=${{env.NETWORK_CONTRIB_ROLE_ID}} principalId=${{env.UAMI_PRINCIPAL_ID}} scopeId=${{env.VNET_RESOURCE_ID}}
 
     #- name: Deploy AppGW Subnet
       #  if: success()

@@ -4,7 +4,7 @@
 	"parameters": {
 		"roleAssignmentName": {
 			"type": "String",
-			"defaultValue": "",
+			"defaultValue": "[newGuid()]",
 			"metadata": {
 				"displayName": "Role Assignment Name",
 				"description": ""
