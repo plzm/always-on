@@ -52,6 +52,12 @@ jobs:
         with:
           creds: ${{secrets.AZURE_CREDENTIALS}}
 
+      #- name: Var Test
+      #  if: success()
+      #  env:
+      #    FULL_SSH_KEY: "${{env.AZURE_LOCATION}} ${{env.AZURE_RESOURCE_GROUP}}"
+      #  run: echo "$FULL_SSH_KEY"
+
       #- name: Create Azure resource group
       #  if: success()
       #  run: |
@@ -172,19 +178,21 @@ jobs:
       #    template: ./templates/cosmos-db.sql.container.json
       #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
-      - name: Var Test
-        if: success()
-        env:
-          FULL_SSH_KEY: "${{env.AZURE_LOCATION}} ${{env.AZURE_RESOURCE_GROUP}}"
-        run: echo "$FULL_SSH_KEY"
-
       - name: Deploy AKS Cluster
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/aks.json
+          template: ./templates/aks.cluster.json
           parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}"
+
+      - name: Deploy AKS Node Pool
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/aks.node-pool.json
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
 
       - name: Azure logout
         run: |
