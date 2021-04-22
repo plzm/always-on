@@ -13,6 +13,10 @@
 				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
 			}
 		},
+		"k8sversion": {
+			"type": "string",
+			"defaultValue": ""
+		},
 		"clusterName": {
 			"type": "string",
 			"defaultValue": ""
@@ -86,15 +90,26 @@
 			"location": "[parameters('location')]",
 			"tags": "[variables('resourceTags')]",
 			"properties": {
+				"kubernetesVersion": "[parameters('k8sversion')]",
 				"dnsPrefix": "[parameters('dnsPrefix')]",
 				"agentPoolProfiles": [
+					{
+						"name": "systempool",
+						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+						"count": "[parameters('nodeCount')]",
+						"vmSize": "[parameters('nodeVmSize')]",
+						"osType": "[parameters('osType')]",
+						"storageProfile": "ManagedDisks",
+						"mode": "System"
+					},
 					{
 						"name": "agentpool",
 						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
 						"count": "[parameters('nodeCount')]",
 						"vmSize": "[parameters('nodeVmSize')]",
 						"osType": "[parameters('osType')]",
-						"storageProfile": "ManagedDisks"
+						"storageProfile": "ManagedDisks",
+						"mode": "User"
 					}
 				],
 				"linuxProfile": {
