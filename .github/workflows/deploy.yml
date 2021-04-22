@@ -32,7 +32,10 @@ env:
   COSMOS_DB_CONTAINER_THROUGHPUT: '400'
   COSMOS_DB_PARTITION_KEY: '/id'
   COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
-  LINUX_ADMIN_USERNAME: 'pelazem'
+  AKS_CLUSTER_NAME: 'ao-aks-eus'
+  AKS_DNS_PREFIX: 'aoakseus'
+  AKS_NODE_COUNT: '1'
+  AKS_NODE_SIZE: 'Standard_DS2_v2'
 
 jobs:
   deploy-azure-resources:
@@ -41,13 +44,13 @@ jobs:
     if: contains(github.event.pull_request.labels.*.name, 'deploy')
 
     steps:
-      #- name: Checkout repository
-      #  uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      #- name: Azure login
-      #  uses: azure/login@v1
-      #  with:
-      #    creds: ${{secrets.AZURE_CREDENTIALS}}
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
 
       #- name: Create Azure resource group
       #  if: success()
@@ -169,20 +172,16 @@ jobs:
       #    template: ./templates/cosmos-db.sql.container.json
       #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
-      #- name: Deploy AKS Cluster
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/aks.json
-      #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
-
-      - name: Test Var
+      - name: Deploy AKS Cluster
         if: success()
         env:
-          FULL_SSH_KEY: ${{secrets.SSH_KEY}}${{env.LINUX_ADMIN_USERNAME}}
-        run: echo $FULL_SSH_KEY
+          FULL_SSH_KEY: ${{secrets.SSH_KEY}}${{secrets.ADMIN_USERNAME}}
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/aks.json
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey=$FULL_SSH_KEY
 
-      #- name: Azure logout
-      #  run: |
-      #    az logout
+      - name: Azure logout
+        run: |
+          az logout
