@@ -44,7 +44,7 @@
 		},
 		"nodeCountMin": {
 			"type": "int",
-			"defaultValue": 1,
+			"defaultValue": 0,
 			"minValue": 0,
 			"maxValue": 100,
 			"metadata": {
@@ -53,8 +53,8 @@
 		},
 		"nodeCountMax": {
 			"type": "int",
-			"defaultValue": 100,
-			"minValue": 1,
+			"defaultValue": 0,
+			"minValue": 0,
 			"maxValue": 100,
 			"metadata": {
 				"description": "The maximum number of nodes for the cluster when autoscale is used."
