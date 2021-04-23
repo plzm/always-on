@@ -1,0 +1,57 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"location": {
+			"type": "String",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "See https://azure.microsoft.com/regions/."
+			}
+		},
+        "tenantId": {
+            "type": "String",
+			"metadata": {
+				"displayName": "Azure AD Tenant ID",
+				"description": ""
+			}
+        },
+        "identityName": {
+            "type": "String",
+			"metadata": {
+				"displayName": "Managed Identity Name",
+				"description": ""
+			}
+        }
+    },
+    "variables": {
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+        "identityReference": "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', parameters('identityName'))]",
+		"apiVersionUserAssignedIdentity": "2018-11-30"
+	},
+    "resources": [
+        {
+            "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+            "apiVersion": "[variables('apiVersionUserAssignedIdentity')]",
+            "name": "[parameters('identityName')]",
+            "location": "[parameters('location')]",
+			"tags": "[variables('resourceTags')]",
+            "properties": {
+                "tenantId": "[parameters('tenantId')]"
+            }
+        }
+    ],
+	"outputs": {
+		"principalId": {
+            "type": "string",
+            "value": "[reference(variables('identityReference'), variables('apiVersionUserAssignedIdentity')).principalId]"
+        }
+	}
+}

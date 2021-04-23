@@ -1,0 +1,117 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"location": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
+			}
+		},
+		"clusterName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"nodePoolName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"nodePoolMode": {
+			"type": "string",
+			"defaultValue": "User",
+			"allowedValues": [
+				"System",
+				"User"
+			]
+		},
+		"nodeCount": {
+			"type": "int",
+			"defaultValue": 1,
+			"minValue": 0,
+			"maxValue": 100,
+			"metadata": {
+				"description": "The number of nodes for the cluster."
+			}
+		},
+		"enableNodeAutoscale": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"nodeCountMin": {
+			"type": "int",
+			"defaultValue": 0,
+			"minValue": 0,
+			"maxValue": 100,
+			"metadata": {
+				"description": "The minimum number of nodes for the cluster when autoscale is used."
+			}
+		},
+		"nodeCountMax": {
+			"type": "int",
+			"defaultValue": 1,
+			"minValue": 1,
+			"maxValue": 100,
+			"metadata": {
+				"description": "The maximum number of nodes for the cluster when autoscale is used."
+			}
+		},
+		"nodeVmSize": {
+			"type": "string",
+			"defaultValue": "Standard_DS2_v2",
+			"metadata": {
+				"description": "The size of the Virtual Machine."
+			}
+		},
+		"osType": {
+			"type": "string",
+			"defaultValue": "Linux",
+			"allowedValues": [
+				"Linux"
+			],
+			"metadata": {
+				"description": "The type of node operating system."
+			}
+		},
+		"osDiskSizeGB": {
+			"type": "int",
+			"defaultValue": 0,
+			"minValue": 0,
+			"maxValue": 1023,
+			"metadata": {
+				"description": "Disk size (in GB) to provision for each of the agent pool nodes. This value ranges from 0 to 1023. Specifying 0 will apply the default disk size for that nodeVmSize."
+			}
+		}
+	},
+	"variables": {
+		"nodeCount": "[if(and(equals(parameters('nodePoolMode'), 'System'), equals(parameters('nodeCount'), 0)), 1, parameters('nodeCount'))]",
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+		"apiVersionAks": "2021-03-01"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.ContainerService/managedClusters/agentPools",
+			"apiVersion": "[variables('apiVersionAks')]",
+			"name": "[concat(parameters('clusterName'), '/', parameters('nodePoolName'))]",
+			"location": "[parameters('location')]",
+			"tags": "[variables('resourceTags')]",
+			"properties": {
+				"mode": "[parameters('nodePoolMode')]",
+				"vmSize": "[parameters('nodeVmSize')]",
+				"count": "[variables('nodeCount')]",
+				"enableAutoScaling": "[parameters('enableNodeAutoscale')]",
+				"minCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMin'), json('null'))]",
+				"maxCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMax'), json('null'))]",
+				"osType": "[parameters('osType')]",
+				"storageProfile": "ManagedDisks",
+				"osDiskSizeGB": "[parameters('osDiskSizeGB')]"
+			}
+		}
+	]
+}

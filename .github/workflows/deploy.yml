@@ -5,8 +5,10 @@ on:
     types: [labeled]
 
 env:
-  AZURE_RESOURCE_GROUP: 'always-on-3'
+  AZURE_RESOURCE_GROUP: 'always-on-5'
   AZURE_LOCATION: '"East US"'
+  UAMI_NAME: 'pz-ao-uami'
+  NETWORK_CONTRIB_ROLE_ID: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   NSG_NAME: 'ao-eus'
   NSG_IN_SRC: '75.68.47.183'
   DDOS_PLAN_NAME: 'ao-ddos'
@@ -26,12 +28,16 @@ env:
   EVENT_HUB_CAPACITY: '2'
   COSMOS_DB_ACCT_NAME: 'ao-cdb-pz'
   COSMOS_DB_LOCATIONS: 'eastus:true,westus:false'
-  COSMOS_DB_DATABASE_NAME: 'db3'
+  COSMOS_DB_DATABASE_NAME: 'db1'
   COSMOS_DB_DATABASE_THROUGHPUT: '1000'
   COSMOS_DB_CONTAINER_NAME: 'c1'
   COSMOS_DB_CONTAINER_THROUGHPUT: '400'
-  COSMOS_DB_PARTITION_KEY: "/id"
-  COSMOS_DB_INCLUDED_INDEX: "/foo/?,/bar/?"
+  COSMOS_DB_PARTITION_KEY: '/id'
+  COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
+  AKS_CLUSTER_NAME: 'ao-aks-eus'
+  AKS_DNS_PREFIX: 'aoakseus'
+  AKS_NODE_COUNT: '1'
+  AKS_NODE_SIZE: 'Standard_DS2_v2'
 
 jobs:
   deploy-azure-resources:
@@ -52,6 +58,26 @@ jobs:
         if: success()
         run: |
           az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
+
+      - name: Deploy User-Assigned MI
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/identity.user-assigned-mi.json
+          parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
+
+      - name: Get UAMI Resource ID
+        if: success()
+        run: echo "UAMI_RESOURCE_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Get UAMI Principal ID
+        if: success()
+        run: echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+
+      #- name: Echo UAMI Resource ID
+      #  if: success()
+      #  run: echo ${{env.UAMI_RESOURCE_ID}}
 
       - name: Deploy NSG
         if: success()
@@ -96,6 +122,31 @@ jobs:
           parameters: |
             ./templates/net.vnet.subnet.parameters.json vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME}}
 
+      - name: Get VNet Resource ID
+        if: success()
+        run: echo "VNET_RESOURCE_ID=$(az network vnet show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.VNET_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Get Subnet Resource ID
+        if: success()
+        run: echo "SUBNET_RESOURCE_ID=$(az network vnet subnet show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --vnet-name ${{env.VNET_NAME}} -n ${{env.SUBNET_NAME_APP}} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Grant UAMI Network Contributor on VNet for kubenet config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: |
+            roleDefinitionId="${{env.NETWORK_CONTRIB_ROLE_ID}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
+
+      - name: Deploy Log Analytics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/monitor.log-analytics-workspace.json
+          parameters: location=${{env.AZURE_LOCATION}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+
       - name: Deploy Key Vault
         if: success()
         uses: azure/arm-deploy@v1
@@ -111,14 +162,6 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/container-registry.json
           parameters: location=${{env.AZURE_LOCATION}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.REGISTRY_REPLICATIONS}} zoneRedundancy=Enabled
-
-      - name: Deploy Log Analytics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/monitor.log-analytics-workspace.json
-          parameters: location=${{env.AZURE_LOCATION}} workspaceName=${{env.LA_WORKSPACE_NAME}}
 
       - name: Deploy App Insights for Back End API
         if: success()
@@ -167,6 +210,22 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/cosmos-db.sql.container.json
           parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
+
+      - name: Deploy AKS Cluster
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/aks.cluster.json
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
+
+      #- name: Deploy AKS Node Pool
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/aks.node-pool.json
+      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
 
       - name: Azure logout
         run: |
