@@ -132,7 +132,7 @@
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
-		"apiVersionAks": "2021-02-01"
+		"apiVersionAks": "2020-09-01"
 	},
 	"resources": [
 		{
