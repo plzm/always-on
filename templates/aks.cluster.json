@@ -149,7 +149,7 @@
 					if
 					(
 						equals(toLower(parameters('managedIdentityType')), 'userassigned'),
-						json(parameters('identityResourceId')),
+						parameters('identityResourceId'),
 						json('null')
 					)
 				]"
