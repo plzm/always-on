@@ -37,7 +37,7 @@
 				"None"
 			]
 		},
-		"userAssignedIdentityResourceId": {
+		"identityResourceId": {
 			"type": "string",
 			"defaultValue": "",
 			"metadata": {
@@ -91,6 +91,10 @@
 			"metadata": {
 				"description": "The type of node operating system."
 			}
+		},
+		"vnetSubnetResourceId": {
+			"type": "string",
+			"defaultValue": ""
 		}
 	},
 	"variables": {
@@ -117,7 +121,8 @@
 						"vmSize": "[parameters('nodeVmSize')]",
 						"osType": "[parameters('osType')]",
 						"storageProfile": "ManagedDisks",
-						"mode": "System"
+						"mode": "System",
+						"vnetSubnetID": "[parameters('vnetSubnetResourceId')]"
 					}
 				],
 				"linuxProfile": {
@@ -129,6 +134,13 @@
 							}
 						]
 					}
+				},
+				"networkProfile": {
+					"networkPlugin": "kubenet",
+					"serviceCidr": "10.1.0.0/16",
+					"dnsServiceIP": "10.1.0.10",
+					"podCidr": "10.241.0.0/16",
+					"dockerBridgeCidr": "172.17.0.1/16"
 				}
 			},
 			"identity": {
@@ -137,7 +149,7 @@
 					if
 					(
 						equals(toLower(parameters('managedIdentityType')), 'userassigned'),
-						json(parameters('userAssignedIdentityResourceId')),
+						json(parameters('identityResourceId')),
 						json('null')
 					)
 				]"
