@@ -221,7 +221,8 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/aks.cluster.json
-          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=SystemAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} identityClientId="${{env.UAMI_CLIENT_ID}}" identityPrincipalId="${{env.UAMI_PRINCIPAL_ID}}" dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=SystemAssigned dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
+          #parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=SystemAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} identityClientId="${{env.UAMI_CLIENT_ID}}" identityPrincipalId="${{env.UAMI_PRINCIPAL_ID}}" dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
 
       #- name: Deploy AKS Node Pool
       #  if: success()
