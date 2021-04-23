@@ -173,10 +173,6 @@
 					"podCidr": "10.241.0.0/16",
 					"dockerBridgeCidr": "172.17.0.1/16"
 				},
-				"servicePrincipalProfile": {
-					"clientId": "msi",
-					"secret": ""
-				},
 				"identity": {
 					"type": "[parameters('managedIdentityType')]",
 					"userAssignedIdentities": "[variables('userAssignedIdentities')]"
