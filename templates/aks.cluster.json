@@ -30,7 +30,7 @@
 		},
 		"managedIdentityType": {
 			"type": "string",
-			"defaultValue": "SystemAssigned",
+			"defaultValue": "None",
 			"allowedValues": [
 				"SystemAssigned",
 				"UserAssigned",
@@ -38,6 +38,22 @@
 			]
 		},
 		"identityResourceId": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "User-Assigned Identity Resource ID",
+				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
+			}
+		},
+		"identityClientId": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "User-Assigned Identity Resource ID",
+				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
+			}
+		},
+		"identityPrincipalId": {
 			"type": "string",
 			"defaultValue": "",
 			"metadata": {
@@ -106,6 +122,21 @@
 		}
 	},
 	"variables": {
+		"userAssignedIdentities": "[
+			if
+			(
+				equals(toLower(parameters('managedIdentityType')), 'userassigned'),
+				createObject
+				(
+					parameters('identityResourceId'),
+					createObject(
+						'clientId', parameters('identityClientId'),
+						'principalId', parameters('identityPrincipalId')
+					)
+				),
+				json('null')
+			)
+		]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -153,6 +184,10 @@
 					"dnsServiceIP": "10.1.0.10",
 					"podCidr": "10.241.0.0/16",
 					"dockerBridgeCidr": "172.17.0.1/16"
+				},
+				"identity": {
+					"type": "[parameters('managedIdentityType')]",
+					"userAssignedIdentities": "[variables('userAssignedIdentities')]"
 				}
 			}
 		}
