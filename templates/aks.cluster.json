@@ -45,22 +45,6 @@
 				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
 			}
 		},
-		"identityClientId": {
-			"type": "string",
-			"defaultValue": "",
-			"metadata": {
-				"displayName": "User-Assigned Identity Resource ID",
-				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
-			}
-		},
-		"identityPrincipalId": {
-			"type": "string",
-			"defaultValue": "",
-			"metadata": {
-				"displayName": "User-Assigned Identity Resource ID",
-				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
-			}
-		},
 		"osDiskSizeGB": {
 			"type": "int",
 			"defaultValue": 0,
@@ -111,6 +95,30 @@
 		"vnetSubnetResourceId": {
 			"type": "string",
 			"defaultValue": ""
+		},
+		"networkPlugin": {	
+			"type": "string",
+			"defaultValue": "kubenet",
+			"allowedValues": [
+				"azure",
+				"kubenet"
+			]
+		},
+		"serviceCidr": {
+			"type": "string",
+			"defaultValue": "10.1.0.0/16"
+		},
+		"dnsServiceIP": {
+			"type": "string",
+			"defaultValue": "10.1.0.10"
+		},
+		"podCidr": {
+			"type": "string",
+			"defaultValue": "10.241.0.0/16"
+		},
+		"dockerBridgeCidr": {
+			"type": "string",
+			"defaultValue": "172.17.0.1/16"
 		}
 	},
 	"variables": {
@@ -121,10 +129,7 @@
 				createObject
 				(
 					parameters('identityResourceId'),
-					createObject(
-						'clientId', parameters('identityClientId'),
-						'principalId', parameters('identityPrincipalId')
-					)
+					createObject()
 				),
 				json('null')
 			)
@@ -132,7 +137,7 @@
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
-		"apiVersionAks": "2020-09-01"
+		"apiVersionAks": "2021-03-01"
 	},
 	"resources": [
 		{
@@ -141,6 +146,10 @@
 			"name": "[parameters('clusterName')]",
 			"location": "[parameters('location')]",
 			"tags": "[variables('resourceTags')]",
+			"identity": {
+				"type": "[parameters('managedIdentityType')]",
+				"userAssignedIdentities": "[variables('userAssignedIdentities')]"
+			},
 			"properties": {
 				"kubernetesVersion": "[parameters('k8sversion')]",
 				"dnsPrefix": "[parameters('dnsPrefix')]",
@@ -153,7 +162,7 @@
 						"osType": "[parameters('osType')]",
 						"storageProfile": "ManagedDisks",
 						"mode": "System",
-						"vnetSubnetID": "[parameters('vnetSubnetResourceId')]"
+						"vnetSubnetID": "[if(empty(parameters('vnetSubnetResourceId')), json('null'),  parameters('vnetSubnetResourceId'))]"
 					}
 				],
 				"linuxProfile": {
@@ -167,17 +176,15 @@
 					}
 				},
 				"networkProfile": {
-					"networkPlugin": "kubenet",
-					"serviceCidr": "10.1.0.0/16",
-					"dnsServiceIP": "10.1.0.10",
-					"podCidr": "10.241.0.0/16",
-					"dockerBridgeCidr": "172.17.0.1/16"
+					"networkPlugin": "[parameters('networkPlugin')]",
+					"serviceCidr": "[if(empty(parameters('serviceCidr')), json('null'), parameters('serviceCidr'))]",
+					"dnsServiceIP": "[if(empty(parameters('dnsServiceIP')), json('null'), parameters('dnsServiceIP'))]",
+					"podCidr": "[if(empty(parameters('podCidr')), json('null'), parameters('podCidr'))]",
+					"dockerBridgeCidr": "[if(empty(parameters('dockerBridgeCidr')), json('null'), parameters('dockerBridgeCidr'))]"
 				},
-				"identity": {
-					"type": "[parameters('managedIdentityType')]",
-					"userAssignedIdentities": "[variables('userAssignedIdentities')]"
-				},
-				"servicePrincipalProfile": {}
+				"servicePrincipalProfile": {
+					"clientId": "msi"
+				}
 			}
 		}
 	],
