@@ -176,7 +176,8 @@
 				"identity": {
 					"type": "[parameters('managedIdentityType')]",
 					"userAssignedIdentities": "[variables('userAssignedIdentities')]"
-				}
+				},
+				"servicePrincipalProfile": {}
 			}
 		}
 	],
