@@ -71,9 +71,9 @@ jobs:
       #  if: success()
       #  run: echo "UAMI_RESOURCE_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Get UAMI Principal ID
-        if: success()
-        run: echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+      #- name: Get UAMI Principal ID
+      #  if: success()
+      #  run: echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
       #- name: Echo UAMI Resource ID
       #  if: success()
@@ -104,18 +104,14 @@ jobs:
       #    parameters: |
       #      ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
-      #- name: Get VNet Resource ID
+      #- name: Grant UAMI Network Contributor on VNet for kubenet config
       #  if: success()
-      #  run: echo "VNET_RESOURCE_ID=$(az network vnet show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.VNET_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-
-      - name: Grant UAMI Network Contributor on VNet for kubenet config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: |
-            roleDefinitionId="${{env.NETWORK_CONTRIB_ROLE_ID}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: |
+      #      roleDefinitionId="${{env.NETWORK_CONTRIB_ROLE_ID}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
 
     #- name: Deploy AppGW Subnet
       #  if: success()
