@@ -95,6 +95,14 @@
 		"vnetSubnetResourceId": {
 			"type": "string",
 			"defaultValue": ""
+		},
+		"spClientId": {
+			"type": "securestring",
+			"defaultValue": ""
+		},
+		"spClientSecret": {
+			"type": "securestring",
+			"defaultValue": ""
 		}
 	},
 	"variables": {
@@ -135,6 +143,10 @@
 						]
 					}
 				},
+                "servicePrincipalProfile": {
+                    "clientId": "[parameters('spClientId')]",
+                    "secret": "[parameters('spClientSecret')]"
+                },
 				"networkProfile": {
 					"networkPlugin": "kubenet",
 					"serviceCidr": "10.1.0.0/16",
