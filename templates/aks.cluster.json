@@ -142,17 +142,6 @@
 					"podCidr": "10.241.0.0/16",
 					"dockerBridgeCidr": "172.17.0.1/16"
 				}
-			},
-			"identity": {
-				"type": "[parameters('managedIdentityType')]",
-				"userAssignedIdentities": "[
-					if
-					(
-						equals(toLower(parameters('managedIdentityType')), 'userassigned'),
-						parameters('identityResourceId'),
-						json('null')
-					)
-				]"
 			}
 		}
 	],
