@@ -174,7 +174,8 @@
 					"dockerBridgeCidr": "172.17.0.1/16"
 				},
 				"servicePrincipalProfile": {
-					"clientId": "msi"
+					"clientId": "msi",
+					"secret": ""
 				},
 				"identity": {
 					"type": "[parameters('managedIdentityType')]",
