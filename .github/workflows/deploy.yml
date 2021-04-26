@@ -6,7 +6,7 @@ on:
 
 env:
   AZURE_RESOURCE_GROUP: 'always-on-6'
-  AZURE_LOCATION: '"East US"'
+  AZURE_LOCATION: 'eastus'
   UAMI_NAME: 'pz-ao-uami'
   NETWORK_CONTRIB_ROLE_ID: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   NSG_NAME: 'ao-eus'
