@@ -46,7 +46,7 @@
 		},
 		"enableSoftDelete": {
 			"type": "bool",
-			"defaultValue": false
+			"defaultValue": true
 		},
 		"softDeleteRetentionInDays": {
 			"type": "int",
