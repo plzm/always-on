@@ -5,7 +5,7 @@ on:
     types: [labeled]
 
 env:
-  AZURE_RESOURCE_GROUP: 'always-on-5'
+  AZURE_RESOURCE_GROUP: 'always-on-6'
   AZURE_LOCATION: '"East US"'
   UAMI_NAME: 'pz-ao-uami'
   NETWORK_CONTRIB_ROLE_ID: '4d97b98b-1d4f-4787-a291-c67834d212e7'
@@ -42,9 +42,7 @@ env:
 jobs:
   deploy-azure-resources:
     runs-on: ubuntu-latest
-
     if: contains(github.event.pull_request.labels.*.name, 'deploy')
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -87,13 +85,13 @@ jobs:
           template: ./templates/net.nsg.json
           parameters: ./templates/net.nsg.parameters.json location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
-      - name: Deploy DDoS Plan
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.ddos-plan.json
-          parameters: ./templates/net.ddos-plan.parameters.json location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      #- name: Deploy DDoS Plan
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/net.ddos-plan.json
+      #    parameters: ./templates/net.ddos-plan.parameters.json location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Deploy VNet
         if: success()
@@ -102,7 +100,7 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.json
           parameters: |
-            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=false ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Deploy AppGW Subnet
         if: success()
@@ -211,13 +209,13 @@ jobs:
           template: ./templates/cosmos-db.sql.container.json
           parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
-      - name: Deploy AKS Cluster
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/aks.cluster.json
-          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
+      #- name: Deploy AKS Cluster
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/aks.cluster.json
+      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
 
       #- name: Deploy AKS Node Pool
       #  if: success()
