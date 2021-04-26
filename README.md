@@ -60,83 +60,83 @@ The diagrams below provide an end-to-end composition of the target architecture,
 #### LEVEL 1 - SINGLE REGION DEPLOYMENT
 
 1. Templatise foundational resources (AKS, Event Hub, CosmosDB)  and deploy a single regional infrastructure stamp.
-   1. Tasks 1.a, 1.c
+   1. Tasks 1.i, 1.iii
 2. Create a containerised sample workload using .Net Core or a suitably justified alternative, storing code artefacts . The workload must suitably consider the walkthrough denoted above.
-   1. Tasks 5.a-e
+   1. Tasks 5.i-v
 3. Optimise Cosmos access to ensure basic performance targets can be satisfied.
-   1. Task 1.b
+   1. Task 1.ii
 4. Configure the AKS cluster for secure scale and deploy application containers via private repos
-   1. Tasks 1.c, 6.a-b
+   1. Tasks 1.iii, 6.i-ii
 
 #### LEVEL 2 - OPERATIONALISATION
 
 1. Define CI/CD automation pipelines for both the application components and underlying Azure resources (IaC) using Azure DevOps. (Note, I am using Github Actions - GHA.)
-   1. Tasks 3.a-c, 4.a-c, 6.a-b
+   1. Tasks 3.i-iii, 4.i-iii, 6.i-ii
 2. Operationalisation of application components through robust logging and the integration of all Azure resources with native tooling, such as Log Analytics and Application insights (and container insights).
-   1. Tasks 7.a-c
+   1. Tasks 7.i-iii
 3. Define and surface a health model for the entire application, applying a 'traffic light' system to represent when the system is healthy
-   1. Tasks 8.a-c
+   1. Tasks 8.i-iii
 4. Harden the security of the system and demonstrate its resilience to typical security risks, particularly DDoS vulnerabilities.
-   1. Tasks 9.a-b
+   1. Tasks 9.i-ii
 
 #### LEVEL 3 - MULTI-REGION EXPANSION
 
 1. Revise deployment pipelines to deploy at least two additional regional stamps in an active-active fashion
-   1. Tasks 1.a-c
+   1. Tasks 1.i-iii
 2. Define an appropriate data consistency model based on scenario requirements, with multiple masters configured
-   1. Task 1.b
+   1. Task 1.ii
 3. Identify and demonstrate critical failure scenarios throughout the entire application stack
-   1. Tasks 10.a-c
+   1. Tasks 10.i-iii
 4. Runbook automation for the orchestration of failover scenarios
-   1. Task 10.d
+   1. Task 10.iv
 
 #### LEVEL 4 - SHOW AND TELL
 
 1. Demonstrate the application meets the performance and availability targets through extensive performance testing and sustained load testing during error and attack scenarios, including DDoS attacks (e.g. BreakingPoint Cloud) and failed AKS nodes.
-   1. Tasks 11.a-c
+   1. Tasks 11.i-iii
 
 ## TASKS
 
 1. Infra automation
-  a. Templatize each resource type.
-  b. Global: one resource, configured for n Azure regions.
-  c. Regional: one resource per Azure region.
+   1. Templatize each resource type.
+   2. Global: one resource, configured for n Azure regions.
+   3. Regional: one resource per Azure region.
 2. Workflow
-  a. Chart resource deployments: sequence, dependencies
+   1. Chart resource deployments: sequence, dependencies
 3. CD Pipeline for Global Resources
-  a. Determine trigger(s).
-  b. For each resource, pass all Azure regions to template; configure within template
-  c. Create/test GHA workflow. Outcome: successful deploy of global resources.
+   1. Determine trigger(s).
+   2. For each resource, pass all Azure regions to template; configure within template
+   3. Create/test GHA workflow. Outcome: successful deploy of global resources.
 4. CD Pipeline(s) for Regional Resources
-  a. Determine trigger(s).
-  b. Determine how to deploy region n. GHA does not support iteration in workflow, so cannot set e.g. an array of regions. For now, each push = one region, as set in AZURE_REGION (or similar) env var?
-  c. Create/test GHA workflows. Outcome: successful deploy of >1 Azure regions in succession.
+   1. Determine trigger(s).
+   2. Determine how to deploy region n. GHA does not support iteration in workflow, so cannot set e.g. an array of regions. For now, each push = one region, as set in AZURE_REGION (or similar) env var?
+   3. Create/test GHA workflows. Outcome: successful deploy of >1 Azure regions in succession.
 5. APIs
-  a. Create Front End (FE) and Back End (BE) APIs.
-  b. FE API: Point reads from Cosmos DB. Writes to Event Hub.
-  c. BE API: Read from Event Hub. Upsert to Cosmos DB.
-  d. Consider two versions: 1. Minimal, with direct knowledge of CDB/EH. 2. Dapr-ified, so APIs do not need "direct knowledge". Potential for performance comparisons.
-  e. Add container support / Dockerfiles.
+   1. Create Front End (FE) and Back End (BE) APIs.
+   2. FE API: Point reads from Cosmos DB. Writes to Event Hub.
+   3. BE API: Read from Event Hub. Upsert to Cosmos DB.
+   4. Consider two versions: 1. Minimal, with direct knowledge of CDB/EH. 2. Dapr-ified, so APIs do not need "direct knowledge". Potential for performance comparisons.
+   5. Add container support / Dockerfiles.
 6. CI/CD Pipelines for APIs
-  a. CI on push. Build, test, Dockerize, push image to non-prod registry?
-  b. CD on merge to main. Build, test, Dockerize, push image to prod registry, run AKS deploy for updated API.
+   1. CI on push. Build, test, Dockerize, push image to non-prod registry?
+   2. CD on merge to main. Build, test, Dockerize, push image to prod registry, run AKS deploy for updated API.
 7. Observability
-  a. Configure resources to log to Log Analytics. Integrate into infra CD pipelines.
-  b. Configure AKS for Container Insights. Integrate into infra CD pipelines.
-  c. Configure APIs to log to App Insights.
+   1. Configure resources to log to Log Analytics. Integrate into infra CD pipelines.
+   2. Configure AKS for Container Insights. Integrate into infra CD pipelines.
+   3. Configure APIs to log to App Insights.
 8. Health Model
-  a. Define metrics/alerts that constitute an aggregate health snapshot ("traffic light model")
-  b. Determine how to surface/visualize this - an Azure Dashboard? Or third-party tooling (Grafana, Datadog, etc.)?
-  c. Surface and test.
+   1. Define metrics/alerts that constitute an aggregate health snapshot ("traffic light model")
+   2. Determine how to surface/visualize this - an Azure Dashboard? Or third-party tooling (Grafana, Datadog, etc.)?
+   3. Surface and test.
 9. Security
-  a. List security risks and controls/mitigations.
-  b. Implement top mitigations. E.g. DDoS protection; network access restrictions; private networking; etc.
+   1. List security risks and controls/mitigations.
+   2. Implement top mitigations. E.g. DDoS protection; network access restrictions; private networking; etc.
 10. Continuity
-  a. List possible failure scenarios.
-  b. Demonstrate failure scenarios. Consider Chaos Studio?
-  c. List failure mitigations.
-  d. Automate failover actions/steps with Runbook as applicable.
+    1. List possible failure scenarios.
+    2. Demonstrate failure scenarios. Consider Chaos Studio?
+    3. List failure mitigations.
+    4. Automate failover actions/steps with Runbook as applicable.
 11. Testing
-  a. Implement distributed load test for DDoS and general perf evaluation.
-  b. Implement perf test to gauge max throughput.
-  c. Implement BreakingPoint DDoS test.
+    1. Implement distributed load test for DDoS and general perf evaluation.
+    2. Implement perf test to gauge max throughput.
+    3. Implement BreakingPoint DDoS test.
