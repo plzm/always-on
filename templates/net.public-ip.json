@@ -1,0 +1,97 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"location": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "See https://azure.microsoft.com/regions/."
+			}
+		},
+		"availabilityZones": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Azure availability zone(s) (AZs)",
+				"description": "Optional. One or more AZs, comma-delimited. Example: 1,2,3. If not provided, a non-zonal PIP will be deployed. See https://azure.microsoft.com/regions/ for which regions support AZs."
+			}
+		},
+		"publicIpName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Public IP Address Name",
+				"description": "Public IP Address Name"
+			}
+		},
+		"publicIpType": {
+			"type": "string",
+			"defaultValue": "Dynamic",
+			"allowedValues": [
+				"Dynamic",
+				"Static"
+			],
+			"metadata": {
+				"displayName": "Public IP address type",
+				"description": "The public IP address type: Static or Dynamic."
+			}
+		},
+		"publicIpSku": {
+			"type": "string",
+			"defaultValue": "Basic",
+			"allowedValues": [
+				"Basic",
+				"Standard"
+			],
+			"metadata": {
+				"displayName": "Public IP address SKU",
+				"description": "See https://docs.microsoft.com/azure/virtual-network/virtual-network-ip-addresses-overview-arm"
+			}
+		},
+		"domainNameLabel": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Public IP address Domain Name Label",
+				"description": "The domain name label. The concatenation of the domain name label and the regionalized DNS zone make up the fully qualified domain name associated with the public IP address. If a domain name label is specified, an A DNS record is created for the public IP in the Microsoft Azure DNS system."
+			}
+		}
+	},
+	"variables": {
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+		"apiVersionNetwork": "2020-11-01"
+	},
+	"resources": [
+		{
+			"name": "[parameters('publicIpName')]",
+			"type": "Microsoft.Network/publicIpAddresses",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"location": "[parameters('location')]",
+			"tags": "[variables('resourceTags')]",
+			"properties": {
+				"publicIpAllocationMethod": "[parameters('publicIpType')]",
+				"dnsSettings": {
+					"domainNameLabel": "[toLower(parameters('domainNameLabel'))]"
+				}
+			},
+			"sku": {
+				"name": "[parameters('publicIpSku')]"
+			},
+			"zones": "[
+				if
+				(
+					empty(parameters('availabilityZones')),
+					json('[]'),
+					split(parameters('availabilityZones'), ',')
+				)
+			]"
+		}
+	]
+}

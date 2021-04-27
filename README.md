@@ -140,3 +140,59 @@ The diagrams below provide an end-to-end composition of the target architecture,
     1. Implement distributed load test for DDoS and general perf evaluation.
     2. Implement perf test to gauge max throughput.
     3. Implement BreakingPoint DDoS test.
+
+## STEPS
+
+### 1. Prepare Secrets
+
+Save the following secrets to the repo(s).
+
+- ADMIN_USERNAME (used for AKS Nodes)
+- AZURE_CREDENTIALS (used for workflow auth, see below)
+- AZURE_SUBSCRIPTION_ID (used for various steps)
+- AZURE_TENANT_ID (used for various steps)
+- SSH_KEY (in form ssh-rsa [key]== username; used for AKS Nodes)
+
+#### AZURE_CREDENTIALS
+
+Use these commands to create a SP and prep the JSON block:
+subscriptionId="$(az account show -o tsv --query 'id')" # This assumes your default sub is the one to use
+spName="pz-always-on-deploy"
+az ad sp create-for-rbac --name "$spName" --role contributor --scopes "/subscriptions/""$subscriptionId" --sdk-auth
+
+Copy the az ad sp create command output (or use az ad sp show later with --id {clientId}) and paste the whole JSON block into the secret. Example:
+
+``` JSON
+{
+  "displayName": "{SP name}",
+  "name": "http://{SP name}",
+  "clientId": "{guid}",
+  "clientSecret": "{guid}",
+  "subscriptionId": "{guid}",
+  "tenantId": "{guid}"
+}
+```
+
+This SP should have Owner RBAC on the deployment RG so that role assignments (e.g. AKS cluster UAMI ---> VNet Network Contributor for kubenet config) will succeed.
+
+Powershell alternative:
+
+``` Powershell
+$servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscriptions/$subscriptionId" -DisplayName $spName
+
+[ordered]@{
+  clientId = $servicePrincipal.ApplicationId
+  displayName = $servicePrincipal.DisplayName
+  name = $servicePrincipal.ServicePrincipalNames[1]
+  clientSecret = [System.Net.NetworkCredential]::new("", $servicePrincipal.Secret).Password
+  tenantId = (Get-AzContext).Tenant.Id
+  subscriptionId = (Get-AzContext).Subscription.Id
+} | ConvertTo-Json
+```
+
+### 2. Tooling
+
+- VS Code with usual extensions for Azure deploy (ARM Tools etc.)
+- Azure CLI
+- kubectl - pre-installed in Cloud Shell, or install locally (WSL2) with `az aks install-cli` (may need to sudo)
+

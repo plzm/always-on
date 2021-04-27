@@ -39,6 +39,7 @@ env:
   AKS_DNS_PREFIX: 'aoakseus'
   AKS_NODE_COUNT: '1'
   AKS_NODE_SIZE: 'Standard_DS2_v2'
+  APPGW_PUBLIC_IP_NAME: 'ao-appgw-pip-eus'
 
 jobs:
   deploy-azure-resources:
@@ -84,7 +85,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.nsg.json
-      #    parameters: ./templates/net.nsg.parameters.json location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+      #    parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
       #- name: Deploy DDoS Plan
       #  if: success()
@@ -92,7 +93,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.ddos-plan.json
-      #    parameters: ./templates/net.ddos-plan.parameters.json location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      #    parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       #- name: Deploy VNet
       #  if: success()
@@ -101,7 +102,7 @@ jobs:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.vnet.json
       #    parameters: |
-      #      ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=${{env.VNET_ENABLE_DDOS}} ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      #      location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=${{env.VNET_ENABLE_DDOS}} ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       #- name: Deploy AppGW Subnet
       #  if: success()
@@ -109,8 +110,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.vnet.subnet.json
-      #    parameters: |
-      #      ./templates/net.vnet.subnet.parameters.json vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
+      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
 
       #- name: Deploy App Subnet
       #  if: success()
@@ -118,8 +118,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.vnet.subnet.json
-      #    parameters: |
-      #      ./templates/net.vnet.subnet.parameters.json vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME}}
+      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME}}
 
       - name: Get VNet Resource ID
         if: success()
@@ -152,7 +151,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/key-vault.json
-      #    parameters: ./templates/key-vault.parameters.json location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
+      #    parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
 
       #- name: Deploy Container Registry
       #  if: success()
@@ -210,13 +209,13 @@ jobs:
       #    template: ./templates/cosmos-db.sql.container.json
       #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
-      - name: Deploy AKS Cluster
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/aks.cluster.json
-          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
+      #- name: Deploy AKS Cluster
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/aks.cluster.json
+      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
 
       #- name: Deploy AKS Node Pool
       #  if: success()
@@ -225,6 +224,14 @@ jobs:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/aks.node-pool.json
       #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
+
+      - name: Deploy Public IP for App GW
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.public-ip.json
+          parameters: location=${{env.AZURE_LOCATION}} availabilityZones="1,2,3" publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APPGW_PUBLIC_IP_NAME}}
 
       - name: Azure logout
         run: |

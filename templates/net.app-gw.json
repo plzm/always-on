@@ -1,0 +1,203 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+		"location": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "See https://azure.microsoft.com/regions/."
+			}
+		},
+		"appGatewayName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"skuName": {
+			"type": "string",
+			"defaultValue": "WAF_v2",
+			"allowedValues": [
+				"WAF_v2",
+				"Standard_v2"
+			]
+		},
+        "vnetResourceGroup": {
+            "type": "string",
+			"defaultValue": ""
+        },
+        "vnetName": {
+            "type": "string",
+			"defaultValue": ""
+        },
+        "subnetName": {
+            "type": "string",
+			"defaultValue": ""
+        },
+		"publicIpResourceGroup": {
+            "type": "string",
+			"defaultValue": ""
+		},
+		"publicIpName": {
+            "type": "string",
+			"defaultValue": ""
+		},
+		"frontEndIpName": {
+			"type": "string",
+			"defaultValue": "appGatewayFrontEndIp"
+		},
+		"frontEndIpPrivateAllocationMethod": {
+			"type": "string",
+			"defaultValue": "Dynamic",
+			"allowedValues": [
+				"Dynamic",
+				"Static"
+			],
+			"metadata": {
+				"displayName": "Public IP address type",
+				"description": "The public IP address type: Static or Dynamic."
+			}
+		},
+		"frontEndPortName": {
+			"type": "string",
+			"defaultValue": "appGatewayFrontEndPort"
+		},
+		"backEndPoolName": {
+			"type": "string",
+			"defaultValue": "appGatewayBackEndPool"
+		},
+		"backendHttpSettingsCollectionName": {
+			"type": "string",
+			"defaultValue": "appGatewayBackEndHttpSettings"
+		},
+		"httpListenerName": {
+			"type": "string",
+			"defaultValue": "appGatewayHttpListener"
+		}
+
+	},
+	"variables": {
+        "vnetId": "[resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
+        "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+		"apiVersionNetwork": "2020-11-01"
+	},
+    "resources": [
+        {
+			"name": "[parameters('appGatewayName')]",
+            "type": "Microsoft.Network/applicationGateways",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"location": "[parameters('location')]",
+			"tags": "[variables('resourceTags')]",
+            "properties": {
+                "sku": {
+                    "name": "[parameters('skuName')]",
+                    "tier": "[parameters('skuName')]",
+                    "capacity": 2
+                },
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "[parameters('frontEndIpName')]",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('subnetId')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "[parameters('frontEndIpName')]",
+                        "properties": {
+                            "privateIPAllocationMethod": "[parameters('frontEndIpPrivateAllocationMethod')]",
+                            "publicIPAddress": {
+                                "id": "[variables('publicIpId')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "[parameters('frontEndPortName')]",
+                        "properties": {
+                            "port": 80
+                        }
+                    }
+                ],
+                "sslCertificates": [],
+                "trustedRootCertificates": [],
+                "trustedClientCertificates": [],
+                "sslProfiles": [],
+                "backendAddressPools": [
+                    {
+                        "name": "[parameters('backEndPoolName')]",
+                        "properties": {
+                            "backendAddresses": []
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "[parameters('backendHttpSettingsCollectionName')]",
+                        "properties": {
+                            "port": 80,
+                            "protocol": "Http",
+                            "cookieBasedAffinity": "Disabled",
+                            "connectionDraining": {
+                                "enabled": false,
+                                "drainTimeoutInSec": 1
+                            },
+                            "pickHostNameFromBackendAddress": false,
+                            "requestTimeout": 30
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "[parameters('httpListenerName')]",
+                        "properties": {
+                            "frontendIPConfiguration": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/frontendIPConfigurations/', parameters('frontEndIpName'))]"
+                            },
+                            "frontendPort": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/frontendPorts/', parameters('frontEndPortName'))]"
+                            },
+                            "protocol": "Http",
+                            "hostNames": [],
+                            "requireServerNameIndication": false
+                        }
+                    }
+                ],
+                "urlPathMaps": [],
+                "requestRoutingRules": [
+                    {
+                        "name": "rule1",
+                        "properties": {
+                            "ruleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/httpListeners/', parameters('httpListenerName'))]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/backendAddressPools/', parameters('backEndPoolName'))]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/backendHttpSettingsCollection/', parameters('backendHttpSettingsCollectionName'))]"
+                            }
+                        }
+                    }
+                ],
+                "probes": [],
+                "rewriteRuleSets": [],
+                "redirectConfigurations": [],
+                "privateLinkConfigurations": []
+            }
+        }
+    ]
+}

@@ -15,8 +15,12 @@ nodeAdminUsername="pelazem"
 sshRSAPublicKey="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAg+4FzJlW5nqUa798vqYGanooy5HvSyG8sS6KjPu0sJAf+fkP6qpHY8k1m2/Z9Mahv2Y0moZDiVRHFMGH8qZU+AlYdvjGyjxHcIzDnsmHcV2ONxEiop4KMJLwecHUyf95ogicB1QYfK/6Q8pL9sDlXt8bAcSh6iP0u2d1g9QJaON2aniOpzn68xnKdGT974i7JQLN0SjaPiidZ2prc0cSIMBN26tGV7at2Jh5FIb1Jv8fXHnZebD/vgLilfCqLbuQjTpDVCskZ+OUAyvlBko3gBjRgd/jBprMqCpFLoGUBVkSSR0IkjTj2A6n2XyCyYRMFYrVrjwyU8I+IvO/6zJSEw== pelazem"
 
 vnetName="ao-eus"
-subnetName="App"
-vnetSubnetResourceId="$(az network vnet subnet show --subscription ""$subscriptionId"" -g ""$resourceGroup"" --vnet-name ""$vnetName"" -n ""$subnetName"" -o tsv --query 'id')"
+subnetNameApp="App"
+subnetNameAppGw="AppGw"
+subnetAppResourceId="$(az network vnet subnet show --subscription ""$subscriptionId"" -g ""$resourceGroup"" --vnet-name ""$vnetName"" -n ""$subnetNameApp"" -o tsv --query 'id')"
+
+publicIpName="ao-appgw-pip-eus-6"
+appGwName="ao-appgw-eus"
 
 #az deployment group create --subscription "$subscriptionId" -n "AKS" --verbose \
 #	-g "$resourceGroup" --template-file "$templateFile" \
@@ -24,7 +28,17 @@ vnetSubnetResourceId="$(az network vnet subnet show --subscription ""$subscripti
 #	location="$location" clusterName="$clusterName" dnsPrefix="$dnsPrefix" \
 #	managedIdentityType="$managedIdentityType" identityResourceId="$identityResourceId" \
 #	nodeAdminUsername="$nodeAdminUsername" sshRSAPublicKey="$sshRSAPublicKey" \
-#	vnetSubnetResourceId="$vnetSubnetResourceId"
+#	vnetSubnetResourceId="$subnetAppResourceId"
 
-az aks show -g "$resourceGroup" -n "$clusterName" --query "servicePrincipalProfile"
-az aks show -g "$resourceGroup" -n "$clusterName" --query "identity"
+#az aks show -g "$resourceGroup" -n "$clusterName" --query "servicePrincipalProfile"
+#az aks show -g "$resourceGroup" -n "$clusterName" --query "identity"
+
+#az network public-ip create --subscription "$subscriptionId" -g "$resourceGroup" -n "$publicIpName" --allocation-method Static --sku Standard --verbose
+
+#az deployment group create --subscription "$subscriptionId" -n "PIP" --verbose \
+#	-g "$resourceGroup" --template-file "../templates/net.public-ip.json" \
+#	--parameters \
+#	location="$location" availabilityZones="1,2,3" publicIpName="$publicIpName" \
+#	publicIpType="Static" publicIpSku="Standard" domainNameLabel="$publicIpName"
+
+#az network application-gateway create --subscription "$subscriptionId" -g "$resourceGroup" -n "$appGwName" -l "$location" --sku WAF_v2 --public-ip-address "$publicIpName" --vnet-name "$vnetName" --subnet "$subnetNameAppGw"
