@@ -26,6 +26,14 @@
 				"Standard_v2"
 			]
 		},
+		"availabilityZones": {
+			"type": "string",
+			"defaultValue": "1,2,3",
+			"metadata": {
+				"displayName": "Azure availability zone(s) (AZs)",
+				"description": "Optional. One or more AZs, comma-delimited. Example: 1,2,3. If not provided, a non-zonal App GW will be deployed. See https://azure.microsoft.com/regions/ for which regions support AZs."
+			}
+		},
         "vnetResourceGroup": {
             "type": "string",
 			"defaultValue": ""
@@ -77,8 +85,43 @@
 		"httpListenerName": {
 			"type": "string",
 			"defaultValue": "appGatewayHttpListener"
+		},
+		"backEndConnectionDrainingEnabled": {
+			"type": "bool",
+			"defaultValue": true
+		},
+		"backEndConnectionDrainingTimeout": {
+			"type": "int",
+			"defaultValue": 60
+		},
+		"wafEnabled": {
+			"type": "bool",
+			"defaultValue": true
+		},
+		"wafMode": {
+			"type": "string",
+			"defaultValue": "Detection",
+			"allowedValues": [
+				"Detection",
+				"Prevention"
+			]
+		},
+		"enableHttp2": {
+			"type": "bool",
+			"defaultValue": true
+		},
+		"autoscaleMinCapacity": {
+			"type": "int",
+			"defaultValue": 1,
+			"minValue": 0,
+			"maxValue": 10
+		},
+		"autoscaleMaxCapacity": {
+			"type": "int",
+			"defaultValue": 5,
+			"minValue": 1,
+			"maxValue": 125
 		}
-
 	},
 	"variables": {
         "vnetId": "[resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
@@ -95,12 +138,19 @@
             "type": "Microsoft.Network/applicationGateways",
 			"apiVersion": "[variables('apiVersionNetwork')]",
 			"location": "[parameters('location')]",
+			"zones": "[
+				if
+				(
+					empty(parameters('availabilityZones')),
+					json('[]'),
+					split(parameters('availabilityZones'), ',')
+				)
+			]",
 			"tags": "[variables('resourceTags')]",
             "properties": {
                 "sku": {
                     "name": "[parameters('skuName')]",
-                    "tier": "[parameters('skuName')]",
-                    "capacity": 2
+                    "tier": "[parameters('skuName')]"
                 },
                 "gatewayIPConfigurations": [
                     {
@@ -151,8 +201,8 @@
                             "protocol": "Http",
                             "cookieBasedAffinity": "Disabled",
                             "connectionDraining": {
-                                "enabled": false,
-                                "drainTimeoutInSec": 1
+                                "enabled": "[parameters('backEndConnectionDrainingEnabled')]",
+                                "drainTimeoutInSec": "[parameters('backEndConnectionDrainingTimeout')]"
                             },
                             "pickHostNameFromBackendAddress": false,
                             "requestTimeout": 30
@@ -196,7 +246,22 @@
                 "probes": [],
                 "rewriteRuleSets": [],
                 "redirectConfigurations": [],
-                "privateLinkConfigurations": []
+                "privateLinkConfigurations": [],
+                "webApplicationFirewallConfiguration": {
+                    "enabled": "[parameters('wafEnabled')]",
+                    "firewallMode": "[parameters('wafMode')]",
+                    "ruleSetType": "OWASP",
+                    "ruleSetVersion": "3.0",
+                    "disabledRuleGroups": [],
+                    "requestBodyCheck": true,
+                    "maxRequestBodySizeInKb": 128,
+                    "fileUploadLimitInMb": 100
+                },
+                "enableHttp2": "[parameters('enableHttp2')]",
+                "autoscaleConfiguration": {
+                    "minCapacity": "[parameters('autoscaleMinCapacity')]",
+                    "maxCapacity": "[parameters('autoscaleMaxCapacity')]"
+                }
             }
         }
     ]

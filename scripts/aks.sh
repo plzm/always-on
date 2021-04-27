@@ -19,8 +19,8 @@ subnetNameApp="App"
 subnetNameAppGw="AppGw"
 subnetAppResourceId="$(az network vnet subnet show --subscription ""$subscriptionId"" -g ""$resourceGroup"" --vnet-name ""$vnetName"" -n ""$subnetNameApp"" -o tsv --query 'id')"
 
-publicIpName="ao-appgw-pip-eus-6"
-appGwName="ao-appgw-eus"
+publicIpName="ao-appgw2-pip-eus"
+appGwName="ao-appgw2-eus"
 
 #az deployment group create --subscription "$subscriptionId" -n "AKS" --verbose \
 #	-g "$resourceGroup" --template-file "$templateFile" \
@@ -35,10 +35,17 @@ appGwName="ao-appgw-eus"
 
 #az network public-ip create --subscription "$subscriptionId" -g "$resourceGroup" -n "$publicIpName" --allocation-method Static --sku Standard --verbose
 
-#az deployment group create --subscription "$subscriptionId" -n "PIP" --verbose \
-#	-g "$resourceGroup" --template-file "../templates/net.public-ip.json" \
-#	--parameters \
-#	location="$location" availabilityZones="1,2,3" publicIpName="$publicIpName" \
-#	publicIpType="Static" publicIpSku="Standard" domainNameLabel="$publicIpName"
+az deployment group create --subscription "$subscriptionId" -n "PIP" --verbose \
+	-g "$resourceGroup" --template-file "../templates/net.public-ip.json" \
+	--parameters \
+	location="$location" publicIpName="$publicIpName" availabilityZones="1,2,3" \
+	publicIpType="Static" publicIpSku="Standard" domainNameLabel="$publicIpName"
+
+az deployment group create --subscription "$subscriptionId" -n "AppGW" --verbose \
+	-g "$resourceGroup" --template-file "../templates/net.app-gw.json" \
+	--parameters \
+	location="$location" appGatewayName="$appGwName" skuName="WAF_v2" availabilityZones="1,2,3" \
+	vnetResourceGroup="$resourceGroup" vnetName="$vnetName" subnetName="$subnetNameAppGw" \
+	publicIpResourceGroup="$resourceGroup" publicIpName="$publicIpName"
 
 #az network application-gateway create --subscription "$subscriptionId" -g "$resourceGroup" -n "$appGwName" -l "$location" --sku WAF_v2 --public-ip-address "$publicIpName" --vnet-name "$vnetName" --subnet "$subnetNameAppGw"
