@@ -19,8 +19,8 @@ subnetNameApp="App"
 subnetNameAppGw="AppGw"
 subnetAppResourceId="$(az network vnet subnet show --subscription ""$subscriptionId"" -g ""$resourceGroup"" --vnet-name ""$vnetName"" -n ""$subnetNameApp"" -o tsv --query 'id')"
 
-publicIpName="ao-appgw2-pip-eus"
-appGwName="ao-appgw2-eus"
+publicIpName="ao-appgw-pip-eus"
+appGwName="ao-appgw-eus"
 
 #az deployment group create --subscription "$subscriptionId" -n "AKS" --verbose \
 #	-g "$resourceGroup" --template-file "$templateFile" \
@@ -33,19 +33,21 @@ appGwName="ao-appgw2-eus"
 #az aks show -g "$resourceGroup" -n "$clusterName" --query "servicePrincipalProfile"
 #az aks show -g "$resourceGroup" -n "$clusterName" --query "identity"
 
-#az network public-ip create --subscription "$subscriptionId" -g "$resourceGroup" -n "$publicIpName" --allocation-method Static --sku Standard --verbose
+#az deployment group create --subscription "$subscriptionId" -n "PIP" --verbose \
+#	-g "$resourceGroup" --template-file "../templates/net.public-ip.json" \
+#	--parameters \
+#	location="$location" publicIpName="$publicIpName" availabilityZones="1,2,3" \
+#	publicIpType="Static" publicIpSku="Standard" domainNameLabel="$publicIpName"
 
-az deployment group create --subscription "$subscriptionId" -n "PIP" --verbose \
-	-g "$resourceGroup" --template-file "../templates/net.public-ip.json" \
-	--parameters \
-	location="$location" publicIpName="$publicIpName" availabilityZones="1,2,3" \
-	publicIpType="Static" publicIpSku="Standard" domainNameLabel="$publicIpName"
+#az deployment group create --subscription "$subscriptionId" -n "AppGW" --verbose \
+#	-g "$resourceGroup" --template-file "../templates/net.app-gw.json" \
+#	--parameters \
+#	location="$location" appGatewayName="$appGwName" skuName="WAF_v2" availabilityZones="1,2,3" \
+#	vnetResourceGroup="$resourceGroup" vnetName="$vnetName" subnetName="$subnetNameAppGw" \
+#	publicIpResourceGroup="$resourceGroup" publicIpName="$publicIpName"
 
-az deployment group create --subscription "$subscriptionId" -n "AppGW" --verbose \
-	-g "$resourceGroup" --template-file "../templates/net.app-gw.json" \
-	--parameters \
-	location="$location" appGatewayName="$appGwName" skuName="WAF_v2" availabilityZones="1,2,3" \
-	vnetResourceGroup="$resourceGroup" vnetName="$vnetName" subnetName="$subnetNameAppGw" \
-	publicIpResourceGroup="$resourceGroup" publicIpName="$publicIpName"
+# az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --verbose
 
-#az network application-gateway create --subscription "$subscriptionId" -g "$resourceGroup" -n "$appGwName" -l "$location" --sku WAF_v2 --public-ip-address "$publicIpName" --vnet-name "$vnetName" --subnet "$subnetNameAppGw"
+# Initial test
+# kubectl apply -f https://raw.githubusercontent.com/Azure/application-gateway-kubernetes-ingress/master/docs/examples/aspnetapp.yaml
+

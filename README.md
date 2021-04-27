@@ -196,3 +196,16 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - Azure CLI
 - kubectl - pre-installed in Cloud Shell, or install locally (WSL2) with `az aks install-cli` (may need to sudo)
 
+### 3. Infra Deploy and Test Notes
+
+#### Test AKS
+
+After cluster deployed and AGIC configured, can test using this: [Deploy a sample application using AGIC](https://docs.microsoft.com/en-us/azure/application-gateway/tutorial-ingress-controller-add-on-existing#deploy-a-sample-application-using-agic).
+
+After deploying the above, can clean up using
+
+``` bash
+kubectl delete svc aspnetapp
+kubectl delete pod aspnetapp
+```
+
