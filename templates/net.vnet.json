@@ -64,7 +64,7 @@
                 "ddosProtectionPlan":"[
 					if
 					(
-						or(empty(trim(parameters('ddosProtectionPlanResourceGroup'))), empty(trim(parameters('ddosProtectionPlanName')))),
+						or(not(parameters('enableDdosProtection')), empty(trim(parameters('ddosProtectionPlanResourceGroup'))), empty(trim(parameters('ddosProtectionPlanName')))),
 						json('null'),
 						createObject('id', resourceId(parameters('ddosProtectionPlanResourceGroup'), 'Microsoft.Network/ddosProtectionPlans', parameters('ddosProtectionPlanName')))
 					)

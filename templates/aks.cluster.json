@@ -45,13 +45,12 @@
 				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
 			}
 		},
-		"osDiskSizeGB": {
-			"type": "int",
-			"defaultValue": 0,
-			"minValue": 0,
-			"maxValue": 1023,
+		"nodeResourceGroup": {
+			"type": "string",
+			"defaultValue": "",
 			"metadata": {
-				"description": "Disk size (in GB) to provision for each of the system pool nodes. This value ranges from 0 to 1023. Specifying 0 will apply the default disk size for that nodeVmSize."
+				"displayName": "(Optional) Node resource group name",
+				"description": "Resource group name for node pool resources. If not provided, the default (MC_resource-group-name_cluster-name_location) will be used."
 			}
 		},
 		"nodeCount": {
@@ -70,16 +69,13 @@
 				"description": "The size of the system node pool VMs."
 			}
 		},
-		"nodeAdminUsername": {
-			"type": "string",
+		"osDiskSizeGB": {
+			"type": "int",
+			"defaultValue": 0,
+			"minValue": 0,
+			"maxValue": 1023,
 			"metadata": {
-				"description": "Username for the system node pool VMs."
-			}
-		},
-		"sshRSAPublicKey": {
-			"type": "string",
-			"metadata": {
-				"description": "SSH public key in three-part format, ssh-rsa *** username"
+				"description": "Disk size (in GB) to provision for each of the system pool nodes. This value ranges from 0 to 1023. Specifying 0 will apply the default disk size for that nodeVmSize."
 			}
 		},
 		"osType": {
@@ -92,11 +88,23 @@
 				"description": "The type of node operating system."
 			}
 		},
+		"nodeAdminUsername": {
+			"type": "string",
+			"metadata": {
+				"description": "Username for the system node pool VMs."
+			}
+		},
+		"sshRSAPublicKey": {
+			"type": "string",
+			"metadata": {
+				"description": "SSH public key in three-part format, ssh-rsa *** username"
+			}
+		},
 		"vnetSubnetResourceId": {
 			"type": "string",
 			"defaultValue": ""
 		},
-		"networkPlugin": {	
+		"networkPlugin": {
 			"type": "string",
 			"defaultValue": "kubenet",
 			"allowedValues": [
@@ -153,6 +161,7 @@
 			"properties": {
 				"kubernetesVersion": "[parameters('k8sversion')]",
 				"dnsPrefix": "[parameters('dnsPrefix')]",
+				"nodeResourceGroup": "[if(empty(parameters('nodeResourceGroup')), json('null'), parameters('nodeResourceGroup'))]",
 				"agentPoolProfiles": [
 					{
 						"name": "systempool",

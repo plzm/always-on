@@ -5,8 +5,8 @@ on:
     types: [labeled]
 
 env:
-  AZURE_RESOURCE_GROUP: 'always-on-5'
-  AZURE_LOCATION: '"East US"'
+  AZURE_RESOURCE_GROUP: 'always-on-6'
+  AZURE_LOCATION: 'eastus'
   UAMI_NAME: 'pz-ao-uami'
   NETWORK_CONTRIB_ROLE_ID: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   NSG_NAME: 'ao-eus'
@@ -14,6 +14,7 @@ env:
   DDOS_PLAN_NAME: 'ao-ddos'
   VNET_NAME: 'ao-eus'
   VNET_PREFIX: '10.0.0.0/16'
+  VNET_ENABLE_DDOS: 'false'
   SUBNET_NAME_APPGW: 'AppGw'
   SUBNET_PREFIX_APPGW: '10.0.1.0/24'
   SUBNET_NAME_APP: 'App'
@@ -38,13 +39,13 @@ env:
   AKS_DNS_PREFIX: 'aoakseus'
   AKS_NODE_COUNT: '1'
   AKS_NODE_SIZE: 'Standard_DS2_v2'
+  APPGW_NAME: 'ao-appgw-eus'
+  APPGW_PUBLIC_IP_NAME: 'ao-appgw-pip-eus'
 
 jobs:
   deploy-azure-resources:
     runs-on: ubuntu-latest
-
     if: contains(github.event.pull_request.labels.*.name, 'deploy')
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -75,9 +76,9 @@ jobs:
         if: success()
         run: echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
-      #- name: Echo UAMI Resource ID
-      #  if: success()
-      #  run: echo ${{env.UAMI_RESOURCE_ID}}
+      - name: Echo UAMI Resource ID
+        if: success()
+        run: echo ${{env.UAMI_RESOURCE_ID}}
 
       - name: Deploy NSG
         if: success()
@@ -85,7 +86,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.nsg.json
-          parameters: ./templates/net.nsg.parameters.json location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+          parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
       - name: Deploy DDoS Plan
         if: success()
@@ -93,7 +94,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.ddos-plan.json
-          parameters: ./templates/net.ddos-plan.parameters.json location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+          parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Deploy VNet
         if: success()
@@ -102,7 +103,7 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.json
           parameters: |
-            ./templates/net.vnet.parameters.json location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=true ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+            location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=${{env.VNET_ENABLE_DDOS}} ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Deploy AppGW Subnet
         if: success()
@@ -110,8 +111,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.subnet.json
-          parameters: |
-            ./templates/net.vnet.subnet.parameters.json vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
+          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
 
       - name: Deploy App Subnet
         if: success()
@@ -119,14 +119,13 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.subnet.json
-          parameters: |
-            ./templates/net.vnet.subnet.parameters.json vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME}}
+          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME}}
 
       - name: Get VNet Resource ID
         if: success()
         run: echo "VNET_RESOURCE_ID=$(az network vnet show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.VNET_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Get Subnet Resource ID
+      - name: Get App Subnet Resource ID
         if: success()
         run: echo "SUBNET_RESOURCE_ID=$(az network vnet subnet show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --vnet-name ${{env.VNET_NAME}} -n ${{env.SUBNET_NAME_APP}} -o tsv --query 'id')" >> $GITHUB_ENV
 
@@ -153,7 +152,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/key-vault.json
-          parameters: ./templates/key-vault.parameters.json location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
+          parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
 
       - name: Deploy Container Registry
         if: success()
@@ -217,15 +216,40 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/aks.cluster.json
-          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetSubnetResourceId="${{env.SUBNET_RESOURCE_ID}}"
 
-      #- name: Deploy AKS Node Pool
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/aks.node-pool.json
-      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
+      - name: Deploy AKS Node Pool
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/aks.node-pool.json
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
+
+      - name: Deploy Public IP for App GW
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.public-ip.json
+          parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APPGW_PUBLIC_IP_NAME}}
+
+      - name: Deploy App GW
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.app-gw.json
+          parameters: location=${{env.AZURE_LOCATION}} appGatewayName="${{env.APPGW_NAME}}" skuName="WAF_v2" availabilityZones="1,2,3" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APPGW}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" 
+
+      - name: Get App GW Resource ID
+        if: success()
+        run: echo "APPGW_RESOURCE_ID=$(az network application-gateway show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Configure AGIC on AKS Cluster
+        if: success()
+        run: |
+          az aks enable-addons --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -a ingress-appgw --appgw-id "${{env.APPGW_RESOURCE_ID}}"
 
       - name: Azure logout
         run: |
