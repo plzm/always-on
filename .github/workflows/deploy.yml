@@ -276,7 +276,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/apim.service.json
-          parameters: location=${{env.AZURE_LOCATION}} apimName="${{env.APIM_SERVICE_NAME}}" skuName="Premium" availabilityZones="1,2,3" scaleUnits=1 managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APIM}}"
+          parameters: location=${{env.AZURE_LOCATION}} apimName="${{env.APIM_SERVICE_NAME}}" skuName="Premium" availabilityZones="1,2,3" scaleUnits=3 managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APIM}}"
 
       - name: Azure logout
         run: |
