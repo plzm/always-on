@@ -100,10 +100,18 @@
 				"description": "SSH public key in three-part format, ssh-rsa *** username"
 			}
 		},
-		"vnetSubnetResourceId": {
-			"type": "string",
+        "vnetResourceGroup": {
+            "type": "string",
 			"defaultValue": ""
-		},
+        },
+        "vnetName": {
+            "type": "string",
+			"defaultValue": ""
+        },
+        "subnetName": {
+            "type": "string",
+			"defaultValue": ""
+        },
 		"networkPlugin": {
 			"type": "string",
 			"defaultValue": "kubenet",
@@ -142,6 +150,8 @@
 				json('null')
 			)
 		]",
+        "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
+        "subnetId": "[if(or(empty(variables('vnetId')), parameters('subnetName')), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -171,7 +181,7 @@
 						"osType": "[parameters('osType')]",
 						"storageProfile": "ManagedDisks",
 						"mode": "System",
-						"vnetSubnetID": "[if(empty(parameters('vnetSubnetResourceId')), json('null'),  parameters('vnetSubnetResourceId'))]"
+						"vnetSubnetId": "[variables('subnetId')]"
 					}
 				],
 				"linuxProfile": {
