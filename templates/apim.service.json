@@ -80,6 +80,14 @@
             "type": "string",
 			"defaultValue": ""
         },
+		"publicIpResourceGroup": {
+            "type": "string",
+			"defaultValue": ""
+		},
+		"publicIpName": {
+            "type": "string",
+			"defaultValue": ""
+		},
         "virtualNetworkType": {
             "type": "string",
 			"defaultValue": "External",
@@ -113,10 +121,11 @@
 		]",
         "vnetId": "[resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName'))]",
         "subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
-		"apiVersionApim": "2020-12-01"
+		"apiVersionApim": "2021-01-01-preview"
     },
     "resources": [
         {
@@ -159,6 +168,7 @@
                     "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2": "[parameters('enableHttp2')]"
                 },
                 "virtualNetworkType": "[parameters('virtualNetworkType')]",
+                "publicIpAddressId": "[variables('publicIpId')]",
                 "disableGateway": "[parameters('disableGateway')]",
                 "apiVersionConstraint": {}
             }
