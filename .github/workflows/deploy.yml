@@ -86,13 +86,13 @@ jobs:
       #  if: success()
       #  run: echo ${{env.UAMI_RESOURCE_ID}}
 
-      - name: Deploy NSG for APIM Subnet
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/apim.nsg.json
-          parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APIM}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+      #- name: Deploy NSG for APIM Subnet
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/apim.nsg.json
+      #    parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APIM}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
       #- name: Deploy NSG for App Subnet
       #  if: success()
@@ -127,13 +127,13 @@ jobs:
       #    template: ./templates/net.vnet.subnet.json
       #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
 
-      - name: Deploy APIM Subnet
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.vnet.subnet.json
-          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APIM}} subnetPrefix=${{env.SUBNET_PREFIX_APIM}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APIM}}
+      #- name: Deploy APIM Subnet
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/net.vnet.subnet.json
+      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APIM}} subnetPrefix=${{env.SUBNET_PREFIX_APIM}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APIM}}
 
       #- name: Deploy App Subnet
       #  if: success()
