@@ -77,7 +77,7 @@
                             "sourceAddressPrefix": "Internet",
                             "destinationAddressPrefix": "VirtualNetwork",
                             "access": "Allow",
-                            "priority": 100,
+                            "priority": 105,
                             "direction": "Inbound"
                         }
                     },
