@@ -5,9 +5,10 @@ on:
     types: [labeled]
 
 env:
-  AZURE_RESOURCE_GROUP: 'always-on-7'
   AZURE_LOCATION: 'eastus'
-  UAMI_NAME: 'pz-ao-uami'
+  AZURE_RESOURCE_GROUP: 'always-on-8'
+  UAMI_NAME: 'pz-ao-uami-8'
+  KEY_VAULT_NAME: 'ao-kv-eus-8'
   NETWORK_CONTRIB_ROLE_ID: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   NSG_NAME: 'ao-eus'
   NSG_IN_SRC: '75.68.47.183'
@@ -21,7 +22,6 @@ env:
   SUBNET_PREFIX_APIM: '10.0.2.0/24'
   SUBNET_NAME_APP: 'App'
   SUBNET_PREFIX_APP: '10.0.5.0/24'
-  KEY_VAULT_NAME: 'ao-kv7-eus'
   REGISTRY_NAME: 'pzaocr'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
   LA_WORKSPACE_NAME: 'ao-la-eus'
