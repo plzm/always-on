@@ -125,7 +125,7 @@
 	},
 	"variables": {
         "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
-        "subnetId": "[if(or(empty(variables('vnetId')), parameters('subnetName')), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
+        "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"

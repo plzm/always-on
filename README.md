@@ -212,4 +212,4 @@ kubectl delete pod aspnetapp
 ```
 
 Second test with a [Multi-Container App](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough-rm-template).
-
+kubectl apply -f ./aks/azure-vote.yaml
