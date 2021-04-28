@@ -21,7 +21,7 @@ env:
   SUBNET_PREFIX_APIM: '10.0.2.0/24'
   SUBNET_NAME_APP: 'App'
   SUBNET_PREFIX_APP: '10.0.5.0/24'
-  KEY_VAULT_NAME: 'ao-kv-eus'
+  KEY_VAULT_NAME: 'ao-kv7-eus'
   REGISTRY_NAME: 'pzaocr'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
   LA_WORKSPACE_NAME: 'ao-la-eus'

@@ -200,7 +200,9 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Test AKS
 
-After cluster deployed and AGIC configured, can test using this: [Deploy a sample application using AGIC](https://docs.microsoft.com/en-us/azure/application-gateway/tutorial-ingress-controller-add-on-existing#deploy-a-sample-application-using-agic).
+After cluster deployed and AGIC configured.
+
+First test: [Deploy a sample application using AGIC](https://docs.microsoft.com/en-us/azure/application-gateway/tutorial-ingress-controller-add-on-existing#deploy-a-sample-application-using-agic).
 
 After deploying the above, can clean up using
 
@@ -208,4 +210,6 @@ After deploying the above, can clean up using
 kubectl delete svc aspnetapp
 kubectl delete pod aspnetapp
 ```
+
+Second test with a [Multi-Container App](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough-rm-template).
 
