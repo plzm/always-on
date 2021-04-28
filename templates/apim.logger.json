@@ -133,9 +133,9 @@
         {
             "type": "Microsoft.ApiManagement/service/apis",
             "apiVersion": "2020-12-01",
-            "name": "[concat(parameters('service_ao_apim2_eus_name'), '/echo-api')]",
+            "name": "[concat(parameters('apimName'), '/echo-api')]",
             "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', parameters('service_ao_apim2_eus_name'))]"
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apimName'))]"
             ],
             "properties": {
                 "displayName": "Echo API",
@@ -149,45 +149,7 @@
                 "isCurrent": true
             }
         },
-        {
-            "type": "Microsoft.ApiManagement/service/groups",
-            "apiVersion": "2020-12-01",
-            "name": "[concat(parameters('service_ao_apim2_eus_name'), '/administrators')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', parameters('service_ao_apim2_eus_name'))]"
-            ],
-            "properties": {
-                "displayName": "Administrators",
-                "description": "Administrators is a built-in group. Its membership is managed by the system. Microsoft Azure subscription administrators fall into this group.",
-                "type": "system"
-            }
-        },
-        {
-            "type": "Microsoft.ApiManagement/service/groups",
-            "apiVersion": "2020-12-01",
-            "name": "[concat(parameters('service_ao_apim2_eus_name'), '/developers')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', parameters('service_ao_apim2_eus_name'))]"
-            ],
-            "properties": {
-                "displayName": "Developers",
-                "description": "Developers is a built-in group. Its membership is managed by the system. Signed-in users fall into this group.",
-                "type": "system"
-            }
-        },
-        {
-            "type": "Microsoft.ApiManagement/service/groups",
-            "apiVersion": "2020-12-01",
-            "name": "[concat(parameters('service_ao_apim2_eus_name'), '/guests')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', parameters('service_ao_apim2_eus_name'))]"
-            ],
-            "properties": {
-                "displayName": "Guests",
-                "description": "Guests is a built-in group. Its membership is managed by the system. Unauthenticated users visiting the developer portal fall into this group.",
-                "type": "system"
-            }
-        },
+
         {
             "type": "Microsoft.ApiManagement/service/loggers",
             "apiVersion": "2020-12-01",
