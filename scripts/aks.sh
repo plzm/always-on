@@ -45,7 +45,7 @@ publicIpNameAppGw="ao-appgw-pip-eus"
 #	vnetResourceGroup="$resourceGroup" vnetName="$vnetName" subnetName="$subnetNameAppGw" \
 #	publicIpResourceGroup="$resourceGroup" publicIpName="$publicIpNameAppGw"
 
-# az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
+ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
 
 #az aks show -g "$resourceGroup" -n "$clusterName" --query "servicePrincipalProfile"
 #az aks show -g "$resourceGroup" -n "$clusterName" --query "identity"
