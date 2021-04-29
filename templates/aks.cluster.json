@@ -135,6 +135,14 @@
 		"dockerBridgeCidr": {
 			"type": "string",
 			"defaultValue": "172.17.0.1/16"
+		},
+		"apiServerAuthorizedIpRanges": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "API Server Authorized IP Ranges",
+				"description": ""
+			}
 		}
 	},
 	"variables": {
@@ -201,6 +209,16 @@
 					"podCidr": "[if(empty(parameters('podCidr')), json('null'), parameters('podCidr'))]",
 					"dockerBridgeCidr": "[if(empty(parameters('dockerBridgeCidr')), json('null'), parameters('dockerBridgeCidr'))]"
 				},
+                "apiServerAccessProfile": {
+                    "authorizedIPRanges": "[
+						if
+						(
+							empty(parameters('apiServerAuthorizedIpRanges')),
+							json('[]'),
+							split(parameters('apiServerAuthorizedIpRanges'), ',')
+						)
+                    ]"
+                },
 				"servicePrincipalProfile": {
 					"clientId": "msi"
 				}

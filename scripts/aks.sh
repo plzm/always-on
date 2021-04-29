@@ -31,13 +31,14 @@ publicIpNameAppGw="ao-appgw-pip-eus"
 #	nodeAdminUsername="$nodeAdminUsername" sshRSAPublicKey="$sshRSAPublicKey" \
 #	vnetSubnetResourceId="$subnetAppResourceId"
 
-
+# App GW Public IP
 #az deployment group create --subscription "$subscriptionId" -n "PIP" --verbose \
 #	-g "$resourceGroup" --template-file "../templates/net.public-ip.json" \
 #	--parameters \
 #	location="$location" publicIpName="$publicIpNameAppGw" availabilityZones="1,2,3" \
 #	publicIpType="Static" publicIpSku="Standard" domainNameLabel="$publicIpNameAppGw"
 
+# App GW
 #az deployment group create --subscription "$subscriptionId" -n "AppGW" --verbose \
 #	-g "$resourceGroup" --template-file "../templates/net.app-gw.json" \
 #	--parameters \
@@ -45,12 +46,12 @@ publicIpNameAppGw="ao-appgw-pip-eus"
 #	vnetResourceGroup="$resourceGroup" vnetName="$vnetName" subnetName="$subnetNameAppGw" \
 #	publicIpResourceGroup="$resourceGroup" publicIpName="$publicIpNameAppGw"
 
- az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
+# Get/overwrite AKS credentials
+az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
 
+# Show AKS cluster identity config
 #az aks show -g "$resourceGroup" -n "$clusterName" --query "servicePrincipalProfile"
 #az aks show -g "$resourceGroup" -n "$clusterName" --query "identity"
 
-# Initial test
-# kubectl apply -f https://raw.githubusercontent.com/Azure/application-gateway-kubernetes-ingress/master/docs/examples/aspnetapp.yaml
 
 kubectl apply -f ../aks/azure-vote.yaml
