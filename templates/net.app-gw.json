@@ -34,6 +34,23 @@
 				"description": "Optional. One or more AZs, comma-delimited. Example: 1,2,3. If not provided, a non-zonal App GW will be deployed. See https://azure.microsoft.com/regions/ for which regions support AZs."
 			}
 		},
+		"managedIdentityType": {
+			"type": "string",
+			"defaultValue": "None",
+			"allowedValues": [
+				"SystemAssigned",
+				"UserAssigned",
+				"None"
+			]
+		},
+		"identityResourceId": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "User-Assigned Identity Resource ID",
+				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
+			}
+		},
         "vnetResourceGroup": {
             "type": "string",
 			"defaultValue": ""
@@ -124,6 +141,18 @@
 		}
 	},
 	"variables": {
+		"userAssignedIdentities": "[
+			if
+			(
+				equals(toLower(parameters('managedIdentityType')), 'userassigned'),
+				createObject
+				(
+					parameters('identityResourceId'),
+					createObject()
+				),
+				json('null')
+			)
+		]",
         "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
         "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
@@ -147,6 +176,10 @@
 				)
 			]",
 			"tags": "[variables('resourceTags')]",
+			"identity": {
+				"type": "[parameters('managedIdentityType')]",
+				"userAssignedIdentities": "[variables('userAssignedIdentities')]"
+			},
             "properties": {
                 "sku": {
                     "name": "[parameters('skuName')]",
