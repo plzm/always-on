@@ -9,6 +9,7 @@ env:
   AZURE_RESOURCE_GROUP: 'always-on-9'
   UAMI_NAME: 'pz-ao-uami-9'
   KEY_VAULT_NAME: 'ao-kv-eus-9'
+  APIM_SERVICE_NAME: 'ao-apim-eus-9'
   NETWORK_CONTRIB_ROLE_ID: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   NSG_NAME_APP: 'ao-app-eus'
   NSG_NAME_APIM: 'ao-apim-eus'
@@ -45,8 +46,7 @@ env:
   AKS_NODE_SIZE: 'Standard_DS2_v2'
   APPGW_NAME: 'ao-appgw-eus'
   APPGW_PUBLIC_IP_NAME: 'ao-appgw-pip-eus'
-  APIM_SERVICE_NAME: "ao-apim-eus"
-  APIM_PUBLIC_IP_NAME: "ao-apim-pip-eus"
+  APIM_PUBLIC_IP_NAME: 'ao-apim-pip-eus'
 
 jobs:
   deploy-azure-resources:
