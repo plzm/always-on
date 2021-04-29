@@ -243,14 +243,12 @@ jobs:
       - name: Get App GW Public IP for AKS API Server Network Restriction
         if: success()
         run: |
-          echo "APPGW_PUBLIC_IP_ADDRESS=$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')" >> $GITHUB_ENV
+          APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
           echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
 
       - name: Echo IP Stuff
         if: success()
-        run: |
-          echo ${{env.APPGW_PUBLIC_IP_ADDRESS}}
-          echo ${{env.AKS_API_SERVER_AUTH_IP_RANGES}}
+        run: echo ${{env.AKS_API_SERVER_AUTH_IP_RANGES}}
 
       #- name: Deploy App GW
       #  if: success()
