@@ -179,7 +179,7 @@ jobs:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/authorization.role-assignment.json
       #    parameters: |
-      #      roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
+      #      roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
 
       #- name: Deploy Log Analytics
       #  if: success()
@@ -310,7 +310,7 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/authorization.role-assignment.json
           parameters: |
-            roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourceGroups/${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}"
+            roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="resourceGroups/${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}"
 
       #- name: Configure AGIC on AKS Cluster
       #  if: success()
