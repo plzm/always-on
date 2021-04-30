@@ -56,8 +56,8 @@
                 "displayName": "[parameters('displayName')]",
                 "description": "[parameters('description')]",
                 "versioningScheme": "[parameters('versioningScheme')]",
-                "versionQueryName": "[parameters('versionQueryName')]",
-                "versionHeaderName": "[parameters('versionHeaderName')]"
+                "versionQueryName": "[if(not(empty(parameters('versionQueryName'))), parameters('versionQueryName'), json('null'))]",
+                "versionHeaderName": "[if(not(empty(parameters('versionHeaderName'))), parameters('versionHeaderName'), json('null'))]"
             }
         }
     ]
