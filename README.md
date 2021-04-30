@@ -190,26 +190,34 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 } | ConvertTo-Json
 ```
 
-### 2. Tooling
+### 2. Tooling and Reference
+
+#### Tooling
 
 - VS Code with usual extensions for Azure deploy (ARM Tools etc.)
 - Azure CLI
 - kubectl - pre-installed in Cloud Shell, or install locally (WSL2) with `az aks install-cli` (may need to sudo)
 
-### 3. Infra Deploy and Test Notes
+#### Useful References
 
-#### Test AKS
+- [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
 
-After cluster deployed and AGIC configured.
+### 3. Design Decisions
 
-First test: [Deploy a sample application using AGIC](https://docs.microsoft.com/en-us/azure/application-gateway/tutorial-ingress-controller-add-on-existing#deploy-a-sample-application-using-agic).
+#### Infrastructure
 
-After deploying the above, can clean up using
+#### Network
 
-``` bash
-kubectl delete svc aspnetapp
-kubectl delete pod aspnetapp
-```
+#### Security
 
-Second test with a [Multi-Container App](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough-rm-template).
+#### CD - Global / Regional Stamp
+
+
+
+### 4. Infrastructure Deployment
+
+#### AKS
+
+Test [Multi-Container App](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough-rm-template).
 kubectl apply -f ./aks/azure-vote.yaml
+

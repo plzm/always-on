@@ -13,3 +13,16 @@ az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/C
 # Then run
 az provider register --namespace Microsoft.ContainerService
 # ##########
+
+# ##########
+# AAD pod identity preview
+# https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity
+
+az feature register --namespace Microsoft.ContainerService  -n EnablePodIdentityPreview
+
+# ... until this shows "Registered"
+az feature list -o table --query "[?contains(name, 'Microsoft.ContainerService/EnablePodIdentityPreview')].{Name:name,State:properties.state}"
+
+# Then run
+az provider register --namespace Microsoft.ContainerService
+# ##########

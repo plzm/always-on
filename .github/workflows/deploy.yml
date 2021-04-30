@@ -6,11 +6,12 @@ on:
 
 env:
   AZURE_LOCATION: 'eastus'
-  AZURE_RESOURCE_GROUP: 'always-on-9'
-  UAMI_NAME: 'pz-ao-uami-9'
-  KEY_VAULT_NAME: 'ao-kv-eus-9'
-  APIM_SERVICE_NAME: 'ao-apim-eus-9'
-  NETWORK_CONTRIB_ROLE_ID: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+  AZURE_RESOURCE_GROUP: 'always-on-10'
+  UAMI_NAME: 'pz-ao-uami-10'
+  KEY_VAULT_NAME: 'ao-kv-eus-10'
+  APIM_SERVICE_NAME: 'ao-apim-eus-10'
+  RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
+  RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   NSG_NAME_APP: 'ao-app-eus'
   NSG_NAME_APIM: 'ao-apim-eus'
   NSG_IN_SRC: '75.68.47.183/32'
@@ -33,7 +34,7 @@ env:
   EVENT_HUB_NS_NAME: 'ao-eh-eus'
   EVENT_HUB_CAPACITY: '2'
   COSMOS_DB_ACCT_NAME: 'ao-cdb-pz'
-  COSMOS_DB_LOCATIONS: 'eastus:true,westus:false'
+  COSMOS_DB_LOCATIONS: 'eastus:true,westus2:true'
   COSMOS_DB_DATABASE_NAME: 'db1'
   COSMOS_DB_DATABASE_THROUGHPUT: '1000'
   COSMOS_DB_CONTAINER_NAME: 'c1'
@@ -61,18 +62,44 @@ jobs:
         with:
           creds: ${{secrets.AZURE_CREDENTIALS}}
 
-      #- name: Create Azure resource group
-      #  if: success()
-      #  run: |
-      #    az group create --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}} --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}}
+      - name: Get AKS Node Resource Group Name
+        if: success()
+        run: |
+          echo "AZURE_RESOURCE_GROUP_AKS_NODES=${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" >> $GITHUB_ENV
 
-      #- name: Deploy User-Assigned MI
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/identity.user-assigned-mi.json
-      #    parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
+      - name: Create Azure resource group
+        if: success()
+        run: |
+          az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}}
+
+      - name: Create AKS Nodes resource group
+        if: success()
+        run: |
+          az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
+
+      - name: Deploy User-Assigned MI
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/identity.user-assigned-mi.json
+          parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
+
+      - name: Get UAMI Info
+        if: success()
+        run: |
+          echo "UAMI_RESOURCE_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "UAMI_OBJECT_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'objectId')" >> $GITHUB_ENV
+          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'clientId')" >> $GITHUB_ENV
+
+      - name: Echo UAMI Info
+        if: success()
+        run: |
+          echo ${{env.UAMI_RESOURCE_ID}}
+          echo ${{env.UAMI_PRINCIPAL_ID}}
+          echo ${{env.UAMI_OBJECT_ID}}
+          echo ${{env.UAMI_CLIENT_ID}}
 
       #- name: Get UAMI Resource ID
       #  if: success()
@@ -81,6 +108,10 @@ jobs:
       #- name: Get UAMI Principal ID
       #  if: success()
       #  run: echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+
+      #- name: Get UAMI Object ID
+      #  if: success()
+      #  run: echo "UAMI_OBJECT_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'objectId')" >> $GITHUB_ENV
 
       #- name: Echo UAMI Resource ID
       #  if: success()
@@ -150,7 +181,7 @@ jobs:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/authorization.role-assignment.json
       #    parameters: |
-      #      roleDefinitionId="${{env.NETWORK_CONTRIB_ROLE_ID}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
+      #      roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
 
       #- name: Deploy Log Analytics
       #  if: success()
@@ -240,15 +271,11 @@ jobs:
       #    template: ./templates/net.public-ip.json
       #    parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APPGW_PUBLIC_IP_NAME}}
 
-      - name: Get App GW Public IP for AKS API Server Network Restriction
-        if: success()
-        run: |
-          APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
-          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
-
-      #- name: Echo IP Stuff
+      #- name: Get App GW Public IP for AKS API Server Network Restriction
       #  if: success()
-      #  run: echo ${{env.AKS_API_SERVER_AUTH_IP_RANGES}}
+      #  run: |
+      #    APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
+      #    echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
 
       #- name: Deploy App GW
       #  if: success()
@@ -268,7 +295,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/aks.cluster.json
-      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APP}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}"
+      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APP}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}"
 
       #- name: Deploy additional AKS Node Pool
       #  if: success()
@@ -277,6 +304,15 @@ jobs:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/aks.node-pool.json
       #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
+
+      - name: Grant UAMI Reader on AKS VMSS RG for Pod Identity
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: |
+            roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Resources/resourceGroups/${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}"
 
       #- name: Configure AGIC on AKS Cluster
       #  if: success()

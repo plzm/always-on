@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# https://docs.microsoft.com/azure/aks/api-server-authorized-ip-ranges
+
 subscriptionId="$(az account show -o tsv --query 'id')"
 location="eastus"
 resourceGroup="always-on-9"

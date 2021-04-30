@@ -180,18 +180,9 @@
 				"kubernetesVersion": "[parameters('k8sversion')]",
 				"dnsPrefix": "[parameters('dnsPrefix')]",
 				"nodeResourceGroup": "[if(empty(parameters('nodeResourceGroup')), json('null'), parameters('nodeResourceGroup'))]",
-				"agentPoolProfiles": [
-					{
-						"name": "systempool",
-						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
-						"count": "[parameters('nodeCount')]",
-						"vmSize": "[parameters('nodeVmSize')]",
-						"osType": "[parameters('osType')]",
-						"storageProfile": "ManagedDisks",
-						"mode": "System",
-						"vnetSubnetId": "[variables('subnetId')]"
-					}
-				],
+				"servicePrincipalProfile": {
+					"clientId": "msi"
+				},
 				"linuxProfile": {
 					"adminUsername": "[parameters('nodeAdminUsername')]",
 					"ssh": {
@@ -219,8 +210,33 @@
 						)
                     ]"
                 },
-				"servicePrincipalProfile": {
-					"clientId": "msi"
+				"agentPoolProfiles": [
+					{
+						"name": "systempool",
+						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+						"count": "[parameters('nodeCount')]",
+						"vmSize": "[parameters('nodeVmSize')]",
+						"osType": "[parameters('osType')]",
+						"storageProfile": "ManagedDisks",
+						"mode": "System",
+						"vnetSubnetId": "[variables('subnetId')]"
+					}
+				],
+				"podIdentityProfile": {
+					"enabled": true,
+					"allowNetworkPluginKubenet": true,
+					"userAssignedIdentities": [
+						{
+							"name": "",
+							"namespace": "",
+							"bindingSelector": "",
+							"identity": {
+								"resourceId": "",
+								"clientId": "",
+								"objectId": ""
+							}
+						}
+					]
 				}
 			}
 		}
