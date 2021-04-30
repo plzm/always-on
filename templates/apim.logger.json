@@ -1,0 +1,92 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimServiceName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "loggerName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "loggerType": {
+            "type": "string",
+            "defaultValue": "applicationInsights",
+            "allowedValues": [
+                "applicationInsights",
+                "azureEventHub",
+                "azureMonitor"
+            ]
+        },
+        "isBuffered": {
+            "type": "bool",
+			"defaultValue": true
+        },
+        "logTargetResourceId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "Log Target Resource ID",
+                "description": "Log Target Resource ID, e.g. /subscriptions/GUID/resourceGroups/RGNAME/providers/microsoft.insights/components/NAME"
+            }
+        },
+        "appInsightsTargetInstrumentationKey": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "App Insights Instrumentation key",
+                "description": "Specify if App Insights is used as the logger target."
+            }
+        },
+        "eventHubName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "Event Hub Name",
+                "description": "Specify if Event Hub is used as the logger target."
+            }
+        },
+        "eventHubConnectionString": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "Event Hub Connection String",
+                "description": "Specify if Event Hub is used as the logger target. Send is needed."
+            }
+        }
+    },
+    "variables": {
+        "credentials": "[
+            if
+            (
+                equals(toLower(parameters('loggerType')), 'applicationinsights'),
+                createObject('instrumentationKey', parameters('appInsightsTargetInstrumentationKey')),
+                if
+                (
+                    equals(toLower(parameters('loggerType')), 'azureeventhub'),
+                    createObject
+                    (
+                        'name', parameters('eventHubName'),
+                        'connectionString', parameters('eventHubConnectionString')
+                    ),
+                    json('null')
+                )
+            )
+        ]",
+		"apiVersionApim": "2020-12-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service/loggers",
+            "apiVersion": "[variables('apiVersionApim')]",
+            "name": "[concat(parameters('apimServiceName'), '/', parameters('loggerName'))]",
+            "properties": {
+                "loggerType": "[parameters('loggerType')]",
+                "isBuffered": "[parameters('isBuffered')]",
+                "resourceId": "[parameters('logTargetResourceId')]",
+                "credentials": "[variables('credentials')]"
+            }
+        }
+    ]
+}

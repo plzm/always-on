@@ -1,0 +1,96 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimServiceName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "apiName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "displayName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "description": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "isCurrent": {
+            "type": "bool",
+            "defaultValue": true
+        },
+        "apiVersion": {
+            "type": "string",
+            "defaultValue": "v1"
+        },
+        "apiVersionDescription": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "apiRevision": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "apiRevisionDescription": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "subscriptionRequired": {
+            "type": "bool",
+            "defaultValue": true
+        },
+        "serviceUrl": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "path": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "protocols": {
+            "type": "string",
+            "defaultValue": "http,https",
+            "allowedValues": [
+                "https,http",
+                "http,https",
+                "https",
+                "http"
+            ],
+            "metadata": {
+                "displayName": "URL Protocols",
+                "description": "HTTP and/or HTTPS support. Comma-delimited string, any of these: 'https,http', 'http,https', 'https', 'http'"
+            }
+        },
+        "apiVersionSetResourceId": {
+            "type": "string",
+            "defaultValue": ""
+        }
+    },
+    "variables": {
+		"apiVersionApim": "2020-12-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service/apis",
+            "apiVersion": "[variables('apiVersionApim')]",
+            "name": "[concat(parameters('apimServiceName'), '/', parameters('apiName'))]",
+            "properties": {
+                "displayName": "[parameters('displayName')]",
+                "description": "[parameters('description')]",
+                "isCurrent": "[parameters('isCurrent')]",
+                "apiVersion": "[parameters('apiVersion')]",
+                "apiVersionDescription": "[parameters('apiVersionDescription')]",
+                "apiRevision": "[parameters('apiRevision')]",
+                "apiRevisionDescription": "[parameters('apiRevisionDescription')]",
+                "subscriptionRequired": "[parameters('subscriptionRequired')]",
+                "serviceUrl": "[parameters('serviceUrl')]",
+                "path": "[parameters('path')]",
+                "protocols": "[split(parameters('protocols'), ',')]",
+                "apiVersionSetId": "[if(not(empty(parameters('apiVersionSetResourceId'))), parameters('apiVersionSetResourceId'), json('null'))]"
+            }
+        }
+    ]
+}

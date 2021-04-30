@@ -55,7 +55,7 @@
 		},
 		"nodeCount": {
 			"type": "int",
-			"defaultValue": 1,
+			"defaultValue": 2,
 			"minValue": 1,
 			"maxValue": 100,
 			"metadata": {
@@ -100,10 +100,18 @@
 				"description": "SSH public key in three-part format, ssh-rsa *** username"
 			}
 		},
-		"vnetSubnetResourceId": {
-			"type": "string",
+        "vnetResourceGroup": {
+            "type": "string",
 			"defaultValue": ""
-		},
+        },
+        "vnetName": {
+            "type": "string",
+			"defaultValue": ""
+        },
+        "subnetName": {
+            "type": "string",
+			"defaultValue": ""
+        },
 		"networkPlugin": {
 			"type": "string",
 			"defaultValue": "kubenet",
@@ -127,10 +135,18 @@
 		"dockerBridgeCidr": {
 			"type": "string",
 			"defaultValue": "172.17.0.1/16"
+		},
+		"apiServerAuthorizedIpRanges": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "API Server Authorized IP Ranges",
+				"description": "Optional. To restrict API Server network access, pass a comma-delimited string of IP ranges. Example: 1.2.3.4/32,13.1.1.0/16. See https://docs.microsoft.com/azure/aks/api-server-authorized-ip-ranges for details."
+			}
 		}
 	},
 	"variables": {
-		"userAssignedIdentities": "[
+		"userAssignedIdentity": "[
 			if
 			(
 				equals(toLower(parameters('managedIdentityType')), 'userassigned'),
@@ -142,6 +158,8 @@
 				json('null')
 			)
 		]",
+        "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
+        "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -156,24 +174,15 @@
 			"tags": "[variables('resourceTags')]",
 			"identity": {
 				"type": "[parameters('managedIdentityType')]",
-				"userAssignedIdentities": "[variables('userAssignedIdentities')]"
+				"userAssignedIdentities": "[variables('userAssignedIdentity')]"
 			},
 			"properties": {
 				"kubernetesVersion": "[parameters('k8sversion')]",
 				"dnsPrefix": "[parameters('dnsPrefix')]",
 				"nodeResourceGroup": "[if(empty(parameters('nodeResourceGroup')), json('null'), parameters('nodeResourceGroup'))]",
-				"agentPoolProfiles": [
-					{
-						"name": "systempool",
-						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
-						"count": "[parameters('nodeCount')]",
-						"vmSize": "[parameters('nodeVmSize')]",
-						"osType": "[parameters('osType')]",
-						"storageProfile": "ManagedDisks",
-						"mode": "System",
-						"vnetSubnetID": "[if(empty(parameters('vnetSubnetResourceId')), json('null'),  parameters('vnetSubnetResourceId'))]"
-					}
-				],
+				"servicePrincipalProfile": {
+					"clientId": "msi"
+				},
 				"linuxProfile": {
 					"adminUsername": "[parameters('nodeAdminUsername')]",
 					"ssh": {
@@ -191,9 +200,28 @@
 					"podCidr": "[if(empty(parameters('podCidr')), json('null'), parameters('podCidr'))]",
 					"dockerBridgeCidr": "[if(empty(parameters('dockerBridgeCidr')), json('null'), parameters('dockerBridgeCidr'))]"
 				},
-				"servicePrincipalProfile": {
-					"clientId": "msi"
-				}
+                "apiServerAccessProfile": {
+                    "authorizedIPRanges": "[
+						if
+						(
+							empty(parameters('apiServerAuthorizedIpRanges')),
+							json('[]'),
+							split(parameters('apiServerAuthorizedIpRanges'), ',')
+						)
+                    ]"
+                },
+				"agentPoolProfiles": [
+					{
+						"name": "systempool",
+						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+						"count": "[parameters('nodeCount')]",
+						"vmSize": "[parameters('nodeVmSize')]",
+						"osType": "[parameters('osType')]",
+						"storageProfile": "ManagedDisks",
+						"mode": "System",
+						"vnetSubnetId": "[variables('subnetId')]"
+					}
+				]
 			}
 		}
 	],

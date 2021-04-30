@@ -1,0 +1,64 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apimServiceName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "apiVersionSetName": {
+            "type": "string",
+            "defaultValue": "[newGuid()]"
+        },
+        "displayName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "description": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "versioningScheme": {
+            "type": "string",
+            "defaultValue": "Segment",
+            "allowedValues": [
+                "Segment",
+                "Query",
+                "Header"
+            ]
+        },
+        "versionQueryName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "API Version Query Param Name",
+                "description": "Name of query parameter that indicates the API Version if versioningScheme is set to Query."
+            }
+        },
+        "versionHeaderName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "API Version Header Name",
+                "description": "Name of HTTP header parameter that indicates the API Version if versioningScheme is set to Header."
+            }
+        }
+    },
+    "variables": {
+		"apiVersionApim": "2020-12-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service/apiVersionSets",
+            "apiVersion": "[variables('apiVersionApim')]",
+            "name": "[concat(parameters('apimServiceName'), '/', uniqueString(parameters('apiVersionSetName')))]",
+            "properties": {
+                "displayName": "[parameters('displayName')]",
+                "description": "[parameters('description')]",
+                "versioningScheme": "[parameters('versioningScheme')]",
+                "versionQueryName": "[if(not(empty(parameters('versionQueryName'))), parameters('versionQueryName'), json('null'))]",
+                "versionHeaderName": "[if(not(empty(parameters('versionHeaderName'))), parameters('versionHeaderName'), json('null'))]"
+            }
+        }
+    ]
+}
