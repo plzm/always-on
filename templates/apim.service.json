@@ -14,7 +14,7 @@
 				"description": "See https://azure.microsoft.com/regions/."
 			}
 		},
-        "apimName": {
+        "apimServiceName": {
             "type": "string",
             "defaultValue": ""
         },
@@ -131,7 +131,7 @@
         {
             "type": "Microsoft.ApiManagement/service",
             "apiVersion": "[variables('apiVersionApim')]",
-            "name": "[parameters('apimName')]",
+            "name": "[parameters('apimServiceName')]",
             "location": "[parameters('location')]",
 			"zones": "[
 				if
@@ -156,7 +156,7 @@
                 "hostnameConfigurations": [
                     {
                         "type": "Proxy",
-                        "hostName": "[concat(parameters('apimName'), '.azure-api.net')]",
+                        "hostName": "[concat(parameters('apimServiceName'), '.azure-api.net')]",
                         "negotiateClientCertificate": false,
                         "defaultSslBinding": true
                     }
