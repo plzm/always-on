@@ -293,13 +293,13 @@ jobs:
       #    template: ./templates/authorization.role-assignment.json
       #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
 
-      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
+      #- name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
       #- name: Deploy additional AKS Node Pool
       #  if: success()
