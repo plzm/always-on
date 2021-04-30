@@ -79,11 +79,6 @@ jobs:
       #  run: |
       #    az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}}
 
-      #- name: Create AKS Nodes resource group
-      #  if: success()
-      #  run: |
-      #    az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
-
       #- name: Deploy Log Analytics
       #  if: success()
       #  uses: azure/arm-deploy@v1
@@ -117,14 +112,6 @@ jobs:
       #  run: |
       #    echo ${{env.UAMI_RESOURCE_ID}}
       #    echo ${{env.UAMI_PRINCIPAL_ID}}
-
-      #- name: Grant UAMI Reader on AKS Nodes RG for Pod Identity
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
 
       #- name: Deploy NSG for APIM Subnet
       #  if: success()
@@ -297,6 +284,14 @@ jobs:
           template: ./templates/aks.cluster.json
           parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APP}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" 
 
+      - name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
+
       #- name: Deploy additional AKS Node Pool
       #  if: success()
       #  uses: azure/arm-deploy@v1
@@ -305,7 +300,7 @@ jobs:
       #    template: ./templates/aks.node-pool.json
       #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
 
-      - name: Enabled Pod-managed identity
+      - name: Enabled Pod Managed identity
         if: success()
         run: |
           az aks update --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --enable-pod-identity --enable-pod-identity-with-kubenet
