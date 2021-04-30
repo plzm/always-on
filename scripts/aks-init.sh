@@ -2,6 +2,7 @@
 
 # ##########
 # BYO Kubelet MI preview
+# https://docs.microsoft.com/azure/aks/use-managed-identity#bring-your-own-kubelet-mi-preview
 
 az feature register --namespace Microsoft.ContainerService -n CustomKubeletIdentityPreview
 # Gives this message: Once the feature 'CustomKubeletIdentityPreview' is registered, invoking 'az provider register -n Microsoft.ContainerService' is required to get the change propagated

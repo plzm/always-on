@@ -24,7 +24,7 @@
 		},
 		"scopeId": {
 			"type": "String",
-			"defaultValue": "[resourceGroup().id]",
+			"defaultValue": "[subscriptionResourceId('Microsoft.Resources/resourceGroups', resourceGroup().name)]",
 			"metadata": {
 				"displayName": "Scope ID for the Role Assignment",
 				"description": "Defaults to the deployment Resource Group"
@@ -32,7 +32,7 @@
 		}
 	},
 	"variables": {
-		"roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]",
+		"roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]",
 		"apiVersionAuthRoleAssignment": "2021-04-01-preview"
 	},
 	"resources": [
@@ -40,10 +40,10 @@
 			"type": "Microsoft.Authorization/roleAssignments",
 			"name": "[parameters('roleAssignmentName')]",
 			"apiVersion": "[variables('apiVersionAuthRoleAssignment')]",
-			"scope": "[parameters('scopeId')]",
 			"properties": {
 				"roleDefinitionId": "[variables('roleDefinitionId')]",
-				"principalId": "[parameters('principalId')]"
+				"principalId": "[parameters('principalId')]",
+				"scope": "[parameters('scopeId')]"
 			}
 		}
 	]

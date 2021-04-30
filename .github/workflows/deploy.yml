@@ -7,6 +7,7 @@ on:
 env:
   AZURE_LOCATION: 'eastus'
   AZURE_RESOURCE_GROUP: 'always-on-10'
+  IDENTITY_TYPE: 'UserAssigned'
   UAMI_NAME: 'pz-ao-uami-10'
   KEY_VAULT_NAME: 'ao-kv-eus-10'
   APIM_SERVICE_NAME: 'ao-apim-eus-10'
@@ -85,6 +86,7 @@ jobs:
       #    template: ./templates/identity.user-assigned-mi.json
       #    parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
+      # principalId = objectId
       - name: Get UAMI Info
         if: success()
         run: |
@@ -92,44 +94,37 @@ jobs:
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
           echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'clientId')" >> $GITHUB_ENV
 
-      - name: Echo UAMI Info
+      #- name: Echo UAMI Info
+      #  if: success()
+      #  run: |
+      #    echo ${{env.UAMI_RESOURCE_ID}}
+      #    echo ${{env.UAMI_PRINCIPAL_ID}}
+      #    echo ${{env.UAMI_CLIENT_ID}}
+
+      - name: Grant UAMI Reader on AKS Nodes RG for Pod Identity
         if: success()
-        run: |
-          echo ${{env.UAMI_RESOURCE_ID}}
-          echo ${{env.UAMI_PRINCIPAL_ID}}
-          echo ${{env.UAMI_CLIENT_ID}}
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: |
+            roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
 
-      #- name: Get UAMI Resource ID
-      #  if: success()
-      #  run: echo "UAMI_RESOURCE_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+      - name: Deploy NSG for APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/apim.nsg.json
+          parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APIM}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
-      #- name: Get UAMI Principal ID
-      #  if: success()
-      #  run: echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
-
-      #- name: Get UAMI Object ID
-      #  if: success()
-      #  run: echo "UAMI_OBJECT_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'objectId')" >> $GITHUB_ENV
-
-      #- name: Echo UAMI Resource ID
-      #  if: success()
-      #  run: echo ${{env.UAMI_RESOURCE_ID}}
-
-      #- name: Deploy NSG for APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/apim.nsg.json
-      #    parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APIM}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
-
-      #- name: Deploy NSG for App Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.nsg.json
-      #    parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APP}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+      - name: Deploy NSG for App Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.nsg.json
+          parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APP}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
       #- name: Deploy DDoS Plan
       #  if: success()
@@ -139,161 +134,161 @@ jobs:
       #    template: ./templates/net.ddos-plan.json
       #    parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
-      #- name: Deploy VNet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.vnet.json
-      #    parameters: |
-      #      location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=${{env.VNET_ENABLE_DDOS}} ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      - name: Deploy VNet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.json
+          parameters: |
+            location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=${{env.VNET_ENABLE_DDOS}} ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
-      #- name: Deploy AppGW Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
+      - name: Deploy AppGW Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
 
-      #- name: Deploy APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APIM}} subnetPrefix=${{env.SUBNET_PREFIX_APIM}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APIM}}
+      - name: Deploy APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APIM}} subnetPrefix=${{env.SUBNET_PREFIX_APIM}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APIM}}
 
-      #- name: Deploy App Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APP}}
+      - name: Deploy App Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APP}} subnetPrefix=${{env.SUBNET_PREFIX_APP}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APP}}
 
-      #- name: Grant UAMI Network Contributor on VNet for kubenet config
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: |
-      #      roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
+      - name: Grant UAMI Network Contributor on VNet for kubenet config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: |
+            roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="Microsoft.Network/virtualNetworks/${{env.VNET_NAME}}"
 
-      #- name: Deploy Log Analytics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/monitor.log-analytics-workspace.json
-      #    parameters: location=${{env.AZURE_LOCATION}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+      - name: Deploy Log Analytics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/monitor.log-analytics-workspace.json
+          parameters: location=${{env.AZURE_LOCATION}} workspaceName=${{env.LA_WORKSPACE_NAME}}
 
-      #- name: Deploy Key Vault
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/key-vault.json
-      #    parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
+      - name: Deploy Key Vault
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/key-vault.json
+          parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
 
-      #- name: Deploy Container Registry
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/container-registry.json
-      #    parameters: location=${{env.AZURE_LOCATION}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.REGISTRY_REPLICATIONS}} zoneRedundancy=Enabled
+      - name: Deploy Container Registry
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/container-registry.json
+          parameters: location=${{env.AZURE_LOCATION}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.REGISTRY_REPLICATIONS}} zoneRedundancy=Enabled
 
-      #- name: Deploy App Insights for Back End API
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/monitor.app-insights.json
-      #    parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_BE}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
+      - name: Deploy App Insights for Back End API
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/monitor.app-insights.json
+          parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_BE}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
 
-      #- name: Deploy App Insights for Front End API
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/monitor.app-insights.json
-      #    parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_FE}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
+      - name: Deploy App Insights for Front End API
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/monitor.app-insights.json
+          parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_FE}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
 
-      #- name: Deploy App Insights for APIM
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/monitor.app-insights.json
-      #    parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_APIM}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
+      - name: Deploy App Insights for APIM
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/monitor.app-insights.json
+          parameters: location=${{env.AZURE_LOCATION}} appInsightsName=${{env.APP_INSIGHTS_NAME_APIM}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
 
-      #- name: Deploy Event Hub
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/event-hub.json
-      #    parameters: location=${{env.AZURE_LOCATION}} namespaceName=${{env.EVENT_HUB_NS_NAME}} capacity=${{env.EVENT_HUB_CAPACITY}}
+      - name: Deploy Event Hub
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/event-hub.json
+          parameters: location=${{env.AZURE_LOCATION}} namespaceName=${{env.EVENT_HUB_NS_NAME}} capacity=${{env.EVENT_HUB_CAPACITY}}
 
-      #- name: Deploy Cosmos DB Account
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/cosmos-db.account.json
-      #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} locationTuples=${{env.COSMOS_DB_LOCATIONS}}
+      - name: Deploy Cosmos DB Account
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/cosmos-db.account.json
+          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} locationTuples=${{env.COSMOS_DB_LOCATIONS}}
 
-      #- name: Deploy Cosmos DB Database
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/cosmos-db.sql.database.json
-      #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_THROUGHPUT}}
+      - name: Deploy Cosmos DB Database
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/cosmos-db.sql.database.json
+          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_THROUGHPUT}}
 
-      #- name: Deploy Cosmos DB Container
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/cosmos-db.sql.container.json
-      #    parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
+      - name: Deploy Cosmos DB Container
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/cosmos-db.sql.container.json
+          parameters: location=${{env.AZURE_LOCATION}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
-      #- name: Deploy Public IP for App GW
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.public-ip.json
-      #    parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APPGW_PUBLIC_IP_NAME}}
+      - name: Deploy Public IP for App GW
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.public-ip.json
+          parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APPGW_PUBLIC_IP_NAME}}
 
-      #- name: Get App GW Public IP for AKS API Server Network Restriction
-      #  if: success()
-      #  run: |
-      #    APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
-      #    echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
+      - name: Get App GW Public IP for AKS API Server Network Restriction
+        if: success()
+        run: |
+          APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
+          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
 
-      #- name: Deploy App GW
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.app-gw.json
-      #    parameters: location=${{env.AZURE_LOCATION}} appGatewayName="${{env.APPGW_NAME}}" skuName="WAF_v2" availabilityZones="1,2,3" managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APPGW}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}"
+      - name: Deploy App GW
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.app-gw.json
+          parameters: location=${{env.AZURE_LOCATION}} appGatewayName="${{env.APPGW_NAME}}" skuName="WAF_v2" availabilityZones="1,2,3" managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APPGW}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}"
 
-      #- name: Get App GW Resource ID
-      #  if: success()
-      #  run: echo "APPGW_RESOURCE_ID=$(az network application-gateway show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+      - name: Get App GW Resource ID
+        if: success()
+        run: echo "APPGW_RESOURCE_ID=$(az network application-gateway show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      #- name: Deploy AKS Cluster
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/aks.cluster.json
-      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} dnsPrefix=${{env.AKS_DNS_PREFIX}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APP}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}"
+      - name: Deploy AKS Cluster
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/aks.cluster.json
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} identityClientId=${{env.UAMI_CLIENT_ID}} identityPrincipalId=${{env.UAMI_PRINCIPAL_ID}} nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APP}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" 
 
       #- name: Deploy additional AKS Node Pool
       #  if: success()
@@ -303,34 +298,25 @@ jobs:
       #    template: ./templates/aks.node-pool.json
       #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
 
-      - name: Grant UAMI Reader on AKS VMSS RG for Pod Identity
+      - name: Configure AGIC on AKS Cluster
+        if: success()
+        run: az aks enable-addons --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -a ingress-appgw --appgw-id "${{env.APPGW_RESOURCE_ID}}"
+
+      - name: Deploy Public IP for APIM Service
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: |
-            roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" scopeId="resourceGroups/${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}"
+          template: ./templates/net.public-ip.json
+          parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APIM_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APIM_PUBLIC_IP_NAME}}
 
-      #- name: Configure AGIC on AKS Cluster
-      #  if: success()
-      #  run: az aks enable-addons --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -a ingress-appgw --appgw-id "${{env.APPGW_RESOURCE_ID}}"
-
-      #- name: Deploy Public IP for APIM Service
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.public-ip.json
-      #    parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APIM_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APIM_PUBLIC_IP_NAME}}
-
-      #- name: Deploy APIM Service
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/apim.service.json
-      #    parameters: location=${{env.AZURE_LOCATION}} apimName="${{env.APIM_SERVICE_NAME}}" skuName="Premium" availabilityZones="1,2,3" scaleUnits=3 managedIdentityType=UserAssigned identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APIM}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APIM_PUBLIC_IP_NAME}}"
+      - name: Deploy APIM Service
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/apim.service.json
+          parameters: location=${{env.AZURE_LOCATION}} apimName="${{env.APIM_SERVICE_NAME}}" skuName="Premium" availabilityZones="1,2,3" scaleUnits=3 managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APIM}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APIM_PUBLIC_IP_NAME}}"
 
       - name: Azure logout
         run: |
