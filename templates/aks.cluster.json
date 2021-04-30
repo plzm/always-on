@@ -45,22 +45,6 @@
 				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
 			}
 		},
-		"identityClientId": {
-			"type": "string",
-			"defaultValue": "",
-			"metadata": {
-				"displayName": "User-Assigned Identity Client ID",
-				"description": "Can get with az identity show"
-			}
-		},
-		"identityPrincipalId": {
-			"type": "string",
-			"defaultValue": "",
-			"metadata": {
-				"displayName": "User-Assigned Identity Principal ID (aka Object ID)",
-				"description": "Can get with az identity show"
-			}
-		},
 		"nodeResourceGroup": {
 			"type": "string",
 			"defaultValue": "",
@@ -159,18 +143,9 @@
 				"displayName": "API Server Authorized IP Ranges",
 				"description": "Optional. To restrict API Server network access, pass a comma-delimited string of IP ranges. Example: 1.2.3.4/32,13.1.1.0/16. See https://docs.microsoft.com/azure/aks/api-server-authorized-ip-ranges for details."
 			}
-		},
-		"podIdentityEnabled": {
-			"type": "bool",
-			"defaultValue": true
-		},
-		"podIdentityAllowKubenet": {
-			"type": "bool",
-			"defaultValue": true
 		}
 	},
 	"variables": {
-		"identityName": "[last(split(parameters('identityResourceId'), '/'))]",
 		"userAssignedIdentity": "[
 			if
 			(
@@ -181,28 +156,6 @@
 					createObject()
 				),
 				json('null')
-			)
-		]",
-		"podIdentity": "[
-			if
-			(
-				and(parameters('podIdentityEnabled'), equals(toLower(parameters('managedIdentityType')), 'userassigned'), not(empty(variables('identityName')))),
-				array
-				(
-					createObject
-					(
-						'name', variables('identityName'),
-						'namespace', 'default',
-						'bindingSelector', '',
-						'identity', createObject
-						(
-							'resourceId', parameters('identityResourceId'),
-							'clientId', parameters('identityClientId'),
-							'objectId', parameters('identityPrincipalId')
-						)
-					)
-				),
-				json('[]')
 			)
 		]",
         "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
@@ -268,12 +221,7 @@
 						"mode": "System",
 						"vnetSubnetId": "[variables('subnetId')]"
 					}
-				],
-				"podIdentityProfile": {
-					"enabled": "[parameters('podIdentityEnabled')]",
-					"allowNetworkPluginKubenet": "[parameters('podIdentityAllowKubenet')]",
-					"userAssignedIdentities": "[variables('podIdentity')]"
-				}
+				]
 			}
 		}
 	],
