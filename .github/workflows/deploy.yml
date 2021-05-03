@@ -87,6 +87,7 @@ jobs:
         run: |
           az extension add --name application-insights
           az extension add --name aks-preview
+          az extension add --name front-door
 
       #- name: Create Azure resource group
       #  if: success()
@@ -293,11 +294,11 @@ jobs:
       #    template: ./templates/net.public-ip.json
       #    parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APPGW_PUBLIC_IP_NAME}}
 
-      - name: Get App GW Public IP for AKS API Server Network Restriction
-        if: success()
-        run: |
-          APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
-          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
+      #- name: Get App GW Public IP for AKS API Server Network Restriction
+      #  if: success()
+      #  run: |
+      #    APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
+      #    echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
 
       #- name: Deploy App GW
       #  if: success()
@@ -307,9 +308,9 @@ jobs:
       #    template: ./templates/net.app-gw.json
       #    parameters: location=${{env.AZURE_LOCATION}} appGatewayName="${{env.APPGW_NAME}}" skuName="WAF_v2" availabilityZones="1,2,3" managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APPGW}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}"
 
-      - name: Get App GW Resource ID
-        if: success()
-        run: echo "APPGW_RESOURCE_ID=$(az network application-gateway show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get App GW Resource ID
+      #  if: success()
+      #  run: echo "APPGW_RESOURCE_ID=$(az network application-gateway show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
       # ARM Template but does not support kubelet identity
@@ -322,25 +323,25 @@ jobs:
       #    parameters: location=${{env.AZURE_LOCATION}} k8sversion=${{env.AKS_VERSION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} availabilityZones="1,2,3" nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APP}}" networkPlugin="${{env.AKS_NET_PLUGIN}}" serviceCidr="${{env.AKS_SERVICE_CIDR}}" dnsServiceIp="${{env.AKS_DNS_SERVICE_IP}}" podCidr="${{env.AKS_POD_CIDR}}" dockerBridgeCidr="${{env.AKS_DOCKER_BRIDGE_ADDRESS}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" 
 
       # az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
-      - name: Deploy AKS Cluster (CLI)
-        if: success()
-        run: |
-          az aks create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g "${{env.AZURE_RESOURCE_GROUP}}" -l "${{env.AZURE_LOCATION}}" --verbose \
-            -n "${{env.AKS_CLUSTER_NAME}}" --zones ${{env.AKS_ZONES_FOR_CLI}} --kubernetes-version "${{env.AKS_VERSION}}" --dns-name-prefix "${{env.AKS_DNS_PREFIX}}" \
-            --enable-managed-identity --assign-identity "${{env.UAMI_RESOURCE_ID}}" --assign-kubelet-identity "${{env.UAMI_RESOURCE_ID}}" \
-            --node-resource-group "${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" --node-count "${{env.AKS_NODE_COUNT}}" --node-vm-size "${{env.AKS_NODE_SIZE}}" \
-            --admin-username "${{secrets.ADMIN_USERNAME}}" --ssh-key-value "${{secrets.SSH_KEY}}" \
-            --vnet-subnet-id "${{env.APP_SUBNET_RESOURCE_ID}}" --api-server-authorized-ip-ranges "${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" \
-            --network-plugin "${{env.AKS_NET_PLUGIN}}" --service-cidr "${{env.AKS_SERVICE_CIDR}}" --dns-service-ip "${{env.AKS_DNS_SERVICE_IP}}" --pod-cidr "${{env.AKS_POD_CIDR}}" --docker-bridge-address "${{env.AKS_DOCKER_BRIDGE_ADDRESS}}"
+      #- name: Deploy AKS Cluster (CLI)
+      #  if: success()
+      #  run: |
+      #    az aks create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g "${{env.AZURE_RESOURCE_GROUP}}" -l "${{env.AZURE_LOCATION}}" --verbose \
+      #      -n "${{env.AKS_CLUSTER_NAME}}" --zones ${{env.AKS_ZONES_FOR_CLI}} --kubernetes-version "${{env.AKS_VERSION}}" --dns-name-prefix "${{env.AKS_DNS_PREFIX}}" \
+      #      --enable-managed-identity --assign-identity "${{env.UAMI_RESOURCE_ID}}" --assign-kubelet-identity "${{env.UAMI_RESOURCE_ID}}" \
+      #      --node-resource-group "${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" --node-count "${{env.AKS_NODE_COUNT}}" --node-vm-size "${{env.AKS_NODE_SIZE}}" \
+      #      --admin-username "${{secrets.ADMIN_USERNAME}}" --ssh-key-value "${{secrets.SSH_KEY}}" \
+      #      --vnet-subnet-id "${{env.APP_SUBNET_RESOURCE_ID}}" --api-server-authorized-ip-ranges "${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" \
+      #      --network-plugin "${{env.AKS_NET_PLUGIN}}" --service-cidr "${{env.AKS_SERVICE_CIDR}}" --dns-service-ip "${{env.AKS_DNS_SERVICE_IP}}" --pod-cidr "${{env.AKS_POD_CIDR}}" --docker-bridge-address "${{env.AKS_DOCKER_BRIDGE_ADDRESS}}"
 
       # AKS Nodes RG is created during the AKS cluster deploy and cannot be pre-created. That's why this step is right after Deploy AKS Cluster.
-      - name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
+      #- name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
 
       #- name: Deploy additional AKS Node Pool
       #  if: success()
@@ -350,69 +351,73 @@ jobs:
       #    template: ./templates/aks.node-pool.json
       #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
 
-      - name: Configure AKS Add-ons - Monitoring, AGIC
+      #- name: Configure AKS Add-ons - Monitoring, AGIC
+      #  if: success()
+      #  run: az aks enable-addons --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -a monitoring,ingress-appgw --workspace-resource-id ${{env.LA_WORKSPACE_RESOURCE_ID}} --appgw-id "${{env.APPGW_RESOURCE_ID}}"
+
+      #- name: Enabled Pod Managed identity
+      #  if: success()
+      #  run: |
+      #    az aks update --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --enable-pod-identity --enable-pod-identity-with-kubenet
+
+      #- name: Add Pod Identity
+      #  if: success()
+      #  run: |
+      #    az aks pod-identity add -g ${{env.AZURE_RESOURCE_GROUP}} --cluster-name ${{env.AKS_CLUSTER_NAME}} --namespace "default" --name ${{env.UAMI_NAME}} --identity-resource-id ${{env.UAMI_RESOURCE_ID}}
+
+      #- name: kubectl
+      #  if: success()
+      #  run: |
+      #    az aks get-credentials --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --overwrite-existing
+
+      - name: Deploy Public IP for APIM Service
         if: success()
-        run: az aks enable-addons --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -a monitoring,ingress-appgw --workspace-resource-id ${{env.LA_WORKSPACE_RESOURCE_ID}} --appgw-id "${{env.APPGW_RESOURCE_ID}}"
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.public-ip.json
+          parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APIM_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APIM_PUBLIC_IP_NAME}}
 
-      - name: Enabled Pod Managed identity
+      - name: Deploy APIM Service
         if: success()
-        run: |
-          az aks update --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --enable-pod-identity --enable-pod-identity-with-kubenet
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/apim.service.json
+          parameters: location=${{env.AZURE_LOCATION}} apimServiceName="${{env.APIM_SERVICE_NAME}}" skuName="Premium" availabilityZones="1,2,3" scaleUnits=3 managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APIM}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APIM_PUBLIC_IP_NAME}}"
 
-      - name: Add Pod Identity
+      - name: Get APIM Service Resource ID
         if: success()
-        run: |
-          az aks pod-identity add -g ${{env.AZURE_RESOURCE_GROUP}} --cluster-name ${{env.AKS_CLUSTER_NAME}} --namespace "default" --name ${{env.UAMI_NAME}} --identity-resource-id ${{env.UAMI_RESOURCE_ID}}
+        run: echo "APIM_SERVICE_RESOURCE_ID=$(az apim show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --service-name ${{env.APIM_SERVICE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: kubectl
+      - name: Deploy APIM API Version Set
         if: success()
-        run: |
-          az aks get-credentials --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --overwrite-existing
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/apim.api-version-set.json
+          parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" displayName="${{env.APIM_API_VERSION_SET_NAME}}" description="${{env.APIM_API_VERSION_SET_DESCRIPTION}}"
 
-      #- name: Deploy Public IP for APIM Service
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.public-ip.json
-      #    parameters: location=${{env.AZURE_LOCATION}} publicIpName="${{env.APIM_PUBLIC_IP_NAME}}" availabilityZones="1,2,3" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{env.APIM_PUBLIC_IP_NAME}}
+      - name: Get APIM API Version Set Resource ID
+        if: success()
+        run: echo "APIM_API_VERSION_SET_RESOURCE_ID=$(az apim api versionset list --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --service-name ${{env.APIM_SERVICE_NAME}} -o tsv --query '[0].id')" >> $GITHUB_ENV
 
-      #- name: Deploy APIM Service
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/apim.service.json
-      #    parameters: location=${{env.AZURE_LOCATION}} apimServiceName="${{env.APIM_SERVICE_NAME}}" skuName="Premium" availabilityZones="1,2,3" scaleUnits=3 managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.SUBNET_NAME_APIM}}" publicIpResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" publicIpName="${{env.APIM_PUBLIC_IP_NAME}}"
+      - name: Deploy APIM Logger
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/apim.logger.json
+          parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" loggerName="${{env.APP_INSIGHTS_NAME_APIM}}" logTargetResourceId="${{env.APP_INSIGHTS_APIM_RESOURCE_ID}}" appInsightsTargetInstrumentationKey="${{env.APP_INSIGHTS_APIM_INSTRUMENTATION_KEY}}"
 
-      #- name: Deploy APIM API Version Set
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/apim.api-version-set.json
-      #    parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" displayName="${{env.APIM_API_VERSION_SET_NAME}}" description="${{env.APIM_API_VERSION_SET_DESCRIPTION}}"
-
-      #- name: Get APIM API Version Set Resource ID
-      #  if: success()
-      #  run: echo "APIM_API_VERSION_SET_RESOURCE_ID=$(az apim api versionset list --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --service-name ${{env.APIM_SERVICE_NAME}} -o tsv --query '[0].id')" >> $GITHUB_ENV
-
-      #- name: Deploy APIM Logger
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/apim.logger.json
-      #    parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" loggerName="${{env.APP_INSIGHTS_NAME_APIM}}" logTargetResourceId="${{env.APP_INSIGHTS_APIM_RESOURCE_ID}}" appInsightsTargetInstrumentationKey="${{env.APP_INSIGHTS_APIM_INSTRUMENTATION_KEY}}"
-
-      # Create a new API. This does NOT import existing source API operations; explore az apim api import for that.
-      #- name: Deploy APIM API
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/apim.api.json
-      #    parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" apiName="${{env.APIM_API_NAME}}" displayName="${{env.APIM_API_NAME}}" description="${{env.APIM_API_DESCRIPTION}}" serviceUrl="${{env.APIM_API_SERVICE_URL}}" path="${{env.APIM_API_SERVICE_PATH}}" apiVersionSetResourceId="${{env.APIM_API_VERSION_SET_RESOURCE_ID}}"
+      # Create a new API. This does NOT import existing source API operations.
+      - name: Deploy APIM API
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/apim.api.json
+          parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" apiName="${{env.APIM_API_NAME}}" displayName="${{env.APIM_API_NAME}}" description="${{env.APIM_API_DESCRIPTION}}" serviceUrl="${{env.APIM_API_SERVICE_URL}}" path="${{env.APIM_API_SERVICE_PATH}}" apiVersionSetResourceId="${{env.APIM_API_VERSION_SET_RESOURCE_ID}}"
 
       - name: Azure logout
         run: |

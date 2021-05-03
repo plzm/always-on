@@ -2,27 +2,86 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-		"timestamp": {
-			"type": "string",
-			"defaultValue": "[utcNow('u')]"
-		},
+        "timestamp": {
+            "type": "string",
+            "defaultValue": "[utcNow('u')]"
+        },
         "frontDoorName": {
             "type": "string",
             "defaultValue": ""
         },
-		"nsgRuleInbound100Src": {
+        "frontDoorEnforceCertificateNameCheck": {
             "type": "string",
-            "defaultValue": "",
+            "defaultValue": "Disabled",
+            "allowedValues": [
+                "Enabled",
+                "Disabled"
+            ],
             "metadata": {
-                "displayName": "Source for dev/test inbound rule",
-                "description": "Optional. If provided, a priority 100 rule will be created to allow inbound access from this source. Useful for dev/test/debug etc. but likely not appropriate to provide in production."
+                "description": "Whether to enforce certificate name check on HTTPS requests to all backend pools. No effect on non-HTTPS requests. - Enabled or Disabled"
+            }
+        },
+        "frontDoorFrontendEndpoint": {
+            "type": "object",
+            "defaultValue": {
+                "name": "MainFrontendEndpoint",
+                "sessionAffinityEnabledState": "Disabled",
+                "sessionAffinityTtlSeconds": 0
+            },
+            "metadata": {
+                "description": "This parameter contains the name and properties of the frontend endpoint."
+            }
+        },
+        "frontDoorBackendPool": {
+            "type": "object",
+            "defaultValue": {
+                "name": "ApimBackendPool",
+                "loadBalancerName": "ApimLoadBalancer"
+            },
+            "metadata": {
+                "description": "This parameter contains the name and properties of the Application Gateway Backend Pool"
+            }
+        },
+        "frontDoorRoutingRule": {
+            "type": "object",
+            "defaultValue": {
+                "name": "ApimRoutingRule",
+                "acceptedProtocols": [
+                    "Http",
+                    "Https"
+                ],
+                "patternsToMatch": [
+                    "/*"
+                ],
+                "customForwardingPath": "/",
+                "forwardingProtocol": "MatchRequest",
+                "cacheConfiguration": {
+                    "queryParameterStripDirective": "StripNone",
+                    "dynamicCompression": "Enabled"
+                }
+            },
+            "metadata": {
+                "description": "This parameter contains the name and properties of the routing rule."
+            }
+        },
+        "frontDoorHealthProbeSettings": {
+            "type": "object",
+            "defaultValue": {
+                "name": "ApimHealthProbeSettings",
+                "intervalInSeconds": 30,
+                "path": "/status-0123456789abcdef",
+                "protocol": "Https"
+            },
+            "metadata": {
+                "description": "This parameter contains the name and properties of the health probe settings."
             }
         }
-	},
+    },
     "variables": {
-		"resourceTags": {
-			"Timestamp": "[parameters('timestamp')]"
-		},
+        "backEndHostName": "[]",
+        "resourceTags": {
+            "Timestamp": "[parameters('timestamp')]"
+        },
         "apiVersionNet": "2020-05-01"
     },
     "resources": [
@@ -32,8 +91,7 @@
             "name": "[parameters('nsgName')]",
             "location": "[parameters('location')]",
             "properties": {
-                "securityRules":
-                "[
+                "securityRules": "[
                     if
                     (
                         empty(trim(parameters('nsgRuleInbound100Src'))),
@@ -69,7 +127,7 @@
             "apiVersion": "[variables('apiVersionNet')]",
             "name": "[parameters('frontDoorName')]",
             "location": "Global",
-			"tags": "[variables('resourceTags')]",
+            "tags": "[variables('resourceTags')]",
             "properties": {
                 "enabledState": "Enabled",
                 "backendPoolsSettings": {
@@ -158,5 +216,6 @@
                 ],
                 "friendlyName": "[parameters('frontDoorName')]"
             }
-        }	]
+        }
+    ]
 }
