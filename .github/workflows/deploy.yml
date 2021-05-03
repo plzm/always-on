@@ -168,7 +168,7 @@ jobs:
       - name: Get App Subnet Resource ID
         if: success()
         run: |
-          echo "APP_SUBNET_RESOURCE_ID=$(az network vnet subnet show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --vnet-name ${{env.VNET_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "APP_SUBNET_RESOURCE_ID=$(az network vnet subnet show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --vnet-name ${{env.VNET_NAME}} -n ${{env.SUBNET_NAME_APP}} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
       #- name: Deploy User-Assigned MI
