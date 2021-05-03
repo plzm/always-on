@@ -6,11 +6,11 @@ on:
 
 env:
   AZURE_LOCATION: 'eastus'
-  AZURE_RESOURCE_GROUP: 'always-on-10'
+  AZURE_RESOURCE_GROUP: 'always-on-11'
   IDENTITY_TYPE: 'UserAssigned'
-  UAMI_NAME: 'pz-ao-uami-10'
-  KEY_VAULT_NAME: 'ao-kv-eus-10'
-  APIM_SERVICE_NAME: 'ao-apim-eus-10'
+  UAMI_NAME: 'pz-ao-uami-11'
+  KEY_VAULT_NAME: 'ao-kv-eus-11'
+  APIM_SERVICE_NAME: 'ao-apim-eus-11'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
@@ -21,10 +21,10 @@ env:
   VNET_NAME: 'ao-eus'
   VNET_PREFIX: '10.0.0.0/16'
   VNET_ENABLE_DDOS: 'false'
-  SUBNET_NAME_APPGW: 'AppGw'
-  SUBNET_PREFIX_APPGW: '10.0.1.0/24'
   SUBNET_NAME_APIM: 'Apim'
-  SUBNET_PREFIX_APIM: '10.0.2.0/24'
+  SUBNET_PREFIX_APIM: '10.0.1.0/24'
+  SUBNET_NAME_APPGW: 'AppGw'
+  SUBNET_PREFIX_APPGW: '10.0.2.0/24'
   SUBNET_NAME_APP: 'App'
   SUBNET_PREFIX_APP: '10.0.5.0/24'
   REGISTRY_NAME: 'pzaocr'
@@ -34,11 +34,11 @@ env:
   APP_INSIGHTS_NAME_BE: 'ao-be-eus'
   APP_INSIGHTS_NAME_FE: 'ao-fe-eus'
   EVENT_HUB_NS_NAME: 'ao-eh-eus'
-  EVENT_HUB_CAPACITY: '2'
+  EVENT_HUB_CAPACITY: '1'
   COSMOS_DB_ACCT_NAME: 'ao-cdb-pz'
   COSMOS_DB_LOCATIONS: 'eastus:true,westus2:true'
   COSMOS_DB_DATABASE_NAME: 'db1'
-  COSMOS_DB_DATABASE_THROUGHPUT: '1000'
+  COSMOS_DB_DATABASE_THROUGHPUT: '400'
   COSMOS_DB_CONTAINER_NAME: 'c1'
   COSMOS_DB_CONTAINER_THROUGHPUT: '400'
   COSMOS_DB_PARTITION_KEY: '/id'
@@ -147,14 +147,6 @@ jobs:
           parameters: |
             location=${{env.AZURE_LOCATION}} vnetName=${{env.VNET_NAME}} vnetPrefix=${{env.VNET_PREFIX}} enableDdosProtection=${{env.VNET_ENABLE_DDOS}} ddosProtectionPlanResourceGroup=${{env.AZURE_RESOURCE_GROUP}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
-      - name: Deploy AppGW Subnet
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.vnet.subnet.json
-          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
-
       - name: Deploy APIM Subnet
         if: success()
         uses: azure/arm-deploy@v1
@@ -162,6 +154,14 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/net.vnet.subnet.json
           parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APIM}} subnetPrefix=${{env.SUBNET_PREFIX_APIM}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APIM}}
+
+      - name: Deploy AppGW Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.SUBNET_NAME_APPGW}} subnetPrefix=${{env.SUBNET_PREFIX_APPGW}}
 
       - name: Deploy App Subnet
         if: success()
@@ -307,13 +307,13 @@ jobs:
           template: ./templates/authorization.role-assignment.json
           parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
-      - name: Deploy additional AKS Node Pool
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/aks.node-pool.json
-          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
+      #- name: Deploy additional AKS Node Pool
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/aks.node-pool.json
+      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
 
       - name: Enabled Pod Managed identity
         if: success()
@@ -362,15 +362,6 @@ jobs:
         if: success()
         run: echo "APIM_API_VERSION_SET_RESOURCE_ID=$(az apim api versionset list --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} --service-name ${{env.APIM_SERVICE_NAME}} -o tsv --query '[0].id')" >> $GITHUB_ENV
 
-      # Create a new API. This does NOT import existing source API operations; explore az apim api import for that.
-      - name: Deploy APIM API
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/apim.api.json
-          parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" apiName="${{env.APIM_API_NAME}}" displayName="${{env.APIM_API_NAME}}" description="${{env.APIM_API_DESCRIPTION}}" serviceUrl="${{env.APIM_API_SERVICE_URL}}" path="${{env.APIM_API_SERVICE_PATH}}" apiVersionSetResourceId="${{env.APIM_API_VERSION_SET_RESOURCE_ID}}"
-
       - name: Deploy APIM Logger
         if: success()
         uses: azure/arm-deploy@v1
@@ -378,6 +369,15 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/apim.logger.json
           parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" loggerName="${{env.APP_INSIGHTS_NAME_APIM}}" logTargetResourceId="${{env.APP_INSIGHTS_APIM_RESOURCE_ID}}" appInsightsTargetInstrumentationKey="${{env.APP_INSIGHTS_APIM_INSTRUMENTATION_KEY}}"
+
+      # Create a new API. This does NOT import existing source API operations; explore az apim api import for that.
+      #- name: Deploy APIM API
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/apim.api.json
+      #    parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" apiName="${{env.APIM_API_NAME}}" displayName="${{env.APIM_API_NAME}}" description="${{env.APIM_API_DESCRIPTION}}" serviceUrl="${{env.APIM_API_SERVICE_URL}}" path="${{env.APIM_API_SERVICE_PATH}}" apiVersionSetResourceId="${{env.APIM_API_VERSION_SET_RESOURCE_ID}}"
 
       - name: Azure logout
         run: |
