@@ -48,28 +48,24 @@ apiServerAuthorizedIpRanges="$appGwPublicIpAddress""/32,""$myIp"
 
 # Create AKS cluster with control plane and kubelet MI
 az aks create --subscription "$subscriptionId" -g "$resourceGroup" -l "$location" --verbose \
-	 -n "$clusterName" --kubernetes-version "$k8sversion" --dns-name-prefix "$dnsPrefix" 
+	 -n "$clusterName" --kubernetes-version "$k8sversion" --dns-name-prefix "$dnsPrefix" \
 	--enable-managed-identity --assign-identity "$identityResourceId" --assign-kubelet-identity "$identityResourceId" \
 	--node-resource-group "$nodeResourceGroup" --node-count "$nodeCount" --node-vm-size "$nodeVmSize" \
 	--admin-username "$nodeAdminUsername" --ssh-key-value "$sshRSAPublicKey" \
 	--vnet-subnet-id "$subnetAppResourceId" --api-server-authorized-ip-ranges "$apiServerAuthorizedIpRanges" \
-	--network-plugin kubenet \
-	--service-cidr "10.1.0.0/16" \
-	--dns-service-ip "10.1.0.10" \
-	--pod-cidr "10.241.0.0/16" \
-	--docker-bridge-address "172.17.0.1/16"
+	--network-plugin kubenet --service-cidr "10.1.0.0/16" --dns-service-ip "10.1.0.10" --pod-cidr "10.241.0.0/16" --docker-bridge-address "172.17.0.1/16"
 
-# Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity - RG is created by AKS deploy and cannot exist before
-az role assignment create --subscription "$subscriptionId" -g "$resourceGroup" --role "$rbacRoleIdReader" --assignee-object-id "$identityPrincipalId"
+## Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity - RG is created by AKS deploy and cannot exist before
+#az role assignment create --subscription "$subscriptionId" -g "$resourceGroup" --role "$rbacRoleIdReader" --assignee-object-id "$identityPrincipalId"
 
-# Configure AKS Add-ons - Monitoring, AGIC
-az aks enable-addons --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" -a monitoring,ingress-appgw --workspace-resource-id "$laWorkspaceResourceId" --appgw-id "$appGwResourceId"
+## Configure AKS Add-ons - Monitoring, AGIC
+#az aks enable-addons --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" -a monitoring,ingress-appgw --workspace-resource-id "$laWorkspaceResourceId" --appgw-id "$appGwResourceId"
 
-# Enabled Pod Managed identity
-az aks update --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --enable-pod-identity --enable-pod-identity-with-kubenet
+## Enabled Pod Managed identity
+#az aks update --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --enable-pod-identity --enable-pod-identity-with-kubenet
 
-# Add Pod Identity
-az aks pod-identity add --subscription "$subscriptionId" -g "$resourceGroup" --cluster-name "$clusterName" --namespace "default" --name "$managedIdentityName" --identity-resource-id "$identityResourceId"
+## Add Pod Identity
+#az aks pod-identity add --subscription "$subscriptionId" -g "$resourceGroup" --cluster-name "$clusterName" --namespace "default" --name "$managedIdentityName" --identity-resource-id "$identityResourceId"
 
 
 
