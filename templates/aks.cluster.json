@@ -124,7 +124,7 @@
 			"type": "string",
 			"defaultValue": "10.1.0.0/16"
 		},
-		"dnsServiceIP": {
+		"dnsServiceIp": {
 			"type": "string",
 			"defaultValue": "10.1.0.10"
 		},
@@ -196,7 +196,7 @@
 				"networkProfile": {
 					"networkPlugin": "[parameters('networkPlugin')]",
 					"serviceCidr": "[if(empty(parameters('serviceCidr')), json('null'), parameters('serviceCidr'))]",
-					"dnsServiceIP": "[if(empty(parameters('dnsServiceIP')), json('null'), parameters('dnsServiceIP'))]",
+					"dnsServiceIp": "[if(empty(parameters('dnsServiceIp')), json('null'), parameters('dnsServiceIp'))]",
 					"podCidr": "[if(empty(parameters('podCidr')), json('null'), parameters('podCidr'))]",
 					"dockerBridgeCidr": "[if(empty(parameters('dockerBridgeCidr')), json('null'), parameters('dockerBridgeCidr'))]"
 				},

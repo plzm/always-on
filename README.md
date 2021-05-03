@@ -212,12 +212,19 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### CD - Global / Regional Stamp
 
-
-
-### 4. Infrastructure Deployment
+### 4. Tech Stack Notes
 
 #### AKS
 
-Test [Multi-Container App](https://docs.microsoft.com/en-us/azure/aks/kubernetes-walkthrough-rm-template).
+[Cluster authorized IP ranges](https://docs.microsoft.com/azure/aks/api-server-authorized-ip-ranges)
+[AAD pod-managed identities (preview)](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
+[BYO kubelet MI (preview)](https://docs.microsoft.com/azure/aks/use-managed-identity#bring-your-own-kubelet-mi-preview)
+
+Enabling preview features (kubelet MI, pod identity) requires separate steps. See [aks-init.sh](./scripts/aks-init.sh) for details of registering previews and updating the AKS RP.
+
+Test [Multi-Container App](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough-rm-template).
+
+``` bash
 kubectl apply -f ./aks/azure-vote.yaml
+```
 
