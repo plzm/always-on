@@ -10,7 +10,7 @@
             "type": "string",
             "defaultValue": ""
         },
-        "frontDoorEnforceCertificateNameCheck": {
+        "enforceCertificateNameCheck": {
             "type": "string",
             "defaultValue": "Disabled",
             "allowedValues": [
@@ -21,31 +21,43 @@
                 "description": "Whether to enforce certificate name check on HTTPS requests to all backend pools. No effect on non-HTTPS requests. - Enabled or Disabled"
             }
         },
-        "frontDoorFrontendEndpoint": {
-            "type": "object",
-            "defaultValue": {
-                "name": "MainFrontendEndpoint",
-                "sessionAffinityEnabledState": "Disabled",
-                "sessionAffinityTtlSeconds": 0
-            },
-            "metadata": {
-                "description": "This parameter contains the name and properties of the frontend endpoint."
-            }
+        "frontendEndpointName": {
+            "type": "string",
+            "defaultValue": "MainFrontendEndpoint"
         },
-        "frontDoorBackendPool": {
-            "type": "object",
-            "defaultValue": {
-                "name": "ApimBackendPool",
-                "loadBalancerName": "ApimLoadBalancer"
-            },
-            "metadata": {
-                "description": "This parameter contains the name and properties of the Application Gateway Backend Pool"
-            }
+        "frontendEndpointSessionAffinity": {
+            "type": "string",
+            "defaultValue": "Disabled",
+            "allowedValues": [
+                "Disabled",
+                "Enabled"
+            ]
         },
-        "frontDoorRoutingRule": {
+        "frontendEndpointSessionAffinityTtlSeconds": {
+            "type": "int",
+            "defaultValue": 0,
+            "minValue": 0
+        },
+        "backendPoolName": {
+            "type": "string",
+            "defaultValue": "BackendPool"
+        },
+        "backendPoolLoadBalancerName": {
+            "type": "string",
+            "defaultValue": "BackendLoadBalancer"
+        },
+        "backendAddress": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "backendHostHeader": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "routingRule": {
             "type": "object",
             "defaultValue": {
-                "name": "ApimRoutingRule",
+                "name": "RoutingRule",
                 "acceptedProtocols": [
                     "Http",
                     "Https"
@@ -64,88 +76,117 @@
                 "description": "This parameter contains the name and properties of the routing rule."
             }
         },
-        "frontDoorHealthProbeSettings": {
-            "type": "object",
-            "defaultValue": {
-                "name": "ApimHealthProbeSettings",
-                "intervalInSeconds": 30,
-                "path": "/status-0123456789abcdef",
-                "protocol": "Https"
-            },
+        "healthProbeSettingsName": {
+            "type": "string",
+            "defaultValue": "HealthProbeSettings"
+        },
+        "healthProbeSettingsIntervalInSeconds": {
+            "type": "int",
+            "defaultValue": 30
+        },
+        "healthProbeSettingsPath": {
+            "type": "string",
+            "defaultValue": "/status-0123456789abcdef"
+        },
+        "healthProbeSettingsProtocol": {
+            "type": "string",
+            "defaultValue": "Https"
+        },
+        "deployWaf": {
+            "type": "bool",
+            "defaultValue": true,
             "metadata": {
-                "description": "This parameter contains the name and properties of the health probe settings."
+                "description": "Specifies whether to deploy a global WAF policy in Front Door."
             }
+        },
+        "wafPolicyName": {
+            "type": "string",
+            "defaultValue": "FrontDoorWaf",
+            "metadata": {
+                "description": "The name of the WAF policy"
+            }
+        },
+        "wafMode": {
+            "type": "string",
+            "allowedValues": [
+                "Detection",
+                "Prevention"
+            ],
+            "defaultValue": "Detection",
+            "metadata": {
+                "description": "Describes if it is in detection mode or prevention mode at policy level."
+            }
+        },
+        "logAnalyticsWorkspaceResourceId": {
+            "type": "string",
+            "defaultValue": ""
         }
     },
     "variables": {
-        "backEndHostName": "[]",
-        "resourceTags": {
+        "frontDoorId": "[resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName'))]",
+        "frontDoorBackendPoolId": "[resourceId('Microsoft.Network/frontdoors/backendPools', parameters('frontDoorName'), parameters('backendPoolName'))]",
+        "frontDoorHealthProbeSettingsId": "[resourceId('Microsoft.Network/frontdoors/healthProbeSettings', parameters('frontDoorName'), parameters('healthProbeSettingsName'))]",
+        "frontDoorLoadBalancerId": "[resourceId('Microsoft.Network/frontdoors/loadBalancingSettings', parameters('frontDoorName'), parameters('backendPoolLoadBalancerName'))]",
+        "frontDoorFrontendEndpointId": "[resourceId('Microsoft.Network/frontdoors/frontendEndpoints', parameters('frontDoorName'), parameters('frontendEndpointName'))]",
+        "frontDoorSuffix": "[if(equals(toLower(environment().name), 'azureusgovernment'), 'azurefd.us', environment().suffixes.azureFrontDoorEndpointSuffix)]",
+        "frontDoorHostName": "[concat(toLower(parameters('frontDoorName')), '.', variables('frontDoorSuffix'))]",
+        "wafPolicyId": "[resourceId('Microsoft.Network/FrontDoorWebApplicationFirewallPolicies', parameters('wafPolicyName'))]",
+         "resourceTags": {
             "Timestamp": "[parameters('timestamp')]"
         },
-        "apiVersionNet": "2020-05-01"
+        "apiVersionNetFd": "2020-05-01",
+        "apiVersionNetWafPolicy": "2020-04-01",
+        "apiVersionDiagnostics": "2017-05-01-preview"
     },
     "resources": [
         {
-            "type": "Microsoft.Network/networkSecurityGroups",
-            "apiVersion": "[variables('apiVersionNet')]",
-            "name": "[parameters('nsgName')]",
-            "location": "[parameters('location')]",
+            "condition": "[parameters('deployWaf')]",
+            "type": "Microsoft.Network/FrontDoorWebApplicationFirewallPolicies",
+            "apiVersion": "[variables('apiVersionNetWafPolicy')]",
+            "name": "[parameters('wafPolicyName')]",
+            "location": "global",
             "properties": {
-                "securityRules": "[
-                    if
-                    (
-                        empty(trim(parameters('nsgRuleInbound100Src'))),
-                        json('[]'),
-                        array
-                        (
-                            createObject
-                            (
-                                'name', variables('rule100Name'),
-                                'properties', createObject
-                                (
-                                    'protocol', '*',
-                                    'sourcePortRange', '*',
-                                    'destinationPortRange', '*',
-                                    'sourceAddressPrefix', parameters('nsgRuleInbound100Src'),
-                                    'destinationAddressPrefix', '*',
-                                    'access', 'Allow',
-                                    'priority', 100,
-                                    'direction', 'Inbound',
-                                    'sourcePortRanges', json('[]'),
-                                    'destinationPortRanges', json('[]'),
-                                    'sourceAddressPrefixes', json('[]'),
-                                    'destinationAddressPrefixes', json('[]')
-                                )
-                            )
-                        )
-                    )
-                ]"
+                "policySettings": {
+                    "mode": "[parameters('wafMode')]",
+                    "enabledState": "Enabled"
+                },
+                "managedRules": {
+                    "managedRuleSets": [
+                        {
+                            "ruleSetType": "DefaultRuleSet",
+                            "ruleSetVersion": "1.0"
+                        }
+                    ]
+                }
             }
         },
         {
             "type": "Microsoft.Network/frontdoors",
-            "apiVersion": "[variables('apiVersionNet')]",
+            "apiVersion": "[variables('apiVersionNetFd')]",
             "name": "[parameters('frontDoorName')]",
             "location": "Global",
+            "dependsOn": [
+                "[variables('wafPolicyId')]"
+            ],
             "tags": "[variables('resourceTags')]",
             "properties": {
                 "enabledState": "Enabled",
                 "backendPoolsSettings": {
-                    "enforceCertificateNameCheck": "[parameters('frontDoorEnforceCertificateNameCheck')]",
+                    "enforceCertificateNameCheck": "[parameters('enforceCertificateNameCheck')]",
                     "sendRecvTimeoutSeconds": 120
                 },
                 "backendPools": [
                     {
-                        "name": "[parameters('frontDoorBackendPool').name]",
+                        "name": "[parameters('backendPoolName')]",
                         "properties": {
                             "backends": [
                                 {
-                                    "address": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apimServiceName'))).hostnameConfigurations[0].hostName]",
+                                    "address": "[parameters('backendAddress')]",
                                     "httpPort": 80,
                                     "httpsPort": 443,
                                     "priority": 1,
                                     "weight": 100,
-                                    "backendHostHeader": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apimServiceName'))).hostnameConfigurations[0].hostName]"
+                                    "backendHostHeader": "[parameters('backendHostHeader')]"
                                 }
                             ],
                             "healthProbeSettings": {
@@ -159,21 +200,21 @@
                 ],
                 "healthProbeSettings": [
                     {
-                        "name": "[parameters('frontDoorHealthProbeSettings').name]",
+                        "name": "[parameters('healthProbeSettingsName')]",
                         "properties": {
-                            "intervalInSeconds": "[parameters('frontDoorHealthProbeSettings').intervalInSeconds]",
-                            "path": "[parameters('frontDoorHealthProbeSettings').path]",
-                            "protocol": "[parameters('frontDoorHealthProbeSettings').protocol]"
+                            "intervalInSeconds": "[parameters('healthProbeSettingsIntervalInSeconds')]",
+                            "path": "[parameters('healthProbeSettingsPath')]",
+                            "protocol": "[parameters('healthProbeSettingsProtocol')]"
                         }
                     }
                 ],
                 "frontendEndpoints": [
                     {
-                        "name": "[parameters('frontDoorFrontendEndpoint').name]",
+                        "name": "[parameters('frontendEndpointName')]",
                         "properties": {
                             "hostName": "[variables('frontDoorHostName')]",
-                            "sessionAffinityEnabledState": "[parameters('frontDoorFrontendEndpoint').sessionAffinityEnabledState]",
-                            "sessionAffinityTtlSeconds": "[parameters('frontDoorFrontendEndpoint').sessionAffinityTtlSeconds]",
+                            "sessionAffinityEnabledState": "[parameters('frontendEndpointSessionAffinity')]",
+                            "sessionAffinityTtlSeconds": "[parameters('frontendEndpointSessionAffinityTtlSeconds')]",
                             "resourceState": "Enabled",
                             "webApplicationFirewallPolicyLink": {
                                 "id": "[if(parameters('deployWaf'), variables('wafPolicyId'), json('null'))]"
@@ -183,7 +224,7 @@
                 ],
                 "loadBalancingSettings": [
                     {
-                        "name": "[parameters('frontDoorBackendPool').loadBalancerName]",
+                        "name": "[parameters('backendPoolLoadBalancerName')]",
                         "properties": {
                             "additionalLatencyMilliseconds": 0,
                             "sampleSize": 4,
@@ -193,28 +234,68 @@
                 ],
                 "routingRules": [
                     {
-                        "name": "[parameters('frontDoorRoutingRule').name]",
+                        "name": "[parameters('routingRule').name]",
                         "properties": {
                             "frontendEndpoints": [
                                 {
-                                    "id": "[variables('frontDoorFrontedEndpointId')]"
+                                    "id": "[variables('frontDoorFrontendEndpointId')]"
                                 }
                             ],
-                            "acceptedProtocols": "[parameters('frontDoorRoutingRule').acceptedProtocols]",
-                            "patternsToMatch": "[parameters('frontDoorRoutingRule').patternsToMatch]",
+                            "acceptedProtocols": "[parameters('routingRule').acceptedProtocols]",
+                            "patternsToMatch": "[parameters('routingRule').patternsToMatch]",
                             "routeConfiguration": {
                                 "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration",
                                 "customForwardingPath": "/",
-                                "forwardingProtocol": "[parameters('frontDoorRoutingRule').forwardingProtocol]",
+                                "forwardingProtocol": "[parameters('routingRule').forwardingProtocol]",
                                 "backendPool": {
                                     "id": "[variables('frontDoorBackendPoolId')]"
                                 },
-                                "cacheConfiguration": "[parameters('frontDoorRoutingRule').cacheConfiguration]"
+                                "cacheConfiguration": "[parameters('routingRule').cacheConfiguration]"
                             }
                         }
                     }
                 ],
                 "friendlyName": "[parameters('frontDoorName')]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/frontdoors/providers/diagnosticsettings",
+            "name": "[concat(parameters('frontDoorName'), '/Microsoft.Insights/service')]",
+            "apiVersion": "[variables('apiVersionDiagnostics')]",
+            "dependsOn": [
+                "[variables('frontDoorId')]"
+            ],
+            "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+                "logs": [
+                    {
+                        "category": "FrontdoorAccessLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "FrontdoorWebApplicationFirewallLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    }
+                ],
+                "metrics": [
+                    {
+                        "category": "AllMetrics",
+                        "timeGrain": "PT1M",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": false,
+                            "days": 0
+                        }
+                    }
+                ]
             }
         }
     ]

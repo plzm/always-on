@@ -104,9 +104,14 @@
         "disableGateway": {
             "type": "bool",
 			"defaultValue": false
+        },
+        "logAnalyticsWorkspaceResourceId": {
+            "type": "string",
+            "defaultValue": ""
         }
     },
     "variables": {
+        "apimId": "[resourceId('Microsoft.ApiManagement/service', parameters('apimServiceName'))]",
 		"userAssignedIdentities": "[
 			if
 			(
@@ -125,7 +130,8 @@
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
-		"apiVersionApim": "2021-01-01-preview"
+		"apiVersionApim": "2021-01-01-preview",
+        "apiVersionDiagnostics": "2017-05-01-preview"
     },
     "resources": [
         {
@@ -171,6 +177,66 @@
                 "publicIpAddressId": "[variables('publicIpId')]",
                 "disableGateway": "[parameters('disableGateway')]",
                 "apiVersionConstraint": {}
+            }
+        },
+        {
+            "name": "[concat(parameters('apimServiceName'), '/Microsoft.Insights/service')]",
+            "type": "Microsoft.ApiManagement/service/providers/diagnosticsettings",
+            "apiVersion": "[variables('apiVersionDiagnostics')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[variables('apimId')]"
+            ],
+            "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+                "logs": [
+                    {
+                        "category": "GatewayLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    }
+                ],
+                "metrics": [
+                    {
+                        "category": "Gateway Requests",
+                        "timeGrain": "PT1M",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": false,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "Capacity",
+                        "timeGrain": "PT1M",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": false,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "EventHub Events",
+                        "timeGrain": "PT1M",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": false,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "Network Status",
+                        "timeGrain": "PT1M",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": false,
+                            "days": 0
+                        }
+                    }
+                ]
             }
         }
     ]
