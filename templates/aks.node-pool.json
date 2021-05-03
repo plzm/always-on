@@ -17,6 +17,14 @@
 			"type": "string",
 			"defaultValue": ""
 		},
+		"availabilityZones": {
+			"type": "string",
+			"defaultValue": "1,2,3",
+			"metadata": {
+				"displayName": "Azure availability zone(s) (AZs)",
+				"description": "Optional. One or more AZs, comma-delimited. Example: 1,2,3. If not provided, a non-zonal node pool will be deployed. See https://azure.microsoft.com/regions/ for which regions support AZs."
+			}
+		},
 		"nodePoolName": {
 			"type": "string",
 			"defaultValue": ""
@@ -110,7 +118,15 @@
 				"maxCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMax'), json('null'))]",
 				"osType": "[parameters('osType')]",
 				"storageProfile": "ManagedDisks",
-				"osDiskSizeGB": "[parameters('osDiskSizeGB')]"
+				"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+				"availabilityZones": "[
+					if
+					(
+						empty(parameters('availabilityZones')),
+						json('[]'),
+						split(parameters('availabilityZones'), ',')
+					)
+				]"
 			}
 		}
 	]

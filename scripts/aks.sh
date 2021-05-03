@@ -45,15 +45,21 @@ nodeVmSize="Standard_DS2_v2"
 nodeAdminUsername="pelazem"
 sshRSAPublicKey="ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAg+4FzJlW5nqUa798vqYGanooy5HvSyG8sS6KjPu0sJAf+fkP6qpHY8k1m2/Z9Mahv2Y0moZDiVRHFMGH8qZU+AlYdvjGyjxHcIzDnsmHcV2ONxEiop4KMJLwecHUyf95ogicB1QYfK/6Q8pL9sDlXt8bAcSh6iP0u2d1g9QJaON2aniOpzn68xnKdGT974i7JQLN0SjaPiidZ2prc0cSIMBN26tGV7at2Jh5FIb1Jv8fXHnZebD/vgLilfCqLbuQjTpDVCskZ+OUAyvlBko3gBjRgd/jBprMqCpFLoGUBVkSSR0IkjTj2A6n2XyCyYRMFYrVrjwyU8I+IvO/6zJSEw== pelazem"
 apiServerAuthorizedIpRanges="$appGwPublicIpAddress""/32,""$myIp"
+networkPlugin="kubenet"
+serviceCidr="10.1.0.0/16"
+dnsServiceIp="10.1.0.10"
+podCidr="10.241.0.0/16"
+dockerBridgeAddress="172.17.0.1/16"
+zones="1 2 3"
 
 # Create AKS cluster with control plane and kubelet MI
 az aks create --subscription "$subscriptionId" -g "$resourceGroup" -l "$location" --verbose \
-	 -n "$clusterName" --kubernetes-version "$k8sversion" --dns-name-prefix "$dnsPrefix" \
+	-n "$clusterName" --zones $zones --kubernetes-version "$k8sversion" --dns-name-prefix "$dnsPrefix" \
 	--enable-managed-identity --assign-identity "$identityResourceId" --assign-kubelet-identity "$identityResourceId" \
 	--node-resource-group "$nodeResourceGroup" --node-count "$nodeCount" --node-vm-size "$nodeVmSize" \
 	--admin-username "$nodeAdminUsername" --ssh-key-value "$sshRSAPublicKey" \
 	--vnet-subnet-id "$subnetAppResourceId" --api-server-authorized-ip-ranges "$apiServerAuthorizedIpRanges" \
-	--network-plugin kubenet --service-cidr "10.1.0.0/16" --dns-service-ip "10.1.0.10" --pod-cidr "10.241.0.0/16" --docker-bridge-address "172.17.0.1/16"
+	--network-plugin "$networkPlugin" --service-cidr "$serviceCidr" --dns-service-ip "$dnsServiceIp" --pod-cidr "$podCidr" --docker-bridge-address "$dockerBridgeAddress"
 
 ## Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity - RG is created by AKS deploy and cannot exist before
 #az role assignment create --subscription "$subscriptionId" -g "$resourceGroup" --role "$rbacRoleIdReader" --assignee-object-id "$identityPrincipalId"

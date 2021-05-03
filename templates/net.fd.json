@@ -1,0 +1,162 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow('u')]"
+		},
+        "frontDoorName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+		"nsgRuleInbound100Src": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "Source for dev/test inbound rule",
+                "description": "Optional. If provided, a priority 100 rule will be created to allow inbound access from this source. Useful for dev/test/debug etc. but likely not appropriate to provide in production."
+            }
+        }
+	},
+    "variables": {
+		"resourceTags": {
+			"Timestamp": "[parameters('timestamp')]"
+		},
+        "apiVersionNet": "2020-05-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkSecurityGroups",
+            "apiVersion": "[variables('apiVersionNet')]",
+            "name": "[parameters('nsgName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "securityRules":
+                "[
+                    if
+                    (
+                        empty(trim(parameters('nsgRuleInbound100Src'))),
+                        json('[]'),
+                        array
+                        (
+                            createObject
+                            (
+                                'name', variables('rule100Name'),
+                                'properties', createObject
+                                (
+                                    'protocol', '*',
+                                    'sourcePortRange', '*',
+                                    'destinationPortRange', '*',
+                                    'sourceAddressPrefix', parameters('nsgRuleInbound100Src'),
+                                    'destinationAddressPrefix', '*',
+                                    'access', 'Allow',
+                                    'priority', 100,
+                                    'direction', 'Inbound',
+                                    'sourcePortRanges', json('[]'),
+                                    'destinationPortRanges', json('[]'),
+                                    'sourceAddressPrefixes', json('[]'),
+                                    'destinationAddressPrefixes', json('[]')
+                                )
+                            )
+                        )
+                    )
+                ]"
+            }
+        },
+        {
+            "type": "Microsoft.Network/frontdoors",
+            "apiVersion": "[variables('apiVersionNet')]",
+            "name": "[parameters('frontDoorName')]",
+            "location": "Global",
+			"tags": "[variables('resourceTags')]",
+            "properties": {
+                "enabledState": "Enabled",
+                "backendPoolsSettings": {
+                    "enforceCertificateNameCheck": "[parameters('frontDoorEnforceCertificateNameCheck')]",
+                    "sendRecvTimeoutSeconds": 120
+                },
+                "backendPools": [
+                    {
+                        "name": "[parameters('frontDoorBackendPool').name]",
+                        "properties": {
+                            "backends": [
+                                {
+                                    "address": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apimServiceName'))).hostnameConfigurations[0].hostName]",
+                                    "httpPort": 80,
+                                    "httpsPort": 443,
+                                    "priority": 1,
+                                    "weight": 100,
+                                    "backendHostHeader": "[reference(resourceId('Microsoft.ApiManagement/service', parameters('apimServiceName'))).hostnameConfigurations[0].hostName]"
+                                }
+                            ],
+                            "healthProbeSettings": {
+                                "id": "[variables('frontDoorHealthProbeSettingsId')]"
+                            },
+                            "loadBalancingSettings": {
+                                "id": "[variables('frontDoorLoadBalancerId')]"
+                            }
+                        }
+                    }
+                ],
+                "healthProbeSettings": [
+                    {
+                        "name": "[parameters('frontDoorHealthProbeSettings').name]",
+                        "properties": {
+                            "intervalInSeconds": "[parameters('frontDoorHealthProbeSettings').intervalInSeconds]",
+                            "path": "[parameters('frontDoorHealthProbeSettings').path]",
+                            "protocol": "[parameters('frontDoorHealthProbeSettings').protocol]"
+                        }
+                    }
+                ],
+                "frontendEndpoints": [
+                    {
+                        "name": "[parameters('frontDoorFrontendEndpoint').name]",
+                        "properties": {
+                            "hostName": "[variables('frontDoorHostName')]",
+                            "sessionAffinityEnabledState": "[parameters('frontDoorFrontendEndpoint').sessionAffinityEnabledState]",
+                            "sessionAffinityTtlSeconds": "[parameters('frontDoorFrontendEndpoint').sessionAffinityTtlSeconds]",
+                            "resourceState": "Enabled",
+                            "webApplicationFirewallPolicyLink": {
+                                "id": "[if(parameters('deployWaf'), variables('wafPolicyId'), json('null'))]"
+                            }
+                        }
+                    }
+                ],
+                "loadBalancingSettings": [
+                    {
+                        "name": "[parameters('frontDoorBackendPool').loadBalancerName]",
+                        "properties": {
+                            "additionalLatencyMilliseconds": 0,
+                            "sampleSize": 4,
+                            "successfulSamplesRequired": 2
+                        }
+                    }
+                ],
+                "routingRules": [
+                    {
+                        "name": "[parameters('frontDoorRoutingRule').name]",
+                        "properties": {
+                            "frontendEndpoints": [
+                                {
+                                    "id": "[variables('frontDoorFrontedEndpointId')]"
+                                }
+                            ],
+                            "acceptedProtocols": "[parameters('frontDoorRoutingRule').acceptedProtocols]",
+                            "patternsToMatch": "[parameters('frontDoorRoutingRule').patternsToMatch]",
+                            "routeConfiguration": {
+                                "@odata.type": "#Microsoft.Azure.FrontDoor.Models.FrontdoorForwardingConfiguration",
+                                "customForwardingPath": "/",
+                                "forwardingProtocol": "[parameters('frontDoorRoutingRule').forwardingProtocol]",
+                                "backendPool": {
+                                    "id": "[variables('frontDoorBackendPoolId')]"
+                                },
+                                "cacheConfiguration": "[parameters('frontDoorRoutingRule').cacheConfiguration]"
+                            }
+                        }
+                    }
+                ],
+                "friendlyName": "[parameters('frontDoorName')]"
+            }
+        }	]
+}
