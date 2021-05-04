@@ -6,6 +6,10 @@
 			"type": "string",
 			"defaultValue": ""
 		},
+        "settingName": {
+			"type": "string",
+			"defaultValue": "diag"
+		},
 		"logAnalyticsWorkspaceResourceId": {
 			"type": "string",
 			"defaultValue": ""
@@ -16,7 +20,7 @@
 	},
 	"resources": [
         {
-            "name": "[concat(parameters('apimServiceName'), '/Microsoft.Insights/service')]",
+            "name": "[concat(parameters('apimServiceName'), '/Microsoft.Insights/', parameters('settingName'))]",
             "type": "Microsoft.ApiManagement/service/providers/diagnosticsettings",
             "apiVersion": "[variables('apiVersionDiagnostics')]",
             "properties": {

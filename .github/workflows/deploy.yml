@@ -109,6 +109,14 @@ jobs:
         run: |
           echo "LA_WORKSPACE_RESOURCE_ID=$(az monitor log-analytics workspace show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
+      - name: Deploy Log Analytics Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/monitor.log-analytics-workspace.diagnostics.json
+          parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
+
 
       - name: Deploy NSG for APIM Subnet
         if: success()
@@ -126,13 +134,13 @@ jobs:
           template: ./templates/net.nsg.json
           parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APP}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
-      - name: Deploy DDoS Plan
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.ddos-plan.json
-          parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      #- name: Deploy DDoS Plan
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/net.ddos-plan.json
+      #    parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Deploy VNet
         if: success()
@@ -211,6 +219,14 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/key-vault.json
           parameters: location=${{env.AZURE_LOCATION}} tenantId=${{secrets.AZURE_TENANT_ID}} keyVaultName=${{env.KEY_VAULT_NAME}}
+
+      - name: Deploy Key Vault Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/key-vault.diagnostics.json
+          parameters: keyVaultName=${{env.KEY_VAULT_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
 
       - name: Deploy Container Registry
@@ -383,6 +399,7 @@ jobs:
         run: |
           az aks get-credentials --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --overwrite-existing
 
+
       - name: Deploy Public IP for APIM Service
         if: success()
         uses: azure/arm-deploy@v1
@@ -405,13 +422,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/apim.service.diagnostics.json
-          parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
-
-      - name: Get APIM Info
-        if: success()
-        run: |
-          echo "APIM_SERVICE_RESOURCE_ID=$(az apim show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APIM_SERVICE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APIM_SERVICE_NAME}} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
+          parameters: apimServiceName=${{env.APIM_SERVICE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
       - name: Deploy APIM API Version Set
         if: success()
@@ -442,22 +453,28 @@ jobs:
           template: ./templates/apim.api.json
           parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" apiName="${{env.APIM_API_NAME}}" displayName="${{env.APIM_API_NAME}}" description="${{env.APIM_API_DESCRIPTION}}" serviceUrl="${{env.APIM_API_SERVICE_URL}}" path="${{env.APIM_API_SERVICE_PATH}}" apiVersionSetResourceId="${{env.APIM_API_VERSION_SET_RESOURCE_ID}}"
 
-
-      - name: Deploy Front Door
+      - name: Get APIM Info
         if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.fd.json
-          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" backendAddress="${{env.APIM_SERVICE_HOSTNAME}}" backendHostHeader="${{env.APIM_SERVICE_HOSTNAME}}"
+        run: |
+          echo "APIM_SERVICE_RESOURCE_ID=$(az apim show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APIM_SERVICE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APIM_SERVICE_NAME}} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
 
-      - name: Deploy Front Door Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/net.fd.diagnostics.json
-          parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
+
+      #- name: Deploy Front Door
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/net.fd.json
+      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" backendAddress="${{env.APIM_SERVICE_HOSTNAME}}" backendHostHeader="${{env.APIM_SERVICE_HOSTNAME}}"
+
+      #- name: Deploy Front Door Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/net.fd.diagnostics.json
+      #    parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
 
       - name: Azure logout

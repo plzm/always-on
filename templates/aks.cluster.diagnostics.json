@@ -6,6 +6,10 @@
 			"type": "string",
 			"defaultValue": ""
 		},
+        "settingName": {
+			"type": "string",
+			"defaultValue": "diag"
+		},
 		"logAnalyticsWorkspaceResourceId": {
 			"type": "string",
 			"defaultValue": ""
@@ -16,8 +20,8 @@
 	},
 	"resources": [
 		{
+			"name": "[concat(parameters('clusterName'), '/Microsoft.Insights/', parameters('settingName'))]",
 			"type": "Microsoft.ContainerService/managedClusters/providers/diagnosticsettings",
-			"name": "[concat(parameters('clusterName'), '/Microsoft.Insights/service')]",
 			"apiVersion": "[variables('apiVersionDiagnostics')]",
 			"properties": {
 				"workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
