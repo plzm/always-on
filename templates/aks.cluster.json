@@ -15,7 +15,15 @@
 		},
 		"k8sversion": {
 			"type": "string",
-			"defaultValue": "1.20.5"
+			"defaultValue": ""
+		},
+		"skuTier": {
+			"type": "string",
+			"defaultValue": "Free",
+			"allowedValues": [
+				"Free",
+				"Paid"
+			]
 		},
 		"clusterName": {
 			"type": "string",
@@ -43,6 +51,14 @@
 			"metadata": {
 				"displayName": "User-Assigned Identity Resource ID",
 				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
+			}
+		},
+		"availabilityZones": {
+			"type": "string",
+			"defaultValue": "1,2,3",
+			"metadata": {
+				"displayName": "Azure availability zone(s) (AZs)",
+				"description": "Optional. One or more AZs, comma-delimited. Example: 1,2,3. If not provided, a non-zonal system agent pool will be deployed. See https://azure.microsoft.com/regions/ for which regions support AZs."
 			}
 		},
 		"nodeResourceGroup": {
@@ -100,18 +116,18 @@
 				"description": "SSH public key in three-part format, ssh-rsa *** username"
 			}
 		},
-        "vnetResourceGroup": {
-            "type": "string",
+		"vnetResourceGroup": {
+			"type": "string",
 			"defaultValue": ""
-        },
-        "vnetName": {
-            "type": "string",
+		},
+		"vnetName": {
+			"type": "string",
 			"defaultValue": ""
-        },
-        "subnetName": {
-            "type": "string",
+		},
+		"subnetName": {
+			"type": "string",
 			"defaultValue": ""
-        },
+		},
 		"networkPlugin": {
 			"type": "string",
 			"defaultValue": "kubenet",
@@ -124,7 +140,7 @@
 			"type": "string",
 			"defaultValue": "10.1.0.0/16"
 		},
-		"dnsServiceIP": {
+		"dnsServiceIp": {
 			"type": "string",
 			"defaultValue": "10.1.0.10"
 		},
@@ -158,8 +174,9 @@
 				json('null')
 			)
 		]",
-        "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
-        "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
+		"skuName": "Basic",
+		"vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
+		"subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -175,6 +192,10 @@
 			"identity": {
 				"type": "[parameters('managedIdentityType')]",
 				"userAssignedIdentities": "[variables('userAssignedIdentity')]"
+			},
+			"sku": {
+				"name": "[variables('skuName')]",
+				"tier": "[parameters('skuTier')]"
 			},
 			"properties": {
 				"kubernetesVersion": "[parameters('k8sversion')]",
@@ -196,12 +217,12 @@
 				"networkProfile": {
 					"networkPlugin": "[parameters('networkPlugin')]",
 					"serviceCidr": "[if(empty(parameters('serviceCidr')), json('null'), parameters('serviceCidr'))]",
-					"dnsServiceIP": "[if(empty(parameters('dnsServiceIP')), json('null'), parameters('dnsServiceIP'))]",
+					"dnsServiceIp": "[if(empty(parameters('dnsServiceIp')), json('null'), parameters('dnsServiceIp'))]",
 					"podCidr": "[if(empty(parameters('podCidr')), json('null'), parameters('podCidr'))]",
 					"dockerBridgeCidr": "[if(empty(parameters('dockerBridgeCidr')), json('null'), parameters('dockerBridgeCidr'))]"
 				},
-                "apiServerAccessProfile": {
-                    "authorizedIPRanges": "[
+				"apiServerAccessProfile": {
+					"authorizedIPRanges": "[
 						if
 						(
 							empty(parameters('apiServerAuthorizedIpRanges')),
@@ -209,7 +230,7 @@
 							split(parameters('apiServerAuthorizedIpRanges'), ',')
 						)
                     ]"
-                },
+				},
 				"agentPoolProfiles": [
 					{
 						"name": "systempool",
@@ -219,7 +240,15 @@
 						"osType": "[parameters('osType')]",
 						"storageProfile": "ManagedDisks",
 						"mode": "System",
-						"vnetSubnetId": "[variables('subnetId')]"
+						"vnetSubnetId": "[variables('subnetId')]",
+						"availabilityZones": "[
+							if
+							(
+								empty(parameters('availabilityZones')),
+								json('[]'),
+								split(parameters('availabilityZones'), ',')
+							)
+						]"
 					}
 				]
 			}

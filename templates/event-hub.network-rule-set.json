@@ -1,0 +1,53 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Azure region"
+            }
+        },
+        "namespaceName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "ruleSetName": {
+            "type": "string",
+            "defaultValue": "default"
+        },
+        "subnetResourceId": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "trustedServiceAccessEnabled": {
+            "type": "bool",
+            "defaultValue": true
+        }
+	},
+    "variables": {
+        "apiVersionEventHub": "2018-01-01-preview"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.EventHub/namespaces/networkRuleSets",
+            "name": "[concat(parameters('namespaceName'), '/', parameters('ruleSetName'))]",
+            "apiVersion": "[variables('apiVersionEventHub')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "defaultAction": "Deny",
+                "virtualNetworkRules": [
+                    {
+                        "subnet": {
+                            "id": "[parameters('subnetResourceId')]"
+                        },
+                        "ignoreMissingVnetServiceEndpoint": false
+                    }
+                ],
+                "ipRules": [],
+                "trustedServiceAccessEnabled": "[parameters('trustedServiceAccessEnabled')]"
+            }
+        }
+	]
+}

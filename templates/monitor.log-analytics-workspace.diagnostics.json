@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "settingName": {
+			"type": "string",
+			"defaultValue": "diag"
+		},
+		"logAnalyticsWorkspaceResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		}
+	},
+	"variables": {
+		"apiVersionDiagnostics": "2017-05-01-preview"
+	},
+	"resources": [
+        {
+            "name": "[concat(parameters('workspaceName'), '/Microsoft.Insights/', parameters('settingName'))]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/diagnosticSettings",
+            "apiVersion": "[variables('apiVersionDiagnostics')]",
+            "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+                "metrics": [
+					{
+						"category": "AllMetrics",
+						"timeGrain": "PT1M",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": false,
+							"days": 0
+						}
+					}
+				],
+                "logs": [
+                    {
+                        "category": "Audit",
+                        "enabled": true
+                    }
+                ]
+            }
+        }
+	]
+}

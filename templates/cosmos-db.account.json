@@ -13,7 +13,7 @@
                 "description": "Azure region"
             }
         },
-        "cosmosDbAccountName": {
+        "accountName": {
             "type": "string",
             "defaultValue": ""
         },
@@ -80,7 +80,7 @@
         {
             "type": "Microsoft.DocumentDB/databaseAccounts",
             "apiVersion": "[variables('apiVersionCosmosDb')]",
-            "name": "[parameters('cosmosDbAccountName')]",
+            "name": "[parameters('accountName')]",
             "location": "[parameters('location')]",
             "kind": "[parameters('accountKind')]",
 			"tags": "[variables('resourceTags')]",

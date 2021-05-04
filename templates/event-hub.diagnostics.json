@@ -1,0 +1,100 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+        "namespaceName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "settingName": {
+			"type": "string",
+			"defaultValue": "diag"
+		},
+		"logAnalyticsWorkspaceResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		}
+	},
+	"variables": {
+		"apiVersionDiagnostics": "2017-05-01-preview"
+	},
+	"resources": [
+        {
+            "name": "[concat(parameters('namespaceName'), '/Microsoft.Insights/', parameters('settingName'))]",
+            "type": "Microsoft.EventHub/namespaces/providers/diagnosticsettings",
+            "apiVersion": "[variables('apiVersionDiagnostics')]",
+            "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+                "logs": [
+                    {
+                        "category": "ArchiveLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "OperationalLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AutoScaleLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "KafkaCoordinatorLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "KafkaUserErrorLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "EventHubVNetConnectionEvent",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "CustomerManagedKeyUserLogs",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    }
+                ],
+                "metrics": [
+					{
+						"category": "AllMetrics",
+						"timeGrain": "PT1M",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": false,
+							"days": 0
+						}
+					}
+                ]
+            }
+        }
+	]
+}

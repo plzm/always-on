@@ -1,0 +1,132 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+		"appInsightsName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "settingName": {
+			"type": "string",
+			"defaultValue": "diag"
+		},
+		"logAnalyticsWorkspaceResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		}
+	},
+	"variables": {
+		"apiVersionDiagnostics": "2017-05-01-preview"
+	},
+	"resources": [
+        {
+            "name": "[concat(parameters('appInsightsName'), '/Microsoft.Insights/', parameters('settingName'))]",
+            "type": "microsoft.insights/components/providers/diagnosticsettings",
+            "apiVersion": "[variables('apiVersionDiagnostics')]",
+            "properties": {
+                "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+                "logs": [
+                    {
+                        "category": "AppAvailabilityResults",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppBrowserTimings",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppEvents",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppMetrics",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppDependencies",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppExceptions",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppPageViews",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppPerformanceCounters",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppRequests",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppSystemEvents",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "AppTraces",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    }
+                ],
+                "metrics": [
+					{
+						"category": "AllMetrics",
+						"timeGrain": "PT1M",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": false,
+							"days": 0
+						}
+					}
+                ]
+            }
+        }
+	]
+}

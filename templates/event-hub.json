@@ -47,7 +47,7 @@
         },
         "kafkaEnabled": {
             "type": "bool",
-            "defaultValue": true
+            "defaultValue": false
         }
 	},
     "variables": {

@@ -61,7 +61,6 @@
             "properties": {
                 "Application_Type": "web",
                 "Flow_Type": "Redfield",
-                "Request_Source": "IbizaAIExtension",
                 "IngestionMode": "LogAnalytics",
                 "WorkspaceResourceId": "[variables('logAnalyticsResourceId')]",
                 "publicNetworkAccessForIngestion": "[parameters('publicNetworkAccessForIngestion')]",
