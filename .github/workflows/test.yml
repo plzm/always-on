@@ -1,4 +1,4 @@
-name: Test env var concatenation
+name: Test env var concatenation and substring
 
 on: push
 
@@ -11,11 +11,14 @@ jobs:
   test1:
     runs-on: ubuntu-latest
     steps:
-      - name: Get Var
+      - name: Prepare a new env var based on env value
         run: |
           echo "NAME_1_SHORT=${NAME_1:0:3}" >> $GITHUB_ENV
 
-      - name: Envvar
+  test2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo out the env vars in a new job
         run: |
           echo ${{env.NAME_1}}
           echo ${{env.NAME_2}}
