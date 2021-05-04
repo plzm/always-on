@@ -1,10 +1,11 @@
-name: Deploy Azure environment
+name: Test env var concatenation
 
 on: push
 
 env:
-  INFIX: '15'
-  TEST: always-on-$INFIX
+  INFIX: 'foo'
+  NAME_1: MyName1-$INFIX
+  NAME_2: MyName2-$INFIX
 
 jobs:
   test1:
@@ -12,4 +13,5 @@ jobs:
     steps:
       - name: Envvar
         run: |
-          echo ${{env.TEST}}
+          echo ${{env.NAME_1}}
+          echo ${{env.NAME_2}}
