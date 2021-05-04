@@ -6,12 +6,15 @@ env:
   INFIX: 'foo'
   NAME_1: MyName1-$INFIX
   NAME_2: MyName2-$INFIX
-  NAME_1_SHORT: $NAME_1:0:3
 
 jobs:
   test1:
     runs-on: ubuntu-latest
     steps:
+      - name: Get Var
+        run: |
+          echo "NAME_1_SHORT=NAME_1:0:3" >> $GITHUB_ENV
+
       - name: Envvar
         run: |
           echo ${{env.NAME_1}}
