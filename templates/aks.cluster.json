@@ -71,11 +71,33 @@
 		},
 		"nodeCount": {
 			"type": "int",
-			"defaultValue": 2,
+			"defaultValue": 1,
 			"minValue": 1,
 			"maxValue": 100,
 			"metadata": {
 				"description": "The number of nodes for the system node pool."
+			}
+		},
+		"enableNodeAutoscale": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"nodeCountMin": {
+			"type": "int",
+			"defaultValue": 0,
+			"minValue": 0,
+			"maxValue": 100,
+			"metadata": {
+				"description": "The minimum number of nodes for the cluster when autoscale is used."
+			}
+		},
+		"nodeCountMax": {
+			"type": "int",
+			"defaultValue": 1,
+			"minValue": 1,
+			"maxValue": 100,
+			"metadata": {
+				"description": "The maximum number of nodes for the cluster when autoscale is used."
 			}
 		},
 		"nodeVmSize": {
@@ -177,6 +199,19 @@
 		"skuName": "Basic",
 		"vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
 		"subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
+		"nodeCount": "[
+			if
+			(
+				not(parameters('enableNodeAutoscale')),
+				if
+				(
+					equals(parameters('nodeCount'), 0),
+					1,
+					parameters('nodeCount')
+				),
+				json('null')
+			)
+		]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -235,7 +270,10 @@
 					{
 						"name": "systempool",
 						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
-						"count": "[parameters('nodeCount')]",
+						"count": "[variables('nodeCount')]",
+						"enableAutoScaling": "[parameters('enableNodeAutoscale')]",
+						"minCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMin'), json('null'))]",
+						"maxCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMax'), json('null'))]",
 						"vmSize": "[parameters('nodeVmSize')]",
 						"osType": "[parameters('osType')]",
 						"storageProfile": "ManagedDisks",

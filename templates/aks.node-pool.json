@@ -43,7 +43,7 @@
 			"minValue": 0,
 			"maxValue": 100,
 			"metadata": {
-				"description": "The number of nodes for the cluster."
+				"description": "The number of nodes for the node pool."
 			}
 		},
 		"enableNodeAutoscale": {
@@ -96,7 +96,19 @@
 		}
 	},
 	"variables": {
-		"nodeCount": "[if(and(equals(parameters('nodePoolMode'), 'System'), equals(parameters('nodeCount'), 0)), 1, parameters('nodeCount'))]",
+		"nodeCount": "[
+			if
+			(
+				not(parameters('enableNodeAutoscale')),
+				if
+				(
+					and(equals(parameters('nodePoolMode'), 'System'), equals(parameters('nodeCount'), 0)),
+					1,
+					parameters('nodeCount')
+				),
+				json('null')
+			)
+		]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},

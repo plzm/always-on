@@ -1,0 +1,15 @@
+name: Deploy Azure environment
+
+on: push
+
+env:
+  INFIX: '15'
+  TEST: always-on-$INFIX
+
+jobs:
+  test1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Envvar
+        run: |
+          echo ${{env.TEST}}

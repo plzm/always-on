@@ -6,7 +6,7 @@ location="eastus"
 subscriptionId="$(az account show -o tsv --query 'id')"
 
 # Deployment
-infix="12"
+infix="15"
 resourceGroup="always-on-""$infix"
 
 # RBAC

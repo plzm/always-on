@@ -6,11 +6,11 @@ on:
 
 env:
   AZURE_LOCATION: 'eastus'
-  AZURE_RESOURCE_GROUP: 'always-on-14'
+  AZURE_RESOURCE_GROUP: 'always-on-15'
   IDENTITY_TYPE: 'UserAssigned'
-  UAMI_NAME: 'pz-ao-uami-14'
-  KEY_VAULT_NAME: 'pz-ao-kv-eus-14'
-  APIM_SERVICE_NAME: 'pz-ao-apim-eus-14'
+  UAMI_NAME: 'pz-ao-uami-15'
+  KEY_VAULT_NAME: 'pz-ao-kv-eus-15'
+  APIM_SERVICE_NAME: 'pz-ao-apim-eus-15'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
