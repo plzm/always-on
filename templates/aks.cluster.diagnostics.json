@@ -1,0 +1,96 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+		"clusterName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"logAnalyticsWorkspaceResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		}
+	},
+	"variables": {
+		"apiVersionDiagnostics": "2017-05-01-preview"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.ContainerService/managedClusters/providers/diagnosticsettings",
+			"name": "[concat(parameters('clusterName'), '/Microsoft.Insights/service')]",
+			"apiVersion": "[variables('apiVersionDiagnostics')]",
+			"properties": {
+				"workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+				"logs": [
+					{
+						"category": "kube-apiserver",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "kube-audit",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "kube-audit-admin",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "kube-controller-manager",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "kube-scheduler",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "cluster-autoscaler",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "guard",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					}
+				],
+				"metrics": [
+					{
+						"category": "AllMetrics",
+						"timeGrain": "PT1M",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": false,
+							"days": 0
+						}
+					}
+				]
+			}
+		}
+	]
+}

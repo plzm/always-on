@@ -116,14 +116,9 @@
             "metadata": {
                 "description": "Describes if it is in detection mode or prevention mode at policy level."
             }
-        },
-        "logAnalyticsWorkspaceResourceId": {
-            "type": "string",
-            "defaultValue": ""
         }
     },
     "variables": {
-        "frontDoorId": "[resourceId('Microsoft.Network/frontdoors', parameters('frontDoorName'))]",
         "frontDoorBackendPoolId": "[resourceId('Microsoft.Network/frontdoors/backendPools', parameters('frontDoorName'), parameters('backendPoolName'))]",
         "frontDoorHealthProbeSettingsId": "[resourceId('Microsoft.Network/frontdoors/healthProbeSettings', parameters('frontDoorName'), parameters('healthProbeSettingsName'))]",
         "frontDoorLoadBalancerId": "[resourceId('Microsoft.Network/frontdoors/loadBalancingSettings', parameters('frontDoorName'), parameters('backendPoolLoadBalancerName'))]",
@@ -135,8 +130,7 @@
             "Timestamp": "[parameters('timestamp')]"
         },
         "apiVersionNetFd": "2020-05-01",
-        "apiVersionNetWafPolicy": "2020-04-01",
-        "apiVersionDiagnostics": "2017-05-01-preview"
+        "apiVersionNetWafPolicy": "2020-04-01"
     },
     "resources": [
         {
@@ -256,46 +250,6 @@
                     }
                 ],
                 "friendlyName": "[parameters('frontDoorName')]"
-            }
-        },
-        {
-            "type": "Microsoft.Network/frontdoors/providers/diagnosticsettings",
-            "name": "[concat(parameters('frontDoorName'), '/Microsoft.Insights/service')]",
-            "apiVersion": "[variables('apiVersionDiagnostics')]",
-            "dependsOn": [
-                "[variables('frontDoorId')]"
-            ],
-            "properties": {
-                "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
-                "logs": [
-                    {
-                        "category": "FrontdoorAccessLog",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "enabled": true,
-                            "days": 0
-                        }
-                    },
-                    {
-                        "category": "FrontdoorWebApplicationFirewallLog",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "enabled": true,
-                            "days": 0
-                        }
-                    }
-                ],
-                "metrics": [
-                    {
-                        "category": "AllMetrics",
-                        "timeGrain": "PT1M",
-                        "enabled": true,
-                        "retentionPolicy": {
-                            "enabled": false,
-                            "days": 0
-                        }
-                    }
-                ]
             }
         }
     ]
