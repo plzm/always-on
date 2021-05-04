@@ -2,7 +2,7 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.1",
 	"parameters": {
-		"apimServiceName": {
+		"appGatewayName": {
 			"type": "string",
 			"defaultValue": ""
 		},
@@ -20,14 +20,30 @@
 	},
 	"resources": [
         {
-            "name": "[concat(parameters('apimServiceName'), '/Microsoft.Insights/', parameters('settingName'))]",
-            "type": "Microsoft.ApiManagement/service/providers/diagnosticsettings",
+            "name": "[concat(parameters('appGatewayName'), '/Microsoft.Insights/', parameters('settingName'))]",
+            "type": "Microsoft.Network/applicationGateways/providers/diagnosticsettings",
             "apiVersion": "[variables('apiVersionDiagnostics')]",
             "properties": {
                 "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
                 "logs": [
                     {
-                        "category": "GatewayLogs",
+                        "category": "ApplicationGatewayAccessLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "ApplicationGatewayPerformanceLog",
+                        "enabled": true,
+                        "retentionPolicy": {
+                            "enabled": true,
+                            "days": 0
+                        }
+                    },
+                    {
+                        "category": "ApplicationGatewayFirewallLog",
                         "enabled": true,
                         "retentionPolicy": {
                             "enabled": true,
