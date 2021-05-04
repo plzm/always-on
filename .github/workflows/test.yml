@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Get Var
         run: |
-          echo "NAME_1_SHORT=NAME_1:0:3" >> $GITHUB_ENV
+          echo "NAME_1_SHORT=${NAME_1:0:3}" >> $GITHUB_ENV
 
       - name: Envvar
         run: |
