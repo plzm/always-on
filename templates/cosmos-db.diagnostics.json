@@ -1,0 +1,116 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+		"accountName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "settingName": {
+			"type": "string",
+			"defaultValue": "diag"
+		},
+		"logAnalyticsWorkspaceResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		}
+	},
+	"variables": {
+		"apiVersionDiagnostics": "2017-05-01-preview"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('accountName'), '/Microsoft.Insights/', parameters('settingName'))]",
+			"type": "Microsoft.DocumentDB/databaseAccounts/providers/diagnosticsettings",
+			"apiVersion": "[variables('apiVersionDiagnostics')]",
+			"properties": {
+				"workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+				"logs": [
+					{
+						"category": "DataPlaneRequests",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "MongoRequests",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "QueryRuntimeStatistics",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "PartitionKeyStatistics",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "PartitionKeyRUConsumption",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "ControlPlaneRequests",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "CassandraRequests",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "GremlinRequests",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					},
+					{
+						"category": "TableApiRequests",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": true,
+							"days": 0
+						}
+					}
+				],
+				"metrics": [
+					{
+						"category": "Requests",
+						"timeGrain": "PT1M",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": false,
+							"days": 0
+						}
+					}
+				]
+			}
+		}
+	]
+}

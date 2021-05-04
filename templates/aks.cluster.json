@@ -17,6 +17,14 @@
 			"type": "string",
 			"defaultValue": ""
 		},
+		"skuTier": {
+			"type": "string",
+			"defaultValue": "Free",
+			"allowedValues": [
+				"Free",
+				"Paid"
+			]
+		},
 		"clusterName": {
 			"type": "string",
 			"defaultValue": ""
@@ -166,6 +174,7 @@
 				json('null')
 			)
 		]",
+		"skuName": "Basic",
 		"vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
 		"subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"resourceTags": {
@@ -183,6 +192,10 @@
 			"identity": {
 				"type": "[parameters('managedIdentityType')]",
 				"userAssignedIdentities": "[variables('userAssignedIdentity')]"
+			},
+			"sku": {
+				"name": "[variables('skuName')]",
+				"tier": "[parameters('skuTier')]"
 			},
 			"properties": {
 				"kubernetesVersion": "[parameters('k8sversion')]",

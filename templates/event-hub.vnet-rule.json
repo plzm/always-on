@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Azure region"
+            }
+        },
+        "namespaceName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "subnetResourceId": {
+            "type": "string",
+            "defaultValue": ""
+        }
+	},
+    "variables": {
+        "subnetName": "[replace(parameters('subnetResourceId'), '/', '-')]",
+        "apiVersionEventHub": "2018-01-01-preview"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.EventHub/namespaces/virtualnetworkrules",
+            "name": "[concat(parameters('namespaceName'), '/', variables('subnetName'))]",
+            "apiVersion": "[variables('apiVersionEventHub')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "virtualNetworkSubnetId": "[parameters('subnetResourceId')]"
+            }
+        }
+	]
+}

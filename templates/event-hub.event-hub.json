@@ -1,0 +1,49 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Azure region"
+            }
+        },
+        "namespaceName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "eventHubName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "messageRetentionInDays": {
+            "type": "int",
+            "minValue": 1,
+            "maxValue": 30,
+            "defaultValue": 1
+        },
+        "partitionCount": {
+            "type": "int",
+            "minValue": 1,
+            "maxValue": 20,
+            "defaultValue": 1
+        }
+	},
+    "variables": {
+        "apiVersionEventHub": "2017-04-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.EventHub/namespaces/eventhubs",
+            "name": "[concat(parameters('namespaceName'), '/', parameters('eventHubName'))]",
+            "apiVersion": "[variables('apiVersionEventHub')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "messageRetentionInDays": "[parameters('messageRetentionInDays')]",
+                "partitionCount": "[parameters('partitionCount')]",
+                "status": "Active"
+            }
+        }
+	]
+}

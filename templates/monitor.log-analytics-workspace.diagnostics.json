@@ -25,7 +25,17 @@
             "apiVersion": "[variables('apiVersionDiagnostics')]",
             "properties": {
                 "workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
-                "metrics": [],
+                "metrics": [
+					{
+						"category": "AllMetrics",
+						"timeGrain": "PT1M",
+						"enabled": true,
+						"retentionPolicy": {
+							"enabled": false,
+							"days": 0
+						}
+					}
+				],
                 "logs": [
                     {
                         "category": "Audit",
