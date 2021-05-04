@@ -12,8 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Prepare a new env var based on env value
-        run: |
-          echo "NAME_1_SHORT=${NAME_1:0:3}" >> $GITHUB_ENV
+        env:
+          NAME_1_SHORT: ${NAME_1:0:3}
 
   test2:
     runs-on: ubuntu-latest
