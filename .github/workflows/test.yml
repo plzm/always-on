@@ -6,6 +6,7 @@ env:
   INFIX: 'foo'
   NAME_1: MyName1-$INFIX
   NAME_2: MyName2-$INFIX
+  NAME_1_SHORT: $NAME_1:0:3
 
 jobs:
   test1:
@@ -15,3 +16,4 @@ jobs:
         run: |
           echo ${{env.NAME_1}}
           echo ${{env.NAME_2}}
+          echo ${{env.NAME_1_SHORT}}
