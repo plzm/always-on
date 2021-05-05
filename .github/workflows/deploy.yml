@@ -245,21 +245,21 @@ jobs:
           echo "UAMI_RESOURCE_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
-      #- name: Grant UAMI Network Contributor on VNet for kubenet config
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.Network/virtualNetworks" resourceName="${{env.VNET_NAME}}"
+      - name: Grant UAMI Network Contributor on VNet for kubenet config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.Network/virtualNetworks" resourceName="${{env.VNET_NAME}}"
 
-      #- name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
+      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
 
       #- name: Deploy Key Vault
