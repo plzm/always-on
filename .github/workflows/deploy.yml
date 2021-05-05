@@ -102,6 +102,12 @@ jobs:
           echo "APIM_PUBLIC_IP_NAME=pz-ao-apim-pip-$INFIX" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=pz-ao-fd-$INFIX" >> $GITHUB_ENV
 
+      - name: Get AKS Node Resource Group Name
+        if: success()
+        run: |
+          echo "AZURE_RESOURCE_GROUP_AKS_NODES=${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" >> $GITHUB_ENV
+
+
       - name: Azure login
         if: success()
         uses: azure/login@v1
@@ -245,21 +251,21 @@ jobs:
           echo "UAMI_RESOURCE_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
-      - name: Grant UAMI Network Contributor on VNet for kubenet config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.Network/virtualNetworks" resourceName="${{env.VNET_NAME}}"
+      #- name: Grant UAMI Network Contributor on VNet for kubenet config
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.Network/virtualNetworks" resourceName="${{env.VNET_NAME}}"
 
-      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
+      #- name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
 
       #- name: Deploy Key Vault
@@ -433,11 +439,11 @@ jobs:
       #    template: ./templates/net.public-ip.diagnostics.json
       #    parameters: publicIpName="${{env.APPGW_PUBLIC_IP_NAME}}" logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
-      #- name: Get App GW Public IP for AKS API Server Network Restriction
-      #  if: success()
-      #  run: |
-      #    APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
-      #    echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
+      - name: Get App GW Public IP for AKS API Server Network Restriction
+        if: success()
+        run: |
+          APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_PUBLIC_IP_NAME}} -o tsv --query 'ipAddress')"
+          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{env.NSG_IN_SRC}}" >> $GITHUB_ENV
 
 
       #- name: Deploy App GW
@@ -456,15 +462,10 @@ jobs:
       #    template: ./templates/net.app-gw.diagnostics.json
       #    parameters: appGatewayName="${{env.APPGW_NAME}}" logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
-      #- name: Get App GW Resource ID
-      #  if: success()
-      #  run: echo "APPGW_RESOURCE_ID=$(az network application-gateway show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+      - name: Get App GW Resource ID
+        if: success()
+        run: echo "APPGW_RESOURCE_ID=$(az network application-gateway show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.APPGW_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-
-      #- name: Get AKS Node Resource Group Name
-      #  if: success()
-      #  run: |
-      #    echo "AZURE_RESOURCE_GROUP_AKS_NODES=${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" >> $GITHUB_ENV
 
       ## ARM Template - but does not support kubelet identity
       ##- name: Deploy AKS Cluster (ARM)
@@ -478,17 +479,30 @@ jobs:
       # az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
       # how to pass ${{env.AKS_NODE_AUTOSCALE}} to --enable-cluster-autoscaler?
       # --node-count "${{env.AKS_NODE_COUNT}}" 
-      #- name: Deploy AKS Cluster (CLI)
-      #  if: success()
-      #  run: |
-      #    az aks create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g "${{env.AZURE_RESOURCE_GROUP}}" -l "${{env.AZURE_LOCATION}}" --verbose \
-      #      -n "${{env.AKS_CLUSTER_NAME}}" --zones ${{env.AKS_ZONES_FOR_CLI}} --kubernetes-version "${{env.AKS_VERSION}}" --dns-name-prefix "${{env.AKS_DNS_PREFIX}}" \
-      #      --enable-managed-identity --assign-identity "${{env.UAMI_RESOURCE_ID}}" --assign-kubelet-identity "${{env.UAMI_RESOURCE_ID}}" \
-      #      --node-resource-group "${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" --node-vm-size "${{env.AKS_NODE_SIZE}}" \
-      #      --enable-cluster-autoscaler --min-count=${{env.AKS_NODE_AUTOSCALE_COUNT_MIN}} --max-count ${{env.AKS_NODE_AUTOSCALE_COUNT_MAX}} \
-      #      --admin-username "${{secrets.ADMIN_USERNAME}}" --ssh-key-value "${{secrets.SSH_KEY}}" \
-      #      --vnet-subnet-id "${{env.APP_SUBNET_RESOURCE_ID}}" --api-server-authorized-ip-ranges "${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" \
-      #      --network-plugin "${{env.AKS_NET_PLUGIN}}" --service-cidr "${{env.AKS_SERVICE_CIDR}}" --dns-service-ip "${{env.AKS_DNS_SERVICE_IP}}" --pod-cidr "${{env.AKS_POD_CIDR}}" --docker-bridge-address "${{env.AKS_DOCKER_BRIDGE_ADDRESS}}"
+      #  if: ${{ success() && env.VNET_ENABLE_DDOS == true }}
+      - name: Deploy AKS Cluster (CLI) with autoscaler enabled
+        if: ${{ success() && env.AKS_NODE_AUTOSCALE == true }}
+        run: |
+          az aks create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g "${{env.AZURE_RESOURCE_GROUP}}" -l "${{env.AZURE_LOCATION}}" --verbose \
+            -n "${{env.AKS_CLUSTER_NAME}}" --zones ${{env.AKS_ZONES_FOR_CLI}} --kubernetes-version "${{env.AKS_VERSION}}" --dns-name-prefix "${{env.AKS_DNS_PREFIX}}" \
+            --enable-managed-identity --assign-identity "${{env.UAMI_RESOURCE_ID}}" --assign-kubelet-identity "${{env.UAMI_RESOURCE_ID}}" \
+            --node-resource-group "${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" --node-vm-size "${{env.AKS_NODE_SIZE}}" \
+            --admin-username "${{secrets.ADMIN_USERNAME}}" --ssh-key-value "${{secrets.SSH_KEY}}" \
+            --vnet-subnet-id "${{env.APP_SUBNET_RESOURCE_ID}}" --api-server-authorized-ip-ranges "${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" \
+            --network-plugin "${{env.AKS_NET_PLUGIN}}" --service-cidr "${{env.AKS_SERVICE_CIDR}}" --dns-service-ip "${{env.AKS_DNS_SERVICE_IP}}" --pod-cidr "${{env.AKS_POD_CIDR}}" --docker-bridge-address "${{env.AKS_DOCKER_BRIDGE_ADDRESS}}" \
+            --enable-cluster-autoscaler --min-count=${{env.AKS_NODE_AUTOSCALE_COUNT_MIN}} --max-count ${{env.AKS_NODE_AUTOSCALE_COUNT_MAX}}
+
+      - name: Deploy AKS Cluster (CLI) with autoscaler NOT enabled
+        if: ${{ success() && env.AKS_NODE_AUTOSCALE == false }}
+        run: |
+          az aks create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g "${{env.AZURE_RESOURCE_GROUP}}" -l "${{env.AZURE_LOCATION}}" --verbose \
+            -n "${{env.AKS_CLUSTER_NAME}}" --zones ${{env.AKS_ZONES_FOR_CLI}} --kubernetes-version "${{env.AKS_VERSION}}" --dns-name-prefix "${{env.AKS_DNS_PREFIX}}" \
+            --enable-managed-identity --assign-identity "${{env.UAMI_RESOURCE_ID}}" --assign-kubelet-identity "${{env.UAMI_RESOURCE_ID}}" \
+            --node-resource-group "${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" --node-vm-size "${{env.AKS_NODE_SIZE}}" \
+            --admin-username "${{secrets.ADMIN_USERNAME}}" --ssh-key-value "${{secrets.SSH_KEY}}" \
+            --vnet-subnet-id "${{env.APP_SUBNET_RESOURCE_ID}}" --api-server-authorized-ip-ranges "${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" \
+            --network-plugin "${{env.AKS_NET_PLUGIN}}" --service-cidr "${{env.AKS_SERVICE_CIDR}}" --dns-service-ip "${{env.AKS_DNS_SERVICE_IP}}" --pod-cidr "${{env.AKS_POD_CIDR}}" --docker-bridge-address "${{env.AKS_DOCKER_BRIDGE_ADDRESS}}" \
+            --node-count ${{env.AKS_NODE_COUNT}}
 
       #- name: Deploy AKS Cluster Diagnostics
       #  if: success()
