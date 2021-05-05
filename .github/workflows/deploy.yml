@@ -31,13 +31,14 @@ env:
   AZURE_LOCATION: 'eastus'
   AVL_ZONES: '1,2,3'
   IDENTITY_TYPE: 'UserAssigned'
-  NSG_NAME_APP: 'ao-app-eus'
-  NSG_NAME_APIM: 'ao-apim-eus'
   NSG_IN_SRC: '75.68.47.183/32'
+  APP_NSG_NAME: 'ao-app-eus'
+  APIM_NSG_NAME: 'ao-apim-eus'
   VNET_PREFIX: '10.0.0.0/16'
-  VNET_ENABLE_DDOS: false
+  VNET_ENABLE_DDOS: 'false'
   APIM_SUBNET_NAME: 'Apim'
   APIM_SUBNET_PREFIX: '10.0.1.0/24'
+  APIM_SUBNET_FRONTDOOR_INBOUND_ONLY: 'true'
   APPGW_SUBNET_NAME: 'AppGw'
   APPGW_SUBNET_PREFIX: '10.0.2.0/24'
   APP_SUBNET_NAME: 'App'
@@ -57,7 +58,7 @@ env:
   AKS_ZONES_FOR_CLI: '1 2 3'
   AKS_VERSION: '1.20.5'
   AKS_NODE_COUNT: '1'
-  AKS_NODE_AUTOSCALE: 'false'
+  AKS_NODE_AUTOSCALE: 'true'
   AKS_NODE_AUTOSCALE_COUNT_MIN: '2'
   AKS_NODE_AUTOSCALE_COUNT_MAX: '10'
   AKS_NODE_SIZE: 'Standard_DS2_v2'
@@ -159,13 +160,13 @@ jobs:
       #    parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
 
-      #- name: Deploy NSG for APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/apim.nsg.json
-      #    parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APIM}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+      - name: Deploy NSG for APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/apim.nsg.json
+          parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.APIM_NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}} allowTrafficOnlyFromFrontDoor=${{env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY}}
 
       #- name: Deploy NSG for APIM Subnet Diagnostics
       #  if: success()
@@ -173,7 +174,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.nsg.diagnostics.json
-      #    parameters: nsgName=${{env.NSG_NAME_APIM}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
+      #    parameters: nsgName=${{env.APIM_NSG_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
       #- name: Deploy NSG for App Subnet
       #  if: success()
@@ -181,7 +182,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.nsg.json
-      #    parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.NSG_NAME_APP}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
+      #    parameters: location=${{env.AZURE_LOCATION}} nsgName=${{env.APP_NSG_NAME}} nsgRuleInbound100Src=${{env.NSG_IN_SRC}}
 
       #- name: Deploy NSG for App Subnet Diagnostics
       #  if: success()
@@ -189,7 +190,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.nsg.diagnostics.json
-      #    parameters: nsgName=${{env.NSG_NAME_APP}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
+      #    parameters: nsgName=${{env.APP_NSG_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
 
       #- name: Deploy DDoS Plan
@@ -223,7 +224,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.APIM_SUBNET_NAME}} subnetPrefix=${{env.APIM_SUBNET_PREFIX}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APIM}}
+      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.APIM_SUBNET_NAME}} subnetPrefix=${{env.APIM_SUBNET_PREFIX}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.APIM_NSG_NAME}}
 
       #- name: Deploy AppGW Subnet
       #  if: success()
@@ -239,7 +240,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.APP_SUBNET_NAME}} subnetPrefix=${{env.APP_SUBNET_PREFIX}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.NSG_NAME_APP}} serviceEndpoints=${{env.APP_SUBNET_SERVICE_ENDPOINTS}}
+      #    parameters: vnetName=${{env.VNET_NAME}} subnetName=${{env.APP_SUBNET_NAME}} subnetPrefix=${{env.APP_SUBNET_PREFIX}} nsgResourceGroup=${{env.AZURE_RESOURCE_GROUP}} nsgName=${{env.APP_NSG_NAME}} serviceEndpoints=${{env.APP_SUBNET_SERVICE_ENDPOINTS}}
 
       - name: Get App Subnet Resource ID
         if: success()
@@ -513,52 +514,52 @@ jobs:
             --network-plugin "${{env.AKS_NET_PLUGIN}}" --service-cidr "${{env.AKS_SERVICE_CIDR}}" --dns-service-ip "${{env.AKS_DNS_SERVICE_IP}}" --pod-cidr "${{env.AKS_POD_CIDR}}" --docker-bridge-address "${{env.AKS_DOCKER_BRIDGE_ADDRESS}}" \
             --node-count ${{env.AKS_NODE_COUNT}}
 
-      #- name: Deploy AKS Cluster Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/aks.cluster.diagnostics.json
-      #    parameters: clusterName=${{env.AKS_CLUSTER_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
+      - name: Deploy AKS Cluster Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/aks.cluster.diagnostics.json
+          parameters: clusterName=${{env.AKS_CLUSTER_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
-      #- name: Get AKS Cluster Resource ID
-      #  if: success()
-      #  run: echo "AKS_CLUSTER_RESOURCE_ID=$(az aks show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+      - name: Get AKS Cluster Resource ID
+        if: success()
+        run: echo "AKS_CLUSTER_RESOURCE_ID=$(az aks show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      #- name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity after AKS Deploy creates the RG
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
+      - name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity after AKS Deploy creates the RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
 
-      #- name: Deploy additional AKS Node Pool
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/aks.node-pool.json
-      #    parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} availabilityZones="${{env.AVL_ZONES}}" nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} enableNodeAutoscale=${{env.AKS_NODE_AUTOSCALE}} nodeCountMin=${{env.AKS_NODE_AUTOSCALE_COUNT_MIN}} nodeCountMax=${{env.AKS_NODE_AUTOSCALE_COUNT_MAX}} nodeVmSize=${{env.AKS_NODE_SIZE}} subnetResourceId=${{env.APP_SUBNET_RESOURCE_ID}}
+      - name: Deploy additional AKS Node Pool
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/aks.node-pool.json
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} availabilityZones="${{env.AVL_ZONES}}" nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} enableNodeAutoscale=${{env.AKS_NODE_AUTOSCALE}} nodeCountMin=${{env.AKS_NODE_AUTOSCALE_COUNT_MIN}} nodeCountMax=${{env.AKS_NODE_AUTOSCALE_COUNT_MAX}} nodeVmSize=${{env.AKS_NODE_SIZE}} subnetResourceId=${{env.APP_SUBNET_RESOURCE_ID}}
 
-      #- name: Configure AKS Add-ons - Monitoring, AGIC
-      #  if: success()
-      #  run: az aks enable-addons --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -a monitoring,ingress-appgw --workspace-resource-id ${{env.LA_WORKSPACE_RESOURCE_ID}} --appgw-id "${{env.APPGW_RESOURCE_ID}}"
+      - name: Configure AKS Add-ons - Monitoring, AGIC
+        if: success()
+        run: az aks enable-addons --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -a monitoring,ingress-appgw --workspace-resource-id ${{env.LA_WORKSPACE_RESOURCE_ID}} --appgw-id "${{env.APPGW_RESOURCE_ID}}"
 
-      #- name: Enabled Pod Managed identity
-      #  if: success()
-      #  run: |
-      #    az aks update --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --enable-pod-identity --enable-pod-identity-with-kubenet
+      - name: Enabled Pod Managed identity
+        if: success()
+        run: |
+          az aks update --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --enable-pod-identity --enable-pod-identity-with-kubenet
 
-      #- name: Add Pod Identity
-      #  if: success()
-      #  run: |
-      #    az aks pod-identity add -g ${{env.AZURE_RESOURCE_GROUP}} --cluster-name ${{env.AKS_CLUSTER_NAME}} --namespace "default" --name ${{env.UAMI_NAME}} --identity-resource-id ${{env.UAMI_RESOURCE_ID}}
+      - name: Add Pod Identity
+        if: success()
+        run: |
+          az aks pod-identity add -g ${{env.AZURE_RESOURCE_GROUP}} --cluster-name ${{env.AKS_CLUSTER_NAME}} --namespace "default" --name ${{env.UAMI_NAME}} --identity-resource-id ${{env.UAMI_RESOURCE_ID}}
 
-      #- name: kubectl
-      #  if: success()
-      #  run: |
-      #    az aks get-credentials --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --overwrite-existing
+      - name: kubectl
+        if: success()
+        run: |
+          az aks get-credentials --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} --overwrite-existing
 
 
       #- name: Deploy Public IP for APIM Service
