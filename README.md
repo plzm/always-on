@@ -216,6 +216,9 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### AKS
 
+Install kubectl locally: [az aks install-cli](https://docs.microsoft.com/cli/azure/aks#az_aks_install_cli)
+Connect to cluster: [az aks get-credentials](https://docs.microsoft.com/cli/azure/aks#az_aks_get_credentials) 
+
 [Cluster authorized IP ranges](https://docs.microsoft.com/azure/aks/api-server-authorized-ip-ranges)
 [AAD pod-managed identities (preview)](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
 [BYO kubelet MI (preview)](https://docs.microsoft.com/azure/aks/use-managed-identity#bring-your-own-kubelet-mi-preview)
@@ -228,3 +231,8 @@ Test [Multi-Container App](https://docs.microsoft.com/azure/aks/kubernetes-walkt
 kubectl apply -f ./aks/azure-vote.yaml
 ```
 
+Enable Cluster Monitoring (Container Insights):
+
+[New cluster](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough#enable-cluster-monitoring)
+
+[Existing cluster](https://docs.microsoft.com/azure/azure-monitor/containers/container-insights-enable-existing-clusters#integrate-with-an-existing-workspace)
