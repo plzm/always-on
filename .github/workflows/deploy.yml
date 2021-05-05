@@ -108,12 +108,12 @@ jobs:
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" >> $GITHUB_ENV
 
       - name: Test True
-        if: ${{ success() && env.AKS_NODE_AUTOSCALE }}
+        if: ${{ success() && $AKS_NODE_AUTOSCALE }}
         run: |
           echo "True!"
 
       - name: Test False
-        if: ${{ success() && !env.AKS_NODE_AUTOSCALE }}
+        if: ${{ success() && !$AKS_NODE_AUTOSCALE }}
         run: |
           echo "False!"
 
