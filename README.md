@@ -219,6 +219,7 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 Install kubectl locally: [az aks install-cli](https://docs.microsoft.com/cli/azure/aks#az_aks_install_cli)
 Connect to cluster: [az aks get-credentials](https://docs.microsoft.com/cli/azure/aks#az_aks_get_credentials) 
 
+[Cluster auto-scaler](https://docs.microsoft.com/azure/aks/cluster-autoscaler)
 [Cluster authorized IP ranges](https://docs.microsoft.com/azure/aks/api-server-authorized-ip-ranges)
 [AAD pod-managed identities (preview)](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
 [BYO kubelet MI (preview)](https://docs.microsoft.com/azure/aks/use-managed-identity#bring-your-own-kubelet-mi-preview)

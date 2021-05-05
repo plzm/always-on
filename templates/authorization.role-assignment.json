@@ -2,14 +2,6 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"roleAssignmentName": {
-			"type": "String",
-			"defaultValue": "[newGuid()]",
-			"metadata": {
-				"displayName": "Role Assignment Name",
-				"description": "Must be a GUID"
-			}
-		},
 		"roleDefinitionId": {
 			"type": "String",
 			"defaultValue": "",
@@ -33,6 +25,7 @@
 	},
 	"variables": {
 		"roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', parameters('roleDefinitionId'))]",
+		"roleAssignmentName": "[guid(subscription().id, resourceGroup().name, parameters('roleDefinitionId'), parameters('principalId'), parameters('resourceType'), parameters('resourceName'))]",
 		"scopeId": "[
 			if
 			(
@@ -46,7 +39,7 @@
 	"resources": [
 		{
 			"type": "Microsoft.Authorization/roleAssignments",
-			"name": "[parameters('roleAssignmentName')]",
+			"name": "[variables('roleAssignmentName')]",
 			"apiVersion": "[variables('apiVersionAuthRoleAssignment')]",
 			"scope": "[variables('scopeId')]",
 			"properties": {
