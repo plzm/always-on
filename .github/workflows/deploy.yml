@@ -21,7 +21,7 @@ env:
   DDOS_PLAN_NAME: 'ao-ddos-$INFIX'
   VNET_NAME: 'ao-eus-$INFIX'
   VNET_PREFIX: '10.0.0.0/16'
-  VNET_ENABLE_DDOS: 'true'
+  VNET_ENABLE_DDOS: 'false'
   APIM_SUBNET_NAME: 'Apim'
   APIM_SUBNET_PREFIX: '10.0.1.0/24'
   APPGW_SUBNET_NAME: 'AppGw'
@@ -93,7 +93,7 @@ jobs:
       #    az extension add --name front-door
 
       - name: Create Azure resource group
-        if: success()
+        if: success() && $VNET_ENABLE_DDOS
         run: |
           az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}}
 
@@ -154,7 +154,7 @@ jobs:
 
 
       #- name: Deploy DDoS Plan
-      #  if: success()
+      #  if: success() && $VNET_ENABLE_DDOS
       #  uses: azure/arm-deploy@v1
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
