@@ -82,7 +82,7 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          echo "AZURE_RESOURCE_GROUP='always-on-$INFIX'" >> $GITHUB_ENV
+          echo "AZURE_RESOURCE_GROUP=always-on-$INFIX" >> $GITHUB_ENV
 
       - name: Azure login
         if: success()
