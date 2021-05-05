@@ -8,18 +8,32 @@ env:
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
+
   INFIX: '15'
-  AZURE_RESOURCE_GROUP: ''
+  AZURE_RESOURCE_GROUP: 'always-on-$INFIX'
+  UAMI_NAME: 'pz-ao-uami-$INFIX'
+  KEY_VAULT_NAME: 'pz-ao-kv-eus-$INFIX'
+  DDOS_PLAN_NAME: 'ao-ddos-$INFIX'
+  VNET_NAME: 'ao-eus-$INFIX'
+  REGISTRY_NAME: 'pzaocr$INFIX'
+  LA_WORKSPACE_NAME: 'pz-ao-la-$INFIX'
+  APP_INSIGHTS_NAME: 'pz-ao-ai-$INFIX'
+  EVENT_HUB_NS_NAME: 'pz-ao-eh-$INFIX'
+  COSMOS_DB_ACCT_NAME: 'pz-ao-cdb-$INFIX'
+  AKS_CLUSTER_NAME: 'pz-ao-aks-$INFIX'
+  AKS_DNS_PREFIX: 'pzaoaks$INFIX'
+  APPGW_NAME: 'pz-ao-appgw-$INFIX'
+  APPGW_PUBLIC_IP_NAME: 'pz-ao-appgw-pip-$INFIX'
+  APIM_SERVICE_NAME: 'pz-ao-apim-eus-$INFIX'
+  APIM_PUBLIC_IP_NAME: 'pz-ao-apim-pip-$INFIX'
+  FRONT_DOOR_NAME: 'pz-ao-fd-$INFIX'
+
   AZURE_LOCATION: 'eastus'
   AVL_ZONES: '1,2,3'
   IDENTITY_TYPE: 'UserAssigned'
-  UAMI_NAME: 'pz-ao-uami-$INFIX'
-  KEY_VAULT_NAME: 'pz-ao-kv-eus-$INFIX'
   NSG_NAME_APP: 'ao-app-eus'
   NSG_NAME_APIM: 'ao-apim-eus'
   NSG_IN_SRC: '75.68.47.183/32'
-  DDOS_PLAN_NAME: 'ao-ddos-$INFIX'
-  VNET_NAME: 'ao-eus-$INFIX'
   VNET_PREFIX: '10.0.0.0/16'
   VNET_ENABLE_DDOS: 'false'
   APIM_SUBNET_NAME: 'Apim'
@@ -29,15 +43,10 @@ env:
   APP_SUBNET_NAME: 'App'
   APP_SUBNET_PREFIX: '10.0.5.0/24'
   APP_SUBNET_SERVICE_ENDPOINTS: 'Microsoft.AzureCosmosDB,Microsoft.EventHub,Microsoft.KeyVault'
-  REGISTRY_NAME: 'pzaocr$INFIX'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
-  LA_WORKSPACE_NAME: 'pz-ao-la-$INFIX'
-  APP_INSIGHTS_NAME: 'pz-ao-ai-$INFIX'
-  EVENT_HUB_NS_NAME: 'pz-ao-eh-$INFIX'
   EVENT_HUB_CAPACITY: '1'
   EVENT_HUB_EVENT_HUB_NAME: 'eh1'
   EVENT_HUB_CONSUMER_GROUP_NAME: 'ao'
-  COSMOS_DB_ACCT_NAME: 'pz-ao-cdb-$INFIX'
   COSMOS_DB_LOCATIONS: 'eastus:true,westus2:true'
   COSMOS_DB_DATABASE_NAME: 'db1'
   COSMOS_DB_DATABASE_THROUGHPUT: '400'
@@ -45,8 +54,6 @@ env:
   COSMOS_DB_CONTAINER_THROUGHPUT: '400'
   COSMOS_DB_PARTITION_KEY: '/id'
   COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
-  AKS_CLUSTER_NAME: 'pz-ao-aks-$INFIX'
-  AKS_DNS_PREFIX: 'pzaoaks$INFIX'
   AKS_ZONES_FOR_CLI: '1 2 3'
   AKS_VERSION: '1.20.5'
   AKS_NODE_COUNT: '1'
@@ -59,17 +66,12 @@ env:
   AKS_DNS_SERVICE_IP: '10.1.0.10'
   AKS_POD_CIDR: '10.241.0.0/16'
   AKS_DOCKER_BRIDGE_ADDRESS: '172.17.0.1/16'
-  APPGW_NAME: 'pz-ao-appgw-$INFIX'
-  APPGW_PUBLIC_IP_NAME: 'pz-ao-appgw-pip-$INFIX'
-  APIM_SERVICE_NAME: 'pz-ao-apim-eus-$INFIX'
-  APIM_PUBLIC_IP_NAME: 'pz-ao-apim-pip-$INFIX'
   APIM_API_VERSION_SET_NAME: 'Demo Conference API'
   APIM_API_VERSION_SET_DESCRIPTION: 'Foo'
   APIM_API_NAME: 'demo-conference-api'
   APIM_API_DESCRIPTION: 'Foo'
   APIM_API_SERVICE_URL: 'https://conferenceapi.azurewebsites.net'
   APIM_API_SERVICE_PATH: 'conference'
-  FRONT_DOOR_NAME: 'pz-ao-fd-$INFIX'
 
 jobs:
   deploy-azure-resources:
@@ -83,6 +85,22 @@ jobs:
         if: success()
         run: |
           echo "AZURE_RESOURCE_GROUP=always-on-$INFIX" >> $GITHUB_ENV
+          echo "UAMI_NAME=pz-ao-uami-$INFIX" >> $GITHUB_ENV
+          echo "KEY_VAULT_NAME=pz-ao-kv-eus-$INFIX" >> $GITHUB_ENV
+          echo "DDOS_PLAN_NAME=ao-ddos-$INFIX" >> $GITHUB_ENV
+          echo "VNET_NAME=ao-eus-$INFIX" >> $GITHUB_ENV
+          echo "REGISTRY_NAME=pzaocr$INFIX" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_NAME=pz-ao-la-$INFIX" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_NAME=pz-ao-ai-$INFIX" >> $GITHUB_ENV
+          echo "EVENT_HUB_NS_NAME=pz-ao-eh-$INFIX" >> $GITHUB_ENV
+          echo "COSMOS_DB_ACCT_NAME=pz-ao-cdb-$INFIX" >> $GITHUB_ENV
+          echo "AKS_CLUSTER_NAME=pz-ao-aks-$INFIX" >> $GITHUB_ENV
+          echo "AKS_DNS_PREFIX=pzaoaks$INFIX" >> $GITHUB_ENV
+          echo "APPGW_NAME=pz-ao-appgw-$INFIX" >> $GITHUB_ENV
+          echo "APPGW_PUBLIC_IP_NAME=pz-ao-appgw-pip-$INFIX" >> $GITHUB_ENV
+          echo "APIM_SERVICE_NAME=pz-ao-apim-eus-$INFIX" >> $GITHUB_ENV
+          echo "APIM_PUBLIC_IP_NAME=pz-ao-apim-pip-$INFIX" >> $GITHUB_ENV
+          echo "FRONT_DOOR_NAME=pz-ao-fd-$INFIX" >> $GITHUB_ENV
 
       - name: Azure login
         if: success()
