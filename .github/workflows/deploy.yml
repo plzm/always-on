@@ -113,7 +113,7 @@ jobs:
           echo "True!"
 
       - name: Test
-        if: ${{ success() && !env.AKS_NODE_AUTOSCALE == false }}
+        if: ${{ success() && !env.AKS_NODE_AUTOSCALE }}
         run: |
           echo "False!"
 
