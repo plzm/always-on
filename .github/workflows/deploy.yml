@@ -93,7 +93,7 @@ jobs:
       #    az extension add --name front-door
 
       - name: Create Azure resource group
-        if: success() && ${{env.$VNET_ENABLE_DDOS}}
+        if: success() && ${{env.VNET_ENABLE_DDOS}}
         run: |
           az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION}} --name ${{env.AZURE_RESOURCE_GROUP}}
 
