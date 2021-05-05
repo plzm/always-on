@@ -1,0 +1,30 @@
+name: Test env var concatenation and substring
+
+on: push
+
+env:
+  INFIX: 'foo'
+  NAME_1: MyName1-$INFIX
+  NAME_2: MyName2-$INFIX
+
+jobs:
+  test1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare a new env var based on env value
+        id: test1-step1
+        run: |
+          export NAME_1_SHORT="${NAME_1:0:3}"
+          echo "::set-output name=name_1_short::${NAME_1_SHORT}"
+    outputs:
+      name_1_short: ${{ steps.test1-step1.outputs.name_1_short }}
+
+  test2:
+    needs: test1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo out the env vars in a new job
+        run: |
+          echo ${{ env.NAME_1 }}
+          echo ${{ env.NAME_2 }}
+          echo ${{ needs.test1.outputs.name_1_short }}

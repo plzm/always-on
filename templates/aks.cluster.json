@@ -17,6 +17,13 @@
 			"type": "string",
 			"defaultValue": ""
 		},
+		"skuName": {
+			"type": "string",
+			"defaultValue": "Basic",
+			"allowedValues": [
+				"Basic"
+			]
+		},
 		"skuTier": {
 			"type": "string",
 			"defaultValue": "Free",
@@ -69,13 +76,39 @@
 				"description": "Resource group name for node pool resources. If not provided, the default (MC_resource-group-name_cluster-name_location) will be used."
 			}
 		},
+		"systemPoolName": {
+			"type": "string",
+			"defaultValue": "systempool"
+		},
 		"nodeCount": {
 			"type": "int",
-			"defaultValue": 2,
+			"defaultValue": 1,
 			"minValue": 1,
 			"maxValue": 100,
 			"metadata": {
 				"description": "The number of nodes for the system node pool."
+			}
+		},
+		"enableNodeAutoscale": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"nodeCountMin": {
+			"type": "int",
+			"defaultValue": 0,
+			"minValue": 0,
+			"maxValue": 100,
+			"metadata": {
+				"description": "The minimum number of nodes for the cluster when autoscale is used."
+			}
+		},
+		"nodeCountMax": {
+			"type": "int",
+			"defaultValue": 1,
+			"minValue": 1,
+			"maxValue": 100,
+			"metadata": {
+				"description": "The maximum number of nodes for the cluster when autoscale is used."
 			}
 		},
 		"nodeVmSize": {
@@ -116,15 +149,7 @@
 				"description": "SSH public key in three-part format, ssh-rsa *** username"
 			}
 		},
-		"vnetResourceGroup": {
-			"type": "string",
-			"defaultValue": ""
-		},
-		"vnetName": {
-			"type": "string",
-			"defaultValue": ""
-		},
-		"subnetName": {
+		"subnetResourceId": {
 			"type": "string",
 			"defaultValue": ""
 		},
@@ -174,9 +199,53 @@
 				json('null')
 			)
 		]",
-		"skuName": "Basic",
-		"vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
-		"subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
+		"availabilityZones": "[
+			if
+			(
+				empty(parameters('availabilityZones')),
+				json('[]'),
+				split(parameters('availabilityZones'), ',')
+			)
+		]",
+		"systemPoolBase": {
+			"mode": "System",
+			"name": "[parameters('systemPoolName')]",
+			"availabilityZones": "[variables('availabilityZones')]",
+			"vmSize": "[parameters('nodeVmSize')]",
+			"osType": "[parameters('osType')]",
+			"storageProfile": "ManagedDisks",
+			"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+			"enableAutoScaling": "[parameters('enableNodeAutoscale')]",
+			"count": "[
+				if
+				(
+					parameters('enableNodeAutoscale'),
+					max(parameters('nodeCount'), parameters('nodeCountMin')),
+					parameters('nodeCount')
+				)
+			]",
+			"minCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMin'), json('null'))]",
+			"maxCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMax'), json('null'))]"
+		},
+		"customSubnetOn": {
+			"availabilityZones": "[variables('availabilityZones')]",
+			"vnetSubnetId": "[parameters('subnetResourceId')]"
+		},
+		"customSubnetOff": {
+			"availabilityZones": "[variables('availabilityZones')]"
+		},
+		"systemPool": "[
+			union
+			(
+				variables('systemPoolBase'),
+				if
+				(
+					empty(parameters('subnetResourceId')),
+					variables('customSubnetOff'),
+					variables('customSubnetOn')
+				)
+			)
+		]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -194,7 +263,7 @@
 				"userAssignedIdentities": "[variables('userAssignedIdentity')]"
 			},
 			"sku": {
-				"name": "[variables('skuName')]",
+				"name": "[parameters('skuName')]",
 				"tier": "[parameters('skuTier')]"
 			},
 			"properties": {
@@ -232,24 +301,7 @@
                     ]"
 				},
 				"agentPoolProfiles": [
-					{
-						"name": "systempool",
-						"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
-						"count": "[parameters('nodeCount')]",
-						"vmSize": "[parameters('nodeVmSize')]",
-						"osType": "[parameters('osType')]",
-						"storageProfile": "ManagedDisks",
-						"mode": "System",
-						"vnetSubnetId": "[variables('subnetId')]",
-						"availabilityZones": "[
-							if
-							(
-								empty(parameters('availabilityZones')),
-								json('[]'),
-								split(parameters('availabilityZones'), ',')
-							)
-						]"
-					}
+					"[variables('systemPool')]"
 				]
 			}
 		}

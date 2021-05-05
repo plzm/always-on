@@ -5,22 +5,23 @@ on:
     types: [labeled]
 
 env:
-  AZURE_LOCATION: 'eastus'
-  AZURE_RESOURCE_GROUP: 'always-on-14'
-  IDENTITY_TYPE: 'UserAssigned'
-  UAMI_NAME: 'pz-ao-uami-14'
-  KEY_VAULT_NAME: 'pz-ao-kv-eus-14'
-  APIM_SERVICE_NAME: 'pz-ao-apim-eus-14'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
+  INFIX: '15'
+  AZURE_RESOURCE_GROUP: 'always-on-$INFIX'
+  AZURE_LOCATION: 'eastus'
+  AVL_ZONES: '1,2,3'
+  IDENTITY_TYPE: 'UserAssigned'
+  UAMI_NAME: 'pz-ao-uami-$INFIX'
+  KEY_VAULT_NAME: 'pz-ao-kv-eus-$INFIX'
   NSG_NAME_APP: 'ao-app-eus'
   NSG_NAME_APIM: 'ao-apim-eus'
   NSG_IN_SRC: '75.68.47.183/32'
-  DDOS_PLAN_NAME: 'ao-ddos'
-  VNET_NAME: 'ao-eus'
+  DDOS_PLAN_NAME: 'ao-ddos-$INFIX'
+  VNET_NAME: 'ao-eus-$INFIX'
   VNET_PREFIX: '10.0.0.0/16'
-  VNET_ENABLE_DDOS: 'false'
+  VNET_ENABLE_DDOS: 'true'
   APIM_SUBNET_NAME: 'Apim'
   APIM_SUBNET_PREFIX: '10.0.1.0/24'
   APPGW_SUBNET_NAME: 'AppGw'
@@ -28,15 +29,15 @@ env:
   APP_SUBNET_NAME: 'App'
   APP_SUBNET_PREFIX: '10.0.5.0/24'
   APP_SUBNET_SERVICE_ENDPOINTS: 'Microsoft.AzureCosmosDB,Microsoft.EventHub,Microsoft.KeyVault'
-  REGISTRY_NAME: 'pzaocr'
+  REGISTRY_NAME: 'pzaocr$INFIX'
   REGISTRY_REPLICATIONS: 'eastus,westus2'
-  LA_WORKSPACE_NAME: 'pz-ao-la-eus'
-  APP_INSIGHTS_NAME: 'pz-ao-ai-eus'
-  EVENT_HUB_NS_NAME: 'pz-ao-eh-eus'
+  LA_WORKSPACE_NAME: 'pz-ao-la-$INFIX'
+  APP_INSIGHTS_NAME: 'pz-ao-ai-$INFIX'
+  EVENT_HUB_NS_NAME: 'pz-ao-eh-$INFIX'
   EVENT_HUB_CAPACITY: '1'
   EVENT_HUB_EVENT_HUB_NAME: 'eh1'
   EVENT_HUB_CONSUMER_GROUP_NAME: 'ao'
-  COSMOS_DB_ACCT_NAME: 'pz-ao-cdb'
+  COSMOS_DB_ACCT_NAME: 'pz-ao-cdb-$INFIX'
   COSMOS_DB_LOCATIONS: 'eastus:true,westus2:true'
   COSMOS_DB_DATABASE_NAME: 'db1'
   COSMOS_DB_DATABASE_THROUGHPUT: '400'
@@ -44,27 +45,31 @@ env:
   COSMOS_DB_CONTAINER_THROUGHPUT: '400'
   COSMOS_DB_PARTITION_KEY: '/id'
   COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
-  AKS_CLUSTER_NAME: 'pz-ao-aks-eus'
-  AKS_DNS_PREFIX: 'pzaoakseus'
+  AKS_CLUSTER_NAME: 'pz-ao-aks-$INFIX'
+  AKS_DNS_PREFIX: 'pzaoaks$INFIX'
   AKS_ZONES_FOR_CLI: '1 2 3'
   AKS_VERSION: '1.20.5'
   AKS_NODE_COUNT: '1'
+  AKS_NODE_AUTOSCALE: 'true'
+  AKS_NODE_AUTOSCALE_COUNT_MIN: '2'
+  AKS_NODE_AUTOSCALE_COUNT_MAX: '10'
   AKS_NODE_SIZE: 'Standard_DS2_v2'
   AKS_NET_PLUGIN: 'kubenet'
   AKS_SERVICE_CIDR: '10.1.0.0/16'
   AKS_DNS_SERVICE_IP: '10.1.0.10'
   AKS_POD_CIDR: '10.241.0.0/16'
   AKS_DOCKER_BRIDGE_ADDRESS: '172.17.0.1/16'
-  APPGW_NAME: 'pz-ao-appgw-eus'
-  APPGW_PUBLIC_IP_NAME: 'pz-ao-appgw-pip-eus'
-  APIM_PUBLIC_IP_NAME: 'pz-ao-apim-pip-eus'
+  APPGW_NAME: 'pz-ao-appgw-$INFIX'
+  APPGW_PUBLIC_IP_NAME: 'pz-ao-appgw-pip-$INFIX'
+  APIM_SERVICE_NAME: 'pz-ao-apim-eus-$INFIX'
+  APIM_PUBLIC_IP_NAME: 'pz-ao-apim-pip-$INFIX'
   APIM_API_VERSION_SET_NAME: 'Demo Conference API'
   APIM_API_VERSION_SET_DESCRIPTION: 'Foo'
   APIM_API_NAME: 'demo-conference-api'
   APIM_API_DESCRIPTION: 'Foo'
   APIM_API_SERVICE_URL: 'https://conferenceapi.azurewebsites.net'
   APIM_API_SERVICE_PATH: 'conference'
-  FRONT_DOOR_NAME: 'pz-ao-fd'
+  FRONT_DOOR_NAME: 'pz-ao-fd-$INFIX'
 
 jobs:
   deploy-azure-resources:
@@ -75,6 +80,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Azure login
+        if: success()
         uses: azure/login@v1
         with:
           creds: ${{secrets.AZURE_CREDENTIALS}}
@@ -147,13 +153,13 @@ jobs:
           parameters: nsgName=${{env.NSG_NAME_APP}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_RESOURCE_ID}}"
 
 
-      #- name: Deploy DDoS Plan
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./templates/net.ddos-plan.json
-      #    parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      - name: Deploy DDoS Plan
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/net.ddos-plan.json
+          parameters: location=${{env.AZURE_LOCATION}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
       - name: Deploy VNet
         if: success()
@@ -444,7 +450,7 @@ jobs:
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./templates/aks.cluster.json
-      #    parameters: location=${{env.AZURE_LOCATION}} k8sversion=${{env.AKS_VERSION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} availabilityZones="1,2,3" nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" vnetResourceGroup="${{env.AZURE_RESOURCE_GROUP}}" vnetName="${{env.VNET_NAME}}" subnetName="${{env.APP_SUBNET_NAME}}" networkPlugin="${{env.AKS_NET_PLUGIN}}" serviceCidr="${{env.AKS_SERVICE_CIDR}}" dnsServiceIp="${{env.AKS_DNS_SERVICE_IP}}" podCidr="${{env.AKS_POD_CIDR}}" dockerBridgeCidr="${{env.AKS_DOCKER_BRIDGE_ADDRESS}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}"
+      #    parameters: location=${{env.AZURE_LOCATION}} k8sversion=${{env.AKS_VERSION}} clusterName=${{env.AKS_CLUSTER_NAME}} dnsPrefix=${{env.AKS_DNS_PREFIX}} managedIdentityType=${{env.IDENTITY_TYPE}} identityResourceId=${{env.UAMI_RESOURCE_ID}} availabilityZones="${{env.AVL_ZONES}}" nodeResourceGroup="${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" nodeCount=${{env.AKS_NODE_COUNT}} enableNodeAutoscale=${{env.AKS_NODE_AUTOSCALE}} nodeCountMin=${{env.AKS_NODE_AUTOSCALE_COUNT_MIN}} nodeCountMax=${{env.AKS_NODE_AUTOSCALE_COUNT_MAX}} nodeVmSize=${{env.AKS_NODE_SIZE}} nodeAdminUsername=${{secrets.ADMIN_USERNAME}} sshRSAPublicKey="${{secrets.SSH_KEY}}" subnetResourceId=${{env.APP_SUBNET_RESOURCE_ID}} networkPlugin="${{env.AKS_NET_PLUGIN}}" serviceCidr="${{env.AKS_SERVICE_CIDR}}" dnsServiceIp="${{env.AKS_DNS_SERVICE_IP}}" podCidr="${{env.AKS_POD_CIDR}}" dockerBridgeCidr="${{env.AKS_DOCKER_BRIDGE_ADDRESS}}" apiServerAuthorizedIpRanges="${{env.AKS_API_SERVER_AUTH_IP_RANGES}}"
 
       # az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
       - name: Deploy AKS Cluster (CLI)
@@ -453,7 +459,8 @@ jobs:
           az aks create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g "${{env.AZURE_RESOURCE_GROUP}}" -l "${{env.AZURE_LOCATION}}" --verbose \
             -n "${{env.AKS_CLUSTER_NAME}}" --zones ${{env.AKS_ZONES_FOR_CLI}} --kubernetes-version "${{env.AKS_VERSION}}" --dns-name-prefix "${{env.AKS_DNS_PREFIX}}" \
             --enable-managed-identity --assign-identity "${{env.UAMI_RESOURCE_ID}}" --assign-kubelet-identity "${{env.UAMI_RESOURCE_ID}}" \
-            --node-resource-group "${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" --node-count "${{env.AKS_NODE_COUNT}}" --node-vm-size "${{env.AKS_NODE_SIZE}}" \
+            --node-resource-group "${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}" --node-vm-size "${{env.AKS_NODE_SIZE}}" \
+            --node-count "${{env.AKS_NODE_COUNT}}" --enable-cluster-autoscaler ${{env.AKS_NODE_AUTOSCALE}} --min-count=${{env.AKS_NODE_AUTOSCALE_COUNT_MIN}} --max-count ${{env.AKS_NODE_AUTOSCALE_COUNT_MAX}} \
             --admin-username "${{secrets.ADMIN_USERNAME}}" --ssh-key-value "${{secrets.SSH_KEY}}" \
             --vnet-subnet-id "${{env.APP_SUBNET_RESOURCE_ID}}" --api-server-authorized-ip-ranges "${{env.AKS_API_SERVER_AUTH_IP_RANGES}}" \
             --network-plugin "${{env.AKS_NET_PLUGIN}}" --service-cidr "${{env.AKS_SERVICE_CIDR}}" --dns-service-ip "${{env.AKS_DNS_SERVICE_IP}}" --pod-cidr "${{env.AKS_POD_CIDR}}" --docker-bridge-address "${{env.AKS_DOCKER_BRIDGE_ADDRESS}}"
@@ -470,14 +477,13 @@ jobs:
         if: success()
         run: echo "AKS_CLUSTER_RESOURCE_ID=$(az aks show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP}} -n ${{env.AKS_CLUSTER_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      # AKS Nodes RG is created during the AKS cluster deploy and cannot be pre-created. That's why this step is right after Deploy AKS Cluster.
-      #- name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
+      - name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity after AKS Deploy creates the RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_AKS_NODES}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_READER}}" principalId="${{env.UAMI_PRINCIPAL_ID}}"
 
       - name: Deploy additional AKS Node Pool
         if: success()
@@ -485,7 +491,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
           template: ./templates/aks.node-pool.json
-          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} nodeVmSize=${{env.AKS_NODE_SIZE}}
+          parameters: location=${{env.AZURE_LOCATION}} clusterName=${{env.AKS_CLUSTER_NAME}} availabilityZones="${{env.AVL_ZONES}}" nodePoolName=userpool1 nodePoolMode=User nodeCount=${{env.AKS_NODE_COUNT}} enableNodeAutoscale=${{env.AKS_NODE_AUTOSCALE}} nodeCountMin=${{env.AKS_NODE_AUTOSCALE_COUNT_MIN}} nodeCountMax=${{env.AKS_NODE_AUTOSCALE_COUNT_MAX}} nodeVmSize=${{env.AKS_NODE_SIZE}} subnetResourceId=${{env.APP_SUBNET_RESOURCE_ID}}
 
       - name: Configure AKS Add-ons - Monitoring, AGIC
         if: success()
@@ -559,8 +565,7 @@ jobs:
           template: ./templates/apim.logger.json
           parameters: apimServiceName="${{env.APIM_SERVICE_NAME}}" loggerName="${{env.APP_INSIGHTS_NAME}}" logTargetResourceId="${{env.APP_INSIGHTS_RESOURCE_ID}}" appInsightsTargetInstrumentationKey="${{env.APP_INSIGHTS_INSTRUMENTATION_KEY}}"
 
-      # Create a new API. This does NOT import existing source API operations.
-      - name: Deploy APIM API
+      - name: Deploy APIM API (does NOT import API operations - TODO)
         if: success()
         uses: azure/arm-deploy@v1
         with:

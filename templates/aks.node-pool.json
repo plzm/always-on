@@ -43,7 +43,7 @@
 			"minValue": 0,
 			"maxValue": 100,
 			"metadata": {
-				"description": "The number of nodes for the cluster."
+				"description": "The number of nodes for the node pool."
 			}
 		},
 		"enableNodeAutoscale": {
@@ -93,10 +93,60 @@
 			"metadata": {
 				"description": "Disk size (in GB) to provision for each of the agent pool nodes. This value ranges from 0 to 1023. Specifying 0 will apply the default disk size for that nodeVmSize."
 			}
+		},
+		"subnetResourceId": {
+			"type": "string",
+			"defaultValue": ""
 		}
 	},
 	"variables": {
-		"nodeCount": "[if(and(equals(parameters('nodePoolMode'), 'System'), equals(parameters('nodeCount'), 0)), 1, parameters('nodeCount'))]",
+		"availabilityZones": "[
+			if
+			(
+				empty(parameters('availabilityZones')),
+				json('[]'),
+				split(parameters('availabilityZones'), ',')
+			)
+		]",
+		"poolBase": {
+			"mode": "[parameters('nodePoolMode')]",
+			"name": "[parameters('nodePoolName')]",
+			"availabilityZones": "[variables('availabilityZones')]",
+			"vmSize": "[parameters('nodeVmSize')]",
+			"osType": "[parameters('osType')]",
+			"storageProfile": "ManagedDisks",
+			"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
+			"enableAutoScaling": "[parameters('enableNodeAutoscale')]",
+			"count": "[
+				if
+				(
+					parameters('enableNodeAutoscale'),
+					max(parameters('nodeCount'), parameters('nodeCountMin')),
+					parameters('nodeCount')
+				)
+			]",
+			"minCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMin'), json('null'))]",
+			"maxCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMax'), json('null'))]"
+		},
+		"customSubnetOn": {
+			"availabilityZones": "[variables('availabilityZones')]",
+			"vnetSubnetId": "[parameters('subnetResourceId')]"
+		},
+		"customSubnetOff": {
+			"availabilityZones": "[variables('availabilityZones')]"
+		},
+		"pool": "[
+			union
+			(
+				variables('poolBase'),
+				if
+				(
+					empty(parameters('subnetResourceId')),
+					variables('customSubnetOff'),
+					variables('customSubnetOn')
+				)
+			)
+		]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -109,25 +159,7 @@
 			"name": "[concat(parameters('clusterName'), '/', parameters('nodePoolName'))]",
 			"location": "[parameters('location')]",
 			"tags": "[variables('resourceTags')]",
-			"properties": {
-				"mode": "[parameters('nodePoolMode')]",
-				"vmSize": "[parameters('nodeVmSize')]",
-				"count": "[variables('nodeCount')]",
-				"enableAutoScaling": "[parameters('enableNodeAutoscale')]",
-				"minCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMin'), json('null'))]",
-				"maxCount": "[if(parameters('enableNodeAutoscale'), parameters('nodeCountMax'), json('null'))]",
-				"osType": "[parameters('osType')]",
-				"storageProfile": "ManagedDisks",
-				"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
-				"availabilityZones": "[
-					if
-					(
-						empty(parameters('availabilityZones')),
-						json('[]'),
-						split(parameters('availabilityZones'), ',')
-					)
-				]"
-			}
+			"properties": "[variables('pool')]"
 		}
 	]
 }
