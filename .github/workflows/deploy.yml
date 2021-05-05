@@ -57,7 +57,7 @@ env:
   AKS_ZONES_FOR_CLI: '1 2 3'
   AKS_VERSION: '1.20.5'
   AKS_NODE_COUNT: '1'
-  AKS_NODE_AUTOSCALE: 'false'
+  AKS_NODE_AUTOSCALE: false
   AKS_NODE_AUTOSCALE_COUNT_MIN: '2'
   AKS_NODE_AUTOSCALE_COUNT_MAX: '10'
   AKS_NODE_SIZE: 'Standard_DS2_v2'
@@ -107,12 +107,12 @@ jobs:
         run: |
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" >> $GITHUB_ENV
 
-      - name: Test
+      - name: Test True
         if: ${{ success() && env.AKS_NODE_AUTOSCALE }}
         run: |
           echo "True!"
 
-      - name: Test
+      - name: Test False
         if: ${{ success() && !env.AKS_NODE_AUTOSCALE }}
         run: |
           echo "False!"
