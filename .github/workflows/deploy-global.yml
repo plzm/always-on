@@ -17,6 +17,7 @@ env:
   APP_INSIGHTS_NAME: 'pz-ao'
   REGISTRY_NAME: 'pzao21'
   COSMOS_DB_ACCT_NAME: 'pz-ao'
+  FRONT_DOOR_NAME: 'pz-ao'
 
   VNET_ENABLE_DDOS: 'true'
 
