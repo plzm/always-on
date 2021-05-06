@@ -102,7 +102,6 @@
                         "count": "[length(variables('locations'))]",
                         "input": {
                             "locationName": "[variables('locations')[copyIndex('locations')]]",
-                            "failoverPriority": "[if(parameters('enableMultipleWriteLocations'), 0, copyIndex('locations'))]",
                             "isZoneRedundant": "true"
                         }
                     }
