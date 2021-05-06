@@ -9,6 +9,7 @@ env:
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   DDOS_PLAN_NAME: 'pz-ao'
+  LA_WORKSPACE_NAME: 'pz-ao'
 
   NSG_IN_SRC: '75.68.47.183/32'
 
@@ -16,7 +17,6 @@ env:
 
   IDENTITY_TYPE: 'UserAssigned'
 
-  LA_WORKSPACE_NAME: 'pz-ao'
 
   VNET_PREFIX: '10.0.0.0/16'
   VNET_ENABLE_DDOS: 'true'
@@ -83,7 +83,7 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          INFIX=$GITHUB_RUN_ID
+          INFIX=$GITHUB_RUN_NUMBER
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           AKS_CLUSTER_NAME=pz-ao-${{ matrix.region }}
 
@@ -122,21 +122,21 @@ jobs:
         run: |
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
-      #- name: Deploy NSG for APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    template: ./templates/apim.nsg.json
-      #    parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
+      - name: Deploy NSG for APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          template: ./templates/apim.nsg.json
+          parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
 
-      #- name: Deploy NSG for APIM Subnet Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    template: ./templates/net.nsg.diagnostics.json
-      #    parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
+      - name: Deploy NSG for APIM Subnet Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          template: ./templates/net.nsg.diagnostics.json
+          parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
       #- name: Deploy NSG for App Subnet
       #  if: success()
