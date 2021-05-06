@@ -114,7 +114,7 @@ jobs:
           echo "APPGW_NAME=pz-ao-${{ matrix.region }}" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=pz-ao-appgw-${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "APIM_SERVICE_NAME=pz-ao-apim-${{ matrix.region }}" >> $GITHUB_ENV
+          echo "APIM_SERVICE_NAME=pz-ao-${{ matrix.region }}${{ env.SUFFIX }}" >> $GITHUB_ENV
           echo "APIM_PUBLIC_IP_NAME=pz-ao-apim-${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME" >> $GITHUB_ENV
