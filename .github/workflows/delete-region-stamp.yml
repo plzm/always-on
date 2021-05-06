@@ -3,6 +3,12 @@ name: Delete Azure environment
 on: 
   workflow_dispatch:
 
+env:
+  RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
+
+  AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
+  AZURE_LOCATION_GLOBAL: 'eastus'
+
 jobs:
   delete-stamp:
     runs-on: ubuntu-latest
@@ -10,10 +16,19 @@ jobs:
       matrix:
         region: [centralus]
     steps:
+      #- name: Install Azure CLI extensions
+      #  run: |
+      #    az extension add --name front-door
+
       - name: Azure login
+        if: success()
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      #- name: Delete FD backend pool backend
+      #  if: success()
+      #  run: az network front-door backend-pool backend remove -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -f 
 
       - name: Destroy regional stamp Resource Group
         if: success()
@@ -22,5 +37,4 @@ jobs:
           az group delete --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --name $AZURE_RESOURCE_GROUP --yes
 
       - name: Azure logout
-        run: |
-          az logout
+        run: az logout

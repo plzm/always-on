@@ -169,6 +169,29 @@
                     "enforceCertificateNameCheck": "[parameters('enforceCertificateNameCheck')]",
                     "sendRecvTimeoutSeconds": 120
                 },
+                "backendPools": [
+                    {
+                        "name": "[parameters('backendPoolName')]",
+                        "properties": {
+                            "backends": [
+                                {
+                                    "address": "[parameters('backendAddress')]",
+                                    "httpPort": 80,
+                                    "httpsPort": 443,
+                                    "priority": 1,
+                                    "weight": 100,
+                                    "backendHostHeader": "[parameters('backendHostHeader')]"
+                                }
+                            ],
+                            "healthProbeSettings": {
+                                "id": "[variables('frontDoorHealthProbeSettingsId')]"
+                            },
+                            "loadBalancingSettings": {
+                                "id": "[variables('frontDoorLoadBalancerId')]"
+                            }
+                        }
+                    }
+                ],
                 "healthProbeSettings": [
                     {
                         "name": "[parameters('healthProbeSettingsName')]",
