@@ -66,15 +66,15 @@ jobs:
       matrix:
         region: [centralus, westus2]
     steps:
-      #- name: Install Azure CLI extensions
-      #  if: success()
-      #  run: |
-      #    az extension add --name aks-preview
-      #    az extension add --name application-insights
-      #    az extension add --name front-door
+      - name: Install Azure CLI extensions
+        if: success()
+        run: |
+          az extension add --name aks-preview
+          az extension add --name application-insights
+          az extension add --name front-door
 
-      #- name: Checkout repository
-      #  uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Azure login
         if: success()
