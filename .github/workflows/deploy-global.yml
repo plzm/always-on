@@ -51,50 +51,50 @@ jobs:
       #  if: success()
       #  run: |
 
-      - name: Create Azure resource group
-        if: success()
-        run: |
-          az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #- name: Create Azure resource group
+      #  if: success()
+      #  run: |
+      #    az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
 
 
-      - name: Deploy Log Analytics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.log-analytics-workspace.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+      #- name: Deploy Log Analytics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/monitor.log-analytics-workspace.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
 
       - name: Get Log Analytics Workspace Resource ID
         if: success()
         run: |
           echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Deploy Log Analytics Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.log-analytics-workspace.diagnostics.json
-          parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      #- name: Deploy Log Analytics Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/monitor.log-analytics-workspace.diagnostics.json
+      #    parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
-      - name: Deploy DDoS Plan
-        if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/net.ddos-plan.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      #- name: Deploy DDoS Plan
+      #  if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/net.ddos-plan.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
 
-      - name: Deploy User-Assigned MI
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/identity.user-assigned-mi.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
+      #- name: Deploy User-Assigned MI
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/identity.user-assigned-mi.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
       - name: Get UAMI Info
         if: success()
