@@ -345,7 +345,7 @@ jobs:
         if: success()
         run: |
           APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'ipAddress')"
-          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{ env.NSG_IN_SRC }} >> $GITHUB_ENV
+          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{ env.NSG_IN_SRC }}" >> $GITHUB_ENV
 
 
       #- name: Deploy App GW
@@ -437,18 +437,15 @@ jobs:
 
       #- name: Enabled Pod Managed identity
       #  if: success()
-      #  run: |
-      #    az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
+      #  run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
 
       #- name: Add Pod Identity
       #  if: success()
-      #  run: |
-      #    az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
+      #  run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
 
       #- name: Get AKS credentials and kubectl
       #  if: success()
-      #  run: |
-      #    az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+      #  run: az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
 
       #- name: Deploy Public IP for APIM Service
