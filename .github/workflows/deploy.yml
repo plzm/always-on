@@ -83,7 +83,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Prepare dynamic env vars
+      - name: Env vars
         if: success()
         run: |
           echo "AZURE_RESOURCE_GROUP=always-on-$INFIX" >> $GITHUB_ENV
@@ -103,11 +103,12 @@ jobs:
           echo "APIM_SERVICE_NAME=pz-ao-apim-eus-$INFIX" >> $GITHUB_ENV
           echo "APIM_PUBLIC_IP_NAME=pz-ao-apim-pip-$INFIX" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=pz-ao-fd-$INFIX" >> $GITHUB_ENV
+          echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME-$AZURE_LOCATION" >> $GITHUB_ENV
 
-      - name: Get AKS Node Resource Group Name
-        if: success()
-        run: |
-          echo "AZURE_RESOURCE_GROUP_AKS_NODES=${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" >> $GITHUB_ENV
+      #- name: Env var - AKS Node Resource Group Name
+      #  if: success()
+      #  run: |
+      #    echo "AZURE_RESOURCE_GROUP_AKS_NODES=${{env.AZURE_RESOURCE_GROUP}}-${{env.AKS_CLUSTER_NAME}}-${{env.AZURE_LOCATION}}" >> $GITHUB_ENV
 
       #- name: Test True
       #  if: ${{ success() && (env.AKS_NODE_AUTOSCALE == 'true') }}
