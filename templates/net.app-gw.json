@@ -281,7 +281,7 @@
                 "redirectConfigurations": [],
                 "privateLinkConfigurations": [],
                 "webApplicationFirewallConfiguration": {
-                    "enabled": "[parameters('wafEnabled')]",
+                    "enabled": "[and(equals(parameters('skuName'), 'WAF_v2'), parameters('wafEnabled'))]",
                     "firewallMode": "[parameters('wafMode')]",
                     "ruleSetType": "OWASP",
                     "ruleSetVersion": "3.0",
