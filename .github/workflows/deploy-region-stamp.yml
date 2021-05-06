@@ -7,7 +7,6 @@ env:
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
 
-  INFIX: '$GITHUB_RUN_ID'
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   DDOS_PLAN_NAME: 'pz-ao'
 
@@ -65,6 +64,13 @@ jobs:
       matrix:
         region: [eastus]
     steps:
+      - name: Install CLI extensions
+        if: success()
+        run: |
+          az extension add --name aks-preview
+          az extension add --name application-insights
+          az extension add --name front-door
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -77,6 +83,7 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          INFIX=${{ $GITHUB_RUN_ID }}
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           AKS_CLUSTER_NAME=pz-ao-${{ matrix.region }}
 
@@ -109,11 +116,6 @@ jobs:
 
           echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app ${{ env.APP_INSIGHTS_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app ${{ env.APP_INSIGHTS_NAME }} -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
-
-      #- name: Install CLI extensions
-      #  if: success()
-      #  run: |
-      #    az extension add --name aks-preview
 
       - name: Create Azure resource group
         if: success()
