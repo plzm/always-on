@@ -83,7 +83,7 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          INFIX=${{ $GITHUB_RUN_ID }}
+          INFIX=$GITHUB_RUN_ID
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           AKS_CLUSTER_NAME=pz-ao-${{ matrix.region }}
 
