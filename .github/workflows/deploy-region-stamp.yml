@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  SUFFIX: '-13'
+  SUFFIX: '-14'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
 
