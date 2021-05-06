@@ -228,6 +228,28 @@ jobs:
       #    template: ./templates/key-vault.diagnostics.json
       #    parameters: keyVaultName=${{ env.KEY_VAULT_NAME }} logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
+      - name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
+        if: success()
+        run: |
+          currentUserObjectId="$(az ad signed-in-user show -o tsv --query 'objectId')"
+
+          az keyvault set-policy --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --verbose \
+            -g "${{ env.AZURE_RESOURCE_GROUP }}" -n "${{ env.KEY_VAULT_NAME }}" \
+            --object-id "$currentUserObjectId" \
+            --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
+            --secret-permissions backup delete get list purge recover restore set \
+            --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
+
+      - name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
+        if: success()
+        run: |
+          az keyvault set-policy --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --verbose \
+            -g "${{ env.AZURE_RESOURCE_GROUP }}" -n "${{ env.KEY_VAULT_NAME }}" \
+            --object-id "${{ env.UAMI_PRINCIPAL_ID }}" \
+            --key-permissions get \
+            --secret-permissions get \
+            --certificate-permissions get
+
 
       #- name: Deploy Event Hub
       #  if: success()
@@ -348,76 +370,76 @@ jobs:
       ##    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones="${{ env.AVL_ZONES }}" nodeResourceGroup="${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin="${{ env.AKS_NET_PLUGIN }}" serviceCidr="${{ env.AKS_SERVICE_CIDR }}" dnsServiceIp="${{ env.AKS_DNS_SERVICE_IP }}" podCidr="${{ env.AKS_POD_CIDR }}" dockerBridgeCidr="${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" apiServerAuthorizedIpRanges="${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}"
 
       # az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
-      - name: Deploy AKS Cluster (CLI) if autoscaler enabled
-        if: ${{ success() && (env.AKS_SYSTEM_POOL_AUTOSCALE == 'true') }}
-        run: |
-          az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g "${{ env.AZURE_RESOURCE_GROUP }}" -l "${{ matrix.region }}" --verbose \
-            -n "${{ env.AKS_CLUSTER_NAME }}" --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version "${{ env.AKS_VERSION }}" --dns-name-prefix "${{ env.AKS_DNS_PREFIX }}" \
-            --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
-            --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
-            --admin-username "${{ secrets.ADMIN_USERNAME }}" --ssh-key-value "${{ secrets.SSH_KEY }}" \
-            --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" \
-            --network-plugin "${{ env.AKS_NET_PLUGIN }}" --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-            --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }}
+      #- name: Deploy AKS Cluster (CLI) if autoscaler enabled
+      #  if: ${{ success() && (env.AKS_SYSTEM_POOL_AUTOSCALE == 'true') }}
+      #  run: |
+      #    az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g "${{ env.AZURE_RESOURCE_GROUP }}" -l "${{ matrix.region }}" --verbose \
+      #      -n "${{ env.AKS_CLUSTER_NAME }}" --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version "${{ env.AKS_VERSION }}" --dns-name-prefix "${{ env.AKS_DNS_PREFIX }}" \
+      #      --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
+      #      --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
+      #      --admin-username "${{ secrets.ADMIN_USERNAME }}" --ssh-key-value "${{ secrets.SSH_KEY }}" \
+      #      --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" \
+      #      --network-plugin "${{ env.AKS_NET_PLUGIN }}" --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
+      #      --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }}
 
-      - name: Deploy AKS Cluster (CLI) if autoscaler NOT enabled
-        if: ${{ success() && (env.AKS_SYSTEM_POOL_AUTOSCALE == 'false') }}
-        run: |
-          az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g "${{ env.AZURE_RESOURCE_GROUP }}" -l "${{ matrix.region }}" --verbose \
-            -n "${{ env.AKS_CLUSTER_NAME }}" --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version "${{ env.AKS_VERSION }}" --dns-name-prefix "${{ env.AKS_DNS_PREFIX }}" \
-            --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
-            --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
-            --admin-username "${{ secrets.ADMIN_USERNAME }}" --ssh-key-value "${{ secrets.SSH_KEY }}" \
-            --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" \
-            --network-plugin "${{ env.AKS_NET_PLUGIN }}" --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-            --node-count ${{ env.AKS_SYSTEM_POOL_NODE_COUNT }}
+      #- name: Deploy AKS Cluster (CLI) if autoscaler NOT enabled
+      #  if: ${{ success() && (env.AKS_SYSTEM_POOL_AUTOSCALE == 'false') }}
+      #  run: |
+      #    az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g "${{ env.AZURE_RESOURCE_GROUP }}" -l "${{ matrix.region }}" --verbose \
+      #      -n "${{ env.AKS_CLUSTER_NAME }}" --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version "${{ env.AKS_VERSION }}" --dns-name-prefix "${{ env.AKS_DNS_PREFIX }}" \
+      #      --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
+      #      --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
+      #      --admin-username "${{ secrets.ADMIN_USERNAME }}" --ssh-key-value "${{ secrets.SSH_KEY }}" \
+      #      --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" \
+      #      --network-plugin "${{ env.AKS_NET_PLUGIN }}" --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
+      #      --node-count ${{ env.AKS_SYSTEM_POOL_NODE_COUNT }}
 
-      - name: Deploy AKS Cluster Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          template: ./templates/aks.cluster.diagnostics.json
-          parameters: clusterName=${{ env.AKS_CLUSTER_NAME }} logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
+      #- name: Deploy AKS Cluster Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    template: ./templates/aks.cluster.diagnostics.json
+      #    parameters: clusterName=${{ env.AKS_CLUSTER_NAME }} logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
-      - name: Get AKS Cluster Resource ID
-        if: success()
-        run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get AKS Cluster Resource ID
+      #  if: success()
+      #  run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity after AKS Deploy creates the RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{ env.RBAC_ROLE_ID_READER }}" principalId="${{ env.UAMI_PRINCIPAL_ID }}"
+      #- name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity after AKS Deploy creates the RG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId="${{ env.RBAC_ROLE_ID_READER }}" principalId="${{ env.UAMI_PRINCIPAL_ID }}"
 
-      - name: Deploy AKS User Node Pool
-        if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          template: ./templates/aks.node-pool.json
-          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones="${{ env.AVL_ZONES }}" nodePoolMode=User nodePoolName="${{ env.AKS_USER_POOL_NODE_NAME }}" nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+      #- name: Deploy AKS User Node Pool
+      #  if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    template: ./templates/aks.node-pool.json
+      #    parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones="${{ env.AVL_ZONES }}" nodePoolMode=User nodePoolName="${{ env.AKS_USER_POOL_NODE_NAME }}" nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
-      - name: Configure AKS Add-ons - Monitoring, AGIC
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring,ingress-appgw --workspace-resource-id ${{ env.LA_WORKSPACE_ID }} --appgw-id "${{ env.APPGW_ID }}"
+      #- name: Configure AKS Add-ons - Monitoring, AGIC
+      #  if: success()
+      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring,ingress-appgw --workspace-resource-id ${{ env.LA_WORKSPACE_ID }} --appgw-id "${{ env.APPGW_ID }}"
 
-      - name: Enabled Pod Managed identity
-        if: success()
-        run: |
-          az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
+      #- name: Enabled Pod Managed identity
+      #  if: success()
+      #  run: |
+      #    az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
 
-      - name: Add Pod Identity
-        if: success()
-        run: |
-          az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
+      #- name: Add Pod Identity
+      #  if: success()
+      #  run: |
+      #    az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
 
-      ##- name: Get AKS credentials and kubectl
-      ##  if: success()
-      ##  run: |
-      ##    az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+      #- name: Get AKS credentials and kubectl
+      #  if: success()
+      #  run: |
+      #    az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
 
       #- name: Deploy Public IP for APIM Service
