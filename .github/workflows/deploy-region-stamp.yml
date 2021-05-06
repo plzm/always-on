@@ -231,25 +231,25 @@ jobs:
       #    template: ./templates/key-vault.diagnostics.json
       #    parameters: keyVaultName=${{ env.KEY_VAULT_NAME }} logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
-      - name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
-        if: success()
-        run: |
-          az keyvault set-policy --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --verbose \
-            -g "${{ env.AZURE_RESOURCE_GROUP }}" -n "${{ env.KEY_VAULT_NAME }}" \
-            --object-id "${{ env.AZURE_CRED_SP_OBJECT_ID }}" \
-            --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
-            --secret-permissions backup delete get list purge recover restore set \
-            --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
+      #- name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
+      #  if: success()
+      #  run: |
+      #    az keyvault set-policy --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --verbose \
+      #      -g "${{ env.AZURE_RESOURCE_GROUP }}" -n "${{ env.KEY_VAULT_NAME }}" \
+      #      --object-id "${{ env.AZURE_CRED_SP_OBJECT_ID }}" \
+      #      --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
+      #      --secret-permissions backup delete get list purge recover restore set \
+      #      --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
 
-      - name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
-        if: success()
-        run: |
-          az keyvault set-policy --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --verbose \
-            -g "${{ env.AZURE_RESOURCE_GROUP }}" -n "${{ env.KEY_VAULT_NAME }}" \
-            --object-id "${{ env.UAMI_PRINCIPAL_ID }}" \
-            --key-permissions get \
-            --secret-permissions get \
-            --certificate-permissions get
+      #- name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
+      #  if: success()
+      #  run: |
+      #    az keyvault set-policy --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --verbose \
+      #      -g "${{ env.AZURE_RESOURCE_GROUP }}" -n "${{ env.KEY_VAULT_NAME }}" \
+      #      --object-id "${{ env.UAMI_PRINCIPAL_ID }}" \
+      #      --key-permissions get \
+      #      --secret-permissions get \
+      #      --certificate-permissions get
 
 
       #- name: Deploy Event Hub
@@ -443,21 +443,21 @@ jobs:
       #    az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
 
-      #- name: Deploy Public IP for APIM Service
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    template: ./templates/net.public-ip.json
-      #    parameters: location=${{ matrix.region }} publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" availabilityZones="${{ env.AVL_ZONES }}" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
+      - name: Deploy Public IP for APIM Service
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          template: ./templates/net.public-ip.json
+          parameters: location=${{ matrix.region }} publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" availabilityZones="${{ env.AVL_ZONES }}" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
 
-      #- name: Deploy Public IP for APIM Service Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    template: ./templates/net.public-ip.diagnostics.json
-      #    parameters: publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
+      - name: Deploy Public IP for APIM Service Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          template: ./templates/net.public-ip.diagnostics.json
+          parameters: publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
 
       - name: Azure logout
