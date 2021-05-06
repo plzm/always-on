@@ -51,24 +51,24 @@
 				"description": "If Identity Type set to UserAssigned, provide the UAI Resource ID here in ARM format, i.e. /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{identityName}"
 			}
 		},
-        "vnetResourceGroup": {
-            "type": "string",
+		"vnetResourceGroup": {
+			"type": "string",
 			"defaultValue": ""
-        },
-        "vnetName": {
-            "type": "string",
+		},
+		"vnetName": {
+			"type": "string",
 			"defaultValue": ""
-        },
-        "subnetName": {
-            "type": "string",
+		},
+		"subnetName": {
+			"type": "string",
 			"defaultValue": ""
-        },
+		},
 		"publicIpResourceGroup": {
-            "type": "string",
+			"type": "string",
 			"defaultValue": ""
 		},
 		"publicIpName": {
-            "type": "string",
+			"type": "string",
 			"defaultValue": ""
 		},
 		"frontEndIpName": {
@@ -153,18 +153,18 @@
 				json('null')
 			)
 		]",
-        "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
-        "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
+		"vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
+		"subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
 		"apiVersionNetwork": "2020-11-01"
 	},
-    "resources": [
-        {
+	"resources": [
+		{
 			"name": "[parameters('appGatewayName')]",
-            "type": "Microsoft.Network/applicationGateways",
+			"type": "Microsoft.Network/applicationGateways",
 			"apiVersion": "[variables('apiVersionNetwork')]",
 			"location": "[parameters('location')]",
 			"zones": "[
@@ -180,122 +180,129 @@
 				"type": "[parameters('managedIdentityType')]",
 				"userAssignedIdentities": "[variables('userAssignedIdentities')]"
 			},
-            "properties": {
-                "sku": {
-                    "name": "[parameters('skuName')]",
-                    "tier": "[parameters('skuName')]"
-                },
-                "gatewayIPConfigurations": [
-                    {
-                        "name": "[parameters('frontEndIpName')]",
-                        "properties": {
-                            "subnet": {
-                                "id": "[variables('subnetId')]"
-                            }
-                        }
-                    }
-                ],
-                "frontendIPConfigurations": [
-                    {
-                        "name": "[parameters('frontEndIpName')]",
-                        "properties": {
-                            "privateIPAllocationMethod": "[parameters('frontEndIpPrivateAllocationMethod')]",
-                            "publicIPAddress": {
-                                "id": "[variables('publicIpId')]"
-                            }
-                        }
-                    }
-                ],
-                "frontendPorts": [
-                    {
-                        "name": "[parameters('frontEndPortName')]",
-                        "properties": {
-                            "port": 80
-                        }
-                    }
-                ],
-                "sslCertificates": [],
-                "trustedRootCertificates": [],
-                "trustedClientCertificates": [],
-                "sslProfiles": [],
-                "backendAddressPools": [
-                    {
-                        "name": "[parameters('backEndPoolName')]",
-                        "properties": {
-                            "backendAddresses": []
-                        }
-                    }
-                ],
-                "backendHttpSettingsCollection": [
-                    {
-                        "name": "[parameters('backendHttpSettingsCollectionName')]",
-                        "properties": {
-                            "port": 80,
-                            "protocol": "Http",
-                            "cookieBasedAffinity": "Disabled",
-                            "connectionDraining": {
-                                "enabled": "[parameters('backEndConnectionDrainingEnabled')]",
-                                "drainTimeoutInSec": "[parameters('backEndConnectionDrainingTimeout')]"
-                            },
-                            "pickHostNameFromBackendAddress": false,
-                            "requestTimeout": 30
-                        }
-                    }
-                ],
-                "httpListeners": [
-                    {
-                        "name": "[parameters('httpListenerName')]",
-                        "properties": {
-                            "frontendIPConfiguration": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/frontendIPConfigurations/', parameters('frontEndIpName'))]"
-                            },
-                            "frontendPort": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/frontendPorts/', parameters('frontEndPortName'))]"
-                            },
-                            "protocol": "Http",
-                            "hostNames": [],
-                            "requireServerNameIndication": false
-                        }
-                    }
-                ],
-                "urlPathMaps": [],
-                "requestRoutingRules": [
-                    {
-                        "name": "rule1",
-                        "properties": {
-                            "ruleType": "Basic",
-                            "httpListener": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/httpListeners/', parameters('httpListenerName'))]"
-                            },
-                            "backendAddressPool": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/backendAddressPools/', parameters('backEndPoolName'))]"
-                            },
-                            "backendHttpSettings": {
-                                "id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/backendHttpSettingsCollection/', parameters('backendHttpSettingsCollectionName'))]"
-                            }
-                        }
-                    }
-                ],
-                "probes": [],
-                "rewriteRuleSets": [],
-                "redirectConfigurations": [],
-                "privateLinkConfigurations": [],
-                "webApplicationFirewallConfiguration": {
-                    "enabled": "[parameters('wafEnabled')]",
-                    "firewallMode": "[parameters('wafMode')]",
-                    "ruleSetType": "OWASP",
-                    "ruleSetVersion": "3.0",
-                    "disabledRuleGroups": [],
-                    "requestBodyCheck": true,
-                    "maxRequestBodySizeInKb": 128,
-                    "fileUploadLimitInMb": 100
-                },
-                "enableHttp2": "[parameters('enableHttp2')]",
-                "autoscaleConfiguration": {
-                    "minCapacity": "[parameters('autoscaleMinCapacity')]",
-                    "maxCapacity": "[parameters('autoscaleMaxCapacity')]"
-                }
-            }
-        }
-    ]
+			"properties": {
+				"sku": {
+					"name": "[parameters('skuName')]",
+					"tier": "[parameters('skuName')]"
+				},
+				"gatewayIPConfigurations": [
+					{
+						"name": "[parameters('frontEndIpName')]",
+						"properties": {
+							"subnet": {
+								"id": "[variables('subnetId')]"
+							}
+						}
+					}
+				],
+				"frontendIPConfigurations": [
+					{
+						"name": "[parameters('frontEndIpName')]",
+						"properties": {
+							"privateIPAllocationMethod": "[parameters('frontEndIpPrivateAllocationMethod')]",
+							"publicIPAddress": {
+								"id": "[variables('publicIpId')]"
+							}
+						}
+					}
+				],
+				"frontendPorts": [
+					{
+						"name": "[parameters('frontEndPortName')]",
+						"properties": {
+							"port": 80
+						}
+					}
+				],
+				"sslCertificates": [],
+				"trustedRootCertificates": [],
+				"trustedClientCertificates": [],
+				"sslProfiles": [],
+				"backendAddressPools": [
+					{
+						"name": "[parameters('backEndPoolName')]",
+						"properties": {
+							"backendAddresses": []
+						}
+					}
+				],
+				"backendHttpSettingsCollection": [
+					{
+						"name": "[parameters('backendHttpSettingsCollectionName')]",
+						"properties": {
+							"port": 80,
+							"protocol": "Http",
+							"cookieBasedAffinity": "Disabled",
+							"connectionDraining": {
+								"enabled": "[parameters('backEndConnectionDrainingEnabled')]",
+								"drainTimeoutInSec": "[parameters('backEndConnectionDrainingTimeout')]"
+							},
+							"pickHostNameFromBackendAddress": false,
+							"requestTimeout": 30
+						}
+					}
+				],
+				"httpListeners": [
+					{
+						"name": "[parameters('httpListenerName')]",
+						"properties": {
+							"frontendIPConfiguration": {
+								"id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/frontendIPConfigurations/', parameters('frontEndIpName'))]"
+							},
+							"frontendPort": {
+								"id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/frontendPorts/', parameters('frontEndPortName'))]"
+							},
+							"protocol": "Http",
+							"hostNames": [],
+							"requireServerNameIndication": false
+						}
+					}
+				],
+				"urlPathMaps": [],
+				"requestRoutingRules": [
+					{
+						"name": "rule1",
+						"properties": {
+							"ruleType": "Basic",
+							"httpListener": {
+								"id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/httpListeners/', parameters('httpListenerName'))]"
+							},
+							"backendAddressPool": {
+								"id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/backendAddressPools/', parameters('backEndPoolName'))]"
+							},
+							"backendHttpSettings": {
+								"id": "[concat(resourceId('Microsoft.Network/applicationGateways', parameters('appGatewayName')), '/backendHttpSettingsCollection/', parameters('backendHttpSettingsCollectionName'))]"
+							}
+						}
+					}
+				],
+				"probes": [],
+				"rewriteRuleSets": [],
+				"redirectConfigurations": [],
+				"privateLinkConfigurations": [],
+				"webApplicationFirewallConfiguration": "[
+					if
+					(
+						equals(parameters('skuName'), 'WAF_v2'),
+						createObject
+						(
+							'enabled', parameters('wafEnabled'),
+							'firewallMode', parameters('wafMode'),
+							'ruleSetType', 'OWASP',
+							'ruleSetVersion', '3.0',
+							'requestBodyCheck', 'true',
+							'maxRequestBodySizeInKb', 128,
+							'fileUploadLimitInMb', 100
+						),
+						json('null')
+					)
+				]",
+				"enableHttp2": "[parameters('enableHttp2')]",
+				"autoscaleConfiguration": {
+					"minCapacity": "[parameters('autoscaleMinCapacity')]",
+					"maxCapacity": "[parameters('autoscaleMaxCapacity')]"
+				}
+			}
+		}
+	]
 }

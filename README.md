@@ -206,6 +206,8 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Infrastructure
 
+- [Azure Regions with Availability Zones](https://docs.microsoft.com/azure/availability-zones/az-region) are used for regional stamps.
+
 #### Network
 
 #### Security
