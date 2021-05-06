@@ -15,7 +15,13 @@
 		},
 		"registryName": {
 			"type": "string",
-			"defaultValue": ""
+			"defaultValue": "",
+            "minLength": 5,
+            "maxLength": 50,
+            "metadata": {
+                "displayName": "Container Registry Name",
+                "description": "See name requirements at https://docs.microsoft.com/rest/api/containerregistry/"
+            }
 		},
 		"skuName": {
 			"type": "string",
