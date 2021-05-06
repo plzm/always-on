@@ -111,6 +111,8 @@ jobs:
 
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME" >> $GITHUB_ENV
 
+          echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
+
           echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
@@ -119,18 +121,18 @@ jobs:
           echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app ${{ env.APP_INSIGHTS_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app ${{ env.APP_INSIGHTS_NAME }} -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
 
-      - name: Create Azure resource group
-        if: success()
-        run: |
-          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
+      #- name: Create Azure resource group
+      #  if: success()
+      #  run: |
+      #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
-      - name: Deploy NSG for APIM Subnet
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          template: ./templates/apim.nsg.json
-          parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
+      #- name: Deploy NSG for APIM Subnet
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    template: ./templates/apim.nsg.json
+      #    parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
 
       #- name: Deploy NSG for APIM Subnet Diagnostics
       #  if: success()
@@ -231,11 +233,9 @@ jobs:
       - name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
         if: success()
         run: |
-          currentUserObjectId="$(az ad signed-in-user show -o tsv --query 'objectId')"
-
           az keyvault set-policy --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --verbose \
             -g "${{ env.AZURE_RESOURCE_GROUP }}" -n "${{ env.KEY_VAULT_NAME }}" \
-            --object-id "$currentUserObjectId" \
+            --object-id "${{ env.AZURE_CRED_SP_OBJECT_ID }}" \
             --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
             --secret-permissions backup delete get list purge recover restore set \
             --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
