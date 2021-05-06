@@ -1,0 +1,32 @@
+name: Deploy Region Stamp
+
+on: 
+  workflow_dispatch:
+
+env:
+  INFIX: foo
+
+jobs:
+  rgs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        region: [eastus, westus2]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{secrets.AZURE_CREDENTIALS}}
+
+      - name: Create Azure resource group
+        if: success()
+        run: |
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.INFIX }}-${{ matrix.region }}
+
+      - name: Azure logout
+        run: |
+          az logout
