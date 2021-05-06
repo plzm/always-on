@@ -212,6 +212,29 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### CD - Global / Regional Stamp
 
+##### Global/Single Resources
+
+- APIM? [Multi-Region](https://docs.microsoft.com/en-us/azure/api-management/api-management-howto-deploy-multi-region)
+- App Insights
+- Container Insights
+- Container Registry (Replications)
+- Cosmos DB
+- DDoS Plan
+- Front Door
+- Log Analytics
+- Managed Identity
+
+##### Regional Resources
+
+- AKS
+- App Gateway
+- Event Hub
+- Key Vault
+- NSG
+- PIP
+- VNet and Subnets
+
+
 ### 4. Tech Stack Notes
 
 #### AKS
