@@ -8,6 +8,7 @@ env:
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
+  UAMI_NAME: 'pz-ao-uami'
   DDOS_PLAN_NAME: 'pz-ao'
   LA_WORKSPACE_NAME: 'pz-ao'
 
