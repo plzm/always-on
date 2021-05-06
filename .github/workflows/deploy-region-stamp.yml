@@ -94,7 +94,7 @@ jobs:
 
           echo "VNET_NAME=ao-${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "KEY_VAULT_NAME=pz-ao-${{ matrix.region }}-${{ env.INFIX }}" >> $GITHUB_ENV
+          echo "KEY_VAULT_NAME=pz-ao-${{ matrix.region }}-$INFIX" >> $GITHUB_ENV
 
           echo "EVENT_HUB_NS_NAME=pz-ao-${{ matrix.region }}" >> $GITHUB_ENV
 
