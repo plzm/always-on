@@ -169,19 +169,6 @@
                     "enforceCertificateNameCheck": "[parameters('enforceCertificateNameCheck')]",
                     "sendRecvTimeoutSeconds": 120
                 },
-                "backendPools": [
-                    {
-                        "name": "[parameters('backendPoolName')]",
-                        "properties": {
-                            "healthProbeSettings": {
-                                "id": "[variables('frontDoorHealthProbeSettingsId')]"
-                            },
-                            "loadBalancingSettings": {
-                                "id": "[variables('frontDoorLoadBalancerId')]"
-                            }
-                        }
-                    }
-                ],
                 "healthProbeSettings": [
                     {
                         "name": "[parameters('healthProbeSettingsName')]",
