@@ -156,6 +156,23 @@
         "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
         "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
+		"wafConfig": "[
+			if
+			(
+				equals(parameters('skuName'), 'WAF_v2'),
+				createObject
+				(
+                    'enabled', parameters('wafEnabled'),
+                    'firewallMode', parameters('wafMode'),
+                    'ruleSetType', 'OWASP',
+                    'ruleSetVersion', '3.0',
+                    'requestBodyCheck', 'true',
+                    'maxRequestBodySizeInKb', 128,
+                    'fileUploadLimitInMb', 100
+				),
+				json('null')
+			)
+		]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -280,16 +297,7 @@
                 "rewriteRuleSets": [],
                 "redirectConfigurations": [],
                 "privateLinkConfigurations": [],
-                "webApplicationFirewallConfiguration": {
-                    "enabled": "[and(equals(parameters('skuName'), 'WAF_v2'), parameters('wafEnabled'))]",
-                    "firewallMode": "[parameters('wafMode')]",
-                    "ruleSetType": "OWASP",
-                    "ruleSetVersion": "3.0",
-                    "disabledRuleGroups": [],
-                    "requestBodyCheck": true,
-                    "maxRequestBodySizeInKb": 128,
-                    "fileUploadLimitInMb": 100
-                },
+                "webApplicationFirewallConfiguration": "[variables('wafConfig')]",
                 "enableHttp2": "[parameters('enableHttp2')]",
                 "autoscaleConfiguration": {
                     "minCapacity": "[parameters('autoscaleMinCapacity')]",
