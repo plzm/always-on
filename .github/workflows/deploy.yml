@@ -103,7 +103,6 @@ jobs:
           echo "APIM_SERVICE_NAME=pz-ao-apim-eus-$INFIX" >> $GITHUB_ENV
           echo "APIM_PUBLIC_IP_NAME=pz-ao-apim-pip-$INFIX" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=pz-ao-fd-$INFIX" >> $GITHUB_ENV
-          echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME-$AZURE_LOCATION" >> $GITHUB_ENV
 
       #- name: Env var - AKS Node Resource Group Name
       #  if: success()
