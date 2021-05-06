@@ -68,18 +68,10 @@
             "type": "string",
             "defaultValue": "paelaz@microsoft.com"
         },
-        "vnetResourceGroup": {
-            "type": "string",
+		"subnetResourceId": {
+			"type": "string",
 			"defaultValue": ""
-        },
-        "vnetName": {
-            "type": "string",
-			"defaultValue": ""
-        },
-        "subnetName": {
-            "type": "string",
-			"defaultValue": ""
-        },
+		},
 		"publicIpResourceGroup": {
             "type": "string",
 			"defaultValue": ""
@@ -119,8 +111,6 @@
 				json('null')
 			)
 		]",
-        "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
-        "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
@@ -162,7 +152,7 @@
                     }
                 ],
                 "virtualNetworkConfiguration": {
-                    "subnetResourceId": "[variables('subnetId')]"
+                    "subnetResourceId": "[if(empty(parameters('subnetResourceId')), json('null'), parameters('subnetResourceId'))]"
                 },
                 "customProperties": {
                     "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2": "[parameters('enableHttp2')]"
