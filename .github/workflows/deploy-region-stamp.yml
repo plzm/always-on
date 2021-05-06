@@ -1,4 +1,4 @@
-name: Deploy Region Stamp
+name: Deploy Always On Region Stamp
 
 on: 
   workflow_dispatch:
@@ -64,16 +64,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region: [centralus, westus2]
+        region: [eastus, westus2]
     steps:
       - name: Install Azure CLI extensions
-        if: success()
         run: |
           az extension add --name aks-preview
           az extension add --name application-insights
           az extension add --name front-door
 
       - name: Checkout repository
+        if: success()
         uses: actions/checkout@v2
 
       - name: Azure login

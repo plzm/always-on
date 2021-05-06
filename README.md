@@ -262,3 +262,8 @@ Enable Cluster Monitoring (Container Insights):
 [New cluster](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough#enable-cluster-monitoring)
 
 [Existing cluster](https://docs.microsoft.com/azure/azure-monitor/containers/container-insights-enable-existing-clusters#integrate-with-an-existing-workspace)
+
+
+### 5. Parking Lot / Out of Scope
+
+- Multiple stamps _per region_
