@@ -152,13 +152,13 @@ jobs:
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --app ${{env.APP_INSIGHTS_NAME}} -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
 
 
-      - name: Deploy Cosmos DB Account
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/cosmos-db.account.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
+      #- name: Deploy Cosmos DB Account
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/cosmos-db.account.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
 
       #- name: Deploy Cosmos DB Diagnostics
       #  if: success()
@@ -185,6 +185,21 @@ jobs:
       #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
 
+      - name: Deploy Front Door
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/net.fd.json
+          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" backendAddress="${{env.APIM_SERVICE_HOSTNAME}}" backendHostHeader="${{env.APIM_SERVICE_HOSTNAME}}"
+
+      - name: Deploy Front Door Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/net.fd.diagnostics.json
+          parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
       - name: Azure logout
