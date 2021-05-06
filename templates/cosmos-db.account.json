@@ -25,12 +25,12 @@
                 "MongoDB"
             ]
         },
-		"locationTuples": {
+		"locations": {
 			"type": "string",
 			"defaultValue": "",
 			"metadata": {
 				"displayName": "Account locations",
-				"description": "Comma-delimited list of location:zone redundancy pairs. Example: eastus:Enabled,westus:Disabled,westus2:Enabled. Account location above should always be first in list, even if no other locations are specified. If single-region write, then failover priority will be set in order of locations in the string."
+				"description": "Comma-delimited list of locations. This template assumes regions which SUPPORT AVAILABILITY ZONES! Example: eastus,westus2. Account location above should always be first in list, even if no other locations are specified. If single-region write, then failover priority will be set in order of locations in the string."
 			}
 		},
         "defaultConsistencyLevel": {
@@ -70,7 +70,7 @@
         }
 	},
     "variables": {
-        "locationTuples": "[split(parameters('locationTuples'), ',')]",
+        "locations": "[split(parameters('locations'), ',')]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -99,11 +99,11 @@
                 "copy": [
                     {
                         "name": "locations",
-                        "count": "[length(variables('locationTuples'))]",
+                        "count": "[length(variables('locations'))]",
                         "input": {
-                            "locationName": "[split(variables('locationTuples')[copyIndex('locations')], ':')[0]]",
+                            "locationName": "[variables('locations')[copyIndex('locations')]]",
                             "failoverPriority": "[if(parameters('enableMultipleWriteLocations'), 0, copyIndex('locations'))]",
-                            "isZoneRedundant": "[split(variables('locationTuples')[copyIndex('locations')], ':')[1]]"
+                            "isZoneRedundant": "true"
                         }
                     }
                 ],
