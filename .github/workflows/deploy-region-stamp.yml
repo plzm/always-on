@@ -5,7 +5,7 @@ on:
 
 env:
   SUFFIX: '-13'
-
+  REGIONS: ( 'centralus', 'westus2' )
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
 
@@ -20,7 +20,6 @@ env:
   AVL_ZONES: '1,2,3'
 
   IDENTITY_TYPE: 'UserAssigned'
-
 
   VNET_PREFIX: '10.0.0.0/16'
   VNET_ENABLE_DDOS: 'true'
@@ -66,17 +65,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region: [eastus]
+        region: ${{ env.REGIONS }}
     steps:
-      - name: Install Azure CLI extensions
-        if: success()
-        run: |
-          az extension add --name aks-preview
-          az extension add --name application-insights
-          az extension add --name front-door
+      #- name: Install Azure CLI extensions
+      #  if: success()
+      #  run: |
+      #    az extension add --name aks-preview
+      #    az extension add --name application-insights
+      #    az extension add --name front-door
 
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      #- name: Checkout repository
+      #  uses: actions/checkout@v2
 
       - name: Azure login
         if: success()
@@ -209,10 +208,10 @@ jobs:
       #    template: ./templates/net.vnet.subnet.json
       #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
-      - name: Get App Subnet Resource ID
-        if: success()
-        run: |
-          echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get App Subnet Resource ID
+      #  if: success()
+      #  run: |
+      #    echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
       #- name: Deploy Key Vault
@@ -333,11 +332,11 @@ jobs:
       #    template: ./templates/net.public-ip.diagnostics.json
       #    parameters: publicIpName="${{ env.APPGW_PUBLIC_IP_NAME }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
-      - name: Get App GW Public IP for AKS API Server Network Restriction
-        if: success()
-        run: |
-          APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'ipAddress')"
-          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{ env.NSG_IN_SRC }}" >> $GITHUB_ENV
+      #- name: Get App GW Public IP for AKS API Server Network Restriction
+      #  if: success()
+      #  run: |
+      #    APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'ipAddress')"
+      #    echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{ env.NSG_IN_SRC }}" >> $GITHUB_ENV
 
 
       #- name: Deploy App GW
@@ -356,9 +355,9 @@ jobs:
       #    template: ./templates/net.app-gw.diagnostics.json
       #    parameters: appGatewayName="${{ env.APPGW_NAME }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
-      - name: Get App GW Resource ID
-        if: success()
-        run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get App GW Resource ID
+      #  if: success()
+      #  run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
       ## ARM Template - but does not support kubelet identity
@@ -443,21 +442,21 @@ jobs:
       #    az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
 
-      - name: Deploy Public IP for APIM Service
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          template: ./templates/net.public-ip.json
-          parameters: location=${{ matrix.region }} publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" availabilityZones="${{ env.AVL_ZONES }}" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
+      #- name: Deploy Public IP for APIM Service
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    template: ./templates/net.public-ip.json
+      #    parameters: location=${{ matrix.region }} publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" availabilityZones="${{ env.AVL_ZONES }}" publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
 
-      - name: Deploy Public IP for APIM Service Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          template: ./templates/net.public-ip.diagnostics.json
-          parameters: publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
+      #- name: Deploy Public IP for APIM Service Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    template: ./templates/net.public-ip.diagnostics.json
+      #    parameters: publicIpName="${{ env.APIM_PUBLIC_IP_NAME }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"
 
 
       - name: Azure logout
