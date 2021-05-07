@@ -107,6 +107,29 @@
                 split(parameters('availabilityZones'), ',')
             )
         ]",
+        "scaleUnits": "[
+            if
+            (
+                equals(parameters('skuName'), 'Premium'),
+                parameters('scaleUnits'),
+                if
+                (
+                    equals(parameters('skuName'), 'Standard'),
+                    min(parameters('scaleUnits'), 4),
+                    if
+                    (
+                        equals(parameters('skuName'), 'Basic'),
+                        min(parameters('scaleUnits'), 2),
+                        if
+                        (
+                            equals(parameters('skuName'), 'Developer'),
+                            min(parameters('scaleUnits'), 1),
+                            0
+                        )
+                    )
+                )
+            )
+        ]",
 		"userAssignedIdentities": "[
 			if
 			(
@@ -134,7 +157,7 @@
 			"zones": "[variables('zones')]",
             "sku": {
                 "name": "[parameters('skuName')]",
-                "capacity": "[parameters('scaleUnits')]"
+                "capacity": "[variables('scaleUnits')]"
             },
 			"tags": "[variables('resourceTags')]",
 			"identity": {

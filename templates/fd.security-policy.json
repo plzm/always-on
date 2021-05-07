@@ -1,0 +1,52 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "frontDoorName": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "securityPolicyName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "wafPolicyId": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "endpointName": {
+            "defaultValue": "",
+            "type": "string"
+        }
+    },
+    "variables": {
+		"apiVersionFd": "2020-09-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles/securitypolicies",
+            "name": "[concat(parameters('frontDoorName'), '/', parameters('securityPolicyName'))]",
+            "apiVersion": "[variables('apiVersionFd')]",
+            "properties": {
+                "parameters": {
+                    "wafPolicy": {
+                        "id": "[parameters('wafPolicyId')]"
+                    },
+                    "associations": [
+                        {
+                            "domains": [
+                                {
+                                    "id": "[resourceId('Microsoft.Cdn/profiles/afdEndpoints', parameters('frontDoorName'), parameters('endpointName'))]"
+                                }
+                            ],
+                            "patternsToMatch": [
+                                "/*"
+                            ]
+                        }
+                    ],
+                    "type": "WebApplicationFirewall"
+                }
+            }
+        }
+    ]
+}

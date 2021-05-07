@@ -1,0 +1,167 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "timestamp": {
+            "type": "string",
+            "defaultValue": "[utcNow('u')]"
+        },
+        "frontDoorName": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "frontdoorwebapplicationfirewallpolicies_wafpolicy1_externalid": {
+            "defaultValue": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-global/providers/Microsoft.Network/frontdoorwebapplicationfirewallpolicies/wafpolicy1",
+            "type": "String"
+        }
+    },
+    "variables": {
+         "resourceTags": {
+            "Timestamp": "[parameters('timestamp')]"
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles",
+            "apiVersion": "2020-09-01",
+            "name": "[parameters('frontDoorName')]",
+            "location": "Global",
+            "sku": {
+                "name": "Premium_AzureFrontDoor"
+            },
+            "kind": "frontdoor",
+            "tags": "[variables('resourceTags')]",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/afdEndpoints",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('frontDoorName'), '/pz-ao-ui-pr-1')]",
+            "location": "Global",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', parameters('frontDoorName'))]"
+            ],
+            "properties": {
+                "originResponseTimeoutSeconds": 16,
+                "enabledState": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/originGroups",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('frontDoorName'), '/apims')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', parameters('frontDoorName'))]"
+            ],
+            "properties": {
+                "loadBalancingSettings": {
+                    "sampleSize": 4,
+                    "successfulSamplesRequired": 3,
+                    "additionalLatencyInMilliseconds": 50
+                },
+                "healthProbeSettings": {
+                    "probePath": "/status-0123456789abcdef",
+                    "probeRequestType": "HEAD",
+                    "probeProtocol": "Http",
+                    "probeIntervalInSeconds": 30
+                },
+                "sessionAffinityState": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/originGroups/origins",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('frontDoorName'), '/apims/pz-ao-eastus-15')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/originGroups', parameters('frontDoorName'), 'apims')]",
+                "[resourceId('Microsoft.Cdn/profiles', parameters('frontDoorName'))]"
+            ],
+            "properties": {
+                "hostName": "pz-ao-eastus-15.azure-api.net",
+                "httpPort": 80,
+                "httpsPort": 443,
+                "originHostHeader": "pz-ao-eastus-15.azure-api.net",
+                "priority": 1,
+                "weight": 1000,
+                "enabledState": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/originGroups/origins",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('frontDoorName'), '/apims/pz-ao-westus2-15')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/originGroups', parameters('frontDoorName'), 'apims')]",
+                "[resourceId('Microsoft.Cdn/profiles', parameters('frontDoorName'))]"
+            ],
+            "properties": {
+                "hostName": "pz-ao-westus2-15.azure-api.net",
+                "httpPort": 80,
+                "httpsPort": 443,
+                "originHostHeader": "pz-ao-westus2-15.azure-api.net",
+                "priority": 1,
+                "weight": 1000,
+                "enabledState": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/securitypolicies",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('frontDoorName'), '/wafpolicy1-83b2ae20')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles', parameters('frontDoorName'))]",
+                "[resourceId('Microsoft.Cdn/profiles/afdEndpoints', parameters('frontDoorName'), 'pz-ao-ui-pr-1')]"
+            ],
+            "properties": {
+                "parameters": {
+                    "wafPolicy": {
+                        "id": "[parameters('frontdoorwebapplicationfirewallpolicies_wafpolicy1_externalid')]"
+                    },
+                    "associations": [
+                        {
+                            "domains": [
+                                {
+                                    "id": "[resourceId('Microsoft.Cdn/profiles/afdEndpoints', parameters('frontDoorName'), 'pz-ao-ui-pr-1')]"
+                                }
+                            ],
+                            "patternsToMatch": [
+                                "/*"
+                            ]
+                        }
+                    ],
+                    "type": "WebApplicationFirewall"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Cdn/profiles/afdEndpoints/routes",
+            "apiVersion": "2020-09-01",
+            "name": "[concat(parameters('frontDoorName'), '/pz-ao-ui-pr-1/route1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Cdn/profiles/afdEndpoints', parameters('frontDoorName'), 'pz-ao-ui-pr-1')]",
+                "[resourceId('Microsoft.Cdn/profiles', parameters('frontDoorName'))]",
+                "[resourceId('Microsoft.Cdn/profiles/originGroups', parameters('frontDoorName'), 'apims')]"
+            ],
+            "properties": {
+                "originGroup": {
+                    "id": "[resourceId('Microsoft.Cdn/profiles/originGroups', parameters('frontDoorName'), 'apims')]"
+                },
+                "customDomains": [],
+                "ruleSets": [],
+                "supportedProtocols": [
+                    "Http",
+                    "Https"
+                ],
+                "patternsToMatch": [
+                    "/*"
+                ],
+                "compressionSettings": {},
+                "queryStringCachingBehavior": "NotSet",
+                "forwardingProtocol": "MatchRequest",
+                "linkToDefaultDomain": "Enabled",
+                "httpsRedirect": "Disabled",
+                "enabledState": "Enabled"
+            }
+        }
+    ]
+}

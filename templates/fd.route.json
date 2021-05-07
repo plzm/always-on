@@ -1,0 +1,129 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "frontDoorName": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "endpointName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "routeName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "originGroupId": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "customDomainIds": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "Custom Domains",
+                "description": "Comma-delimited list of custom domain resource IDs."
+            }
+        },
+        "protocols": {
+            "type": "string",
+            "defaultValue": "Http,Https",
+            "allowedValues": [
+                "Https,Http",
+                "Http,Https",
+                "Https",
+                "Http"
+            ],
+            "metadata": {
+                "displayName": "URL Protocols",
+                "description": "HTTP and/or HTTPS support. Comma-delimited string, any of these: 'https,http', 'http,https', 'https', 'http'"
+            }
+        },
+        "patternsToMatch": {
+            "type": "string",
+            "defaultValue": "/*",
+            "metadata": {
+                "displayName": "Patterns to Match",
+                "description": "Comma-delimited list."
+            }
+        },
+        "queryStringCachingBehavior": {
+            "type": "string",
+            "defaultValue": "NotSet",
+            "allowedValues": [
+                "BypassCaching",
+                "IgnoreQueryString",
+                "NotSet",
+                "UseQueryString"
+            ]
+        },
+        "forwardingProtocol": {
+            "type": "string",
+            "defaultValue": "MatchRequest",
+            "allowedValues": [
+                "MatchRequest",
+                "HttpOnly",
+                "HttpsOnly"
+            ]
+        },
+        "linkToDefaultDomain": {
+            "type": "string",
+            "defaultValue": "Enabled",
+            "allowedValues": [
+                "Enabled",
+                "Disabled"
+            ]
+        },
+        "httpsRedirect": {
+            "type": "string",
+            "defaultValue": "Disabled",
+            "allowedValues": [
+                "Enabled",
+                "Disabled"
+            ]
+        },
+        "enabledState": {
+            "type": "string",
+            "defaultValue": "Enabled",
+            "allowedValues": [
+                "Enabled",
+                "Disabled"
+            ]
+        }
+    },
+    "variables": {
+        "customDomainIds": "[if(empty(parameters('customDomainIds')), json('[]'), split(parameters('customDomainIds'), ','))]",
+        "apiVersionFd": "2020-09-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles/afdEndpoints/routes",
+            "name": "[concat(parameters('frontDoorName'), '/', parameters('endpointName'), '/', parameters('routeName'))]",
+            "apiVersion": "[variables('apiVersionFd')]",
+            "properties": {
+                "originGroup": {
+                    "id": "[parameters('originGroupId')]"
+                },
+                "copy": [
+                    {
+                        "name": "customDomains",
+                        "count": "[length(variables('customDomainIds'))]",
+                        "input": {
+                            "id": "[variables('customDomainIds')[copyIndex('customDomains')]]"
+                        }
+                    }
+                ],
+                "ruleSets": [],
+                "supportedProtocols": "[split(parameters('protocols'), ',')]",
+                "patternsToMatch": "[split(parameters('patternsToMatch'), ',')]",
+                "compressionSettings": {},
+                "queryStringCachingBehavior": "[parameters('queryStringCachingBehavior')]",
+                "forwardingProtocol": "[parameters('forwardingProtocol')]",
+                "linkToDefaultDomain": "[parameters('linkToDefaultDomain')]",
+                "httpsRedirect": "[parameters('httpsRedirect')]",
+                "enabledState": "[parameters('enabledState')]"
+            }
+        }
+    ]
+}
