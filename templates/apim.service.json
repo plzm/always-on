@@ -31,7 +31,7 @@
         },
 		"availabilityZones": {
 			"type": "string",
-			"defaultValue": "1,2,3",
+			"defaultValue": "",
 			"metadata": {
 				"displayName": "Azure availability zone(s) (AZs)",
 				"description": "Optional. One or more AZs, comma-delimited. Example: 1,2,3. If not provided, a non-zonal App GW will be deployed. See https://azure.microsoft.com/regions/ for which regions support AZs."
@@ -68,10 +68,6 @@
             "type": "string",
             "defaultValue": "paelaz@microsoft.com"
         },
-		"subnetResourceId": {
-			"type": "string",
-			"defaultValue": ""
-		},
 		"publicIpResourceGroup": {
             "type": "string",
 			"defaultValue": ""
@@ -89,6 +85,10 @@
                 "Internal"
             ]
         },
+		"subnetResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		},
         "enableHttp2": {
             "type": "bool",
 			"defaultValue": true
@@ -100,7 +100,12 @@
     },
     "variables": {
         "zones": "[
-
+            if
+            (
+                or(empty(parameters('availabilityZones')), not(equals(parameters('skuName'), 'Premium'))),
+                json('[]'),
+                split(parameters('availabilityZones'), ',')
+            )
         ]",
 		"userAssignedIdentities": "[
 			if
@@ -126,14 +131,7 @@
             "apiVersion": "[variables('apiVersionApim')]",
             "name": "[parameters('apimServiceName')]",
             "location": "[parameters('location')]",
-			"zones": "[
-				if
-				(
-					empty(parameters('availabilityZones')),
-					json('[]'),
-					split(parameters('availabilityZones'), ',')
-				)
-			]",
+			"zones": "[variables('zones')]",
             "sku": {
                 "name": "[parameters('skuName')]",
                 "capacity": "[parameters('scaleUnits')]"
