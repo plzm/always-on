@@ -186,7 +186,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }}-${{ env.UAMI_PRINCIPAL_ID }}
+          deploymentName: ${{ env.VNET_NAME }}-role-assignment
           template: ./templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
@@ -295,7 +295,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-auth-rule-send
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
           template: ./templates/event-hub.ns-auth-rule.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Send" ruleName="Send"
 
@@ -304,7 +304,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-auth-rule-listen
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-listen
           template: ./templates/event-hub.ns-auth-rule.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Listen" ruleName="Listen"
 
@@ -331,7 +331,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-network-ruleset
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-net-ruleset
           template: ./templates/event-hub.network-rule-set.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
@@ -446,7 +446,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.RBAC_ROLE_ID_READER }}-${{ env.UAMI_PRINCIPAL_ID }}
+          deploymentName: aks-nodes-rg-role-assignment
           template: ./templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_READER }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
