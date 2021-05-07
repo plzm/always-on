@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  SUFFIX: '-14'
+  SUFFIX: '15'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
 
@@ -104,7 +104,7 @@ jobs:
 
           echo "VNET_NAME=ao-${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "KEY_VAULT_NAME=pz-ao-${{ matrix.region }}${{ env.SUFFIX }}" >> $GITHUB_ENV
+          echo "KEY_VAULT_NAME=pz-ao-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
 
           echo "EVENT_HUB_NS_NAME=pz-ao-${{ matrix.region }}" >> $GITHUB_ENV
 
@@ -114,7 +114,7 @@ jobs:
           echo "APPGW_NAME=pz-ao-${{ matrix.region }}" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=pz-ao-appgw-${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "APIM_SERVICE_NAME=pz-ao-${{ matrix.region }}${{ env.SUFFIX }}" >> $GITHUB_ENV
+          echo "APIM_SERVICE_NAME=pz-ao-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
           echo "APIM_PUBLIC_IP_NAME=pz-ao-apim-${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME" >> $GITHUB_ENV

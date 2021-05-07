@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 env:
+  SUFFIX: '15'
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
@@ -15,7 +16,6 @@ env:
   DDOS_PLAN_NAME: 'pz-ao'
   LA_WORKSPACE_NAME: 'pz-ao'
   APP_INSIGHTS_NAME: 'pz-ao'
-  REGISTRY_NAME: 'pzao21'
   COSMOS_DB_ACCT_NAME: 'pz-ao'
   FRONT_DOOR_NAME: 'pz-ao'
 
@@ -49,54 +49,55 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      #- name: Prepare dynamic env vars
-      #  if: success()
-      #  run: |
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          echo "REGISTRY_NAME=pzao${{ env.SUFFIX }}" >> $GITHUB_ENV
 
-      #- name: Create Azure resource group
-      #  if: success()
-      #  run: |
-      #    az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      - name: Create Azure resource group
+        if: success()
+        run: |
+          az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
 
 
-      #- name: Deploy Log Analytics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/monitor.log-analytics-workspace.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+      - name: Deploy Log Analytics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/monitor.log-analytics-workspace.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
 
       - name: Get Log Analytics Workspace Resource ID
         if: success()
         run: |
           echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      #- name: Deploy Log Analytics Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/monitor.log-analytics-workspace.diagnostics.json
-      #    parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      - name: Deploy Log Analytics Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/monitor.log-analytics-workspace.diagnostics.json
+          parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
-      #- name: Deploy DDoS Plan
-      #  if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/net.ddos-plan.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      - name: Deploy DDoS Plan
+        if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/net.ddos-plan.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
 
-      #- name: Deploy User-Assigned MI
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/identity.user-assigned-mi.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
+      - name: Deploy User-Assigned MI
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/identity.user-assigned-mi.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
       - name: Get UAMI Info
         if: success()
@@ -104,47 +105,47 @@ jobs:
           echo "UAMI_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
-      #- name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
+      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
 
-      #- name: Deploy Container Registry
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/container-registry.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.AZURE_LOCATIONS}} zoneRedundancy=Enabled
+      - name: Deploy Container Registry
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/container-registry.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.AZURE_LOCATIONS}} zoneRedundancy=Enabled
 
-      #- name: Deploy Container Registry Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/container-registry.diagnostics.json
-      #    parameters: registryName=${{env.REGISTRY_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      - name: Deploy Container Registry Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/container-registry.diagnostics.json
+          parameters: registryName=${{env.REGISTRY_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
-      #- name: Deploy App Insights
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/monitor.app-insights.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP_GLOBAL}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
+      - name: Deploy App Insights
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/monitor.app-insights.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP_GLOBAL}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
 
-      #- name: Deploy App Insights Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/monitor.app-insights.diagnostics.json
-      #    parameters: appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      - name: Deploy App Insights Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/monitor.app-insights.diagnostics.json
+          parameters: appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
       - name: Get App Insights Resource ID
         if: success()
@@ -153,37 +154,37 @@ jobs:
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --app ${{env.APP_INSIGHTS_NAME}} -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
 
 
-      #- name: Deploy Cosmos DB Account
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/cosmos-db.account.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
+      - name: Deploy Cosmos DB Account
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/cosmos-db.account.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
 
-      #- name: Deploy Cosmos DB Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/cosmos-db.diagnostics.json
-      #    parameters: accountName=${{env.COSMOS_DB_ACCT_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      - name: Deploy Cosmos DB Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/cosmos-db.diagnostics.json
+          parameters: accountName=${{env.COSMOS_DB_ACCT_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
-      #- name: Deploy Cosmos DB Database
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/cosmos-db.sql.database.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_THROUGHPUT}}
+      - name: Deploy Cosmos DB Database
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/cosmos-db.sql.database.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_THROUGHPUT}}
 
-      #- name: Deploy Cosmos DB Container
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/cosmos-db.sql.container.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
+      - name: Deploy Cosmos DB Container
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/cosmos-db.sql.container.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
 
       #- name: Deploy Front Door
