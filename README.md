@@ -264,6 +264,9 @@ Enable Cluster Monitoring (Container Insights):
 [Existing cluster](https://docs.microsoft.com/azure/azure-monitor/containers/container-insights-enable-existing-clusters#integrate-with-an-existing-workspace)
 
 
-### 5. Parking Lot / Out of Scope
+### 5. Parking Lot
 
 - Multiple stamps _per region_
+- Custom domain
+- Custom domain SSL cert
+
