@@ -54,43 +54,13 @@ jobs:
         run: |
           echo "REGISTRY_NAME=pzao${{ env.SUFFIX }}" >> $GITHUB_ENV
 
-      - name: Create Azure resource group
-        if: success()
-        run: |
-          az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #- name: Create Azure resource group
+      #  if: success()
+      #  run: |
+      #    az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
 
 
-      - name: Deploy Log Analytics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.log-analytics-workspace.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
-
-      - name: Get Log Analytics Workspace Resource ID
-        if: success()
-        run: |
-          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-
-      - name: Deploy Log Analytics Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.log-analytics-workspace.diagnostics.json
-          parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
-
-
-      - name: Deploy DDoS Plan
-        if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/net.ddos-plan.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
-
-
+      # Deploy here but do role assignment at end of job to allow time for provisioning
       - name: Deploy User-Assigned MI
         if: success()
         uses: azure/arm-deploy@v1
@@ -99,19 +69,36 @@ jobs:
           template: ./templates/identity.user-assigned-mi.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
-      - name: Get UAMI Info
+
+      #- name: Deploy Log Analytics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/monitor.log-analytics-workspace.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+
+      - name: Get Log Analytics Workspace Resource ID
         if: success()
         run: |
-          echo "UAMI_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
+      #- name: Deploy Log Analytics Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/monitor.log-analytics-workspace.diagnostics.json
+      #    parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+
+      #- name: Deploy DDoS Plan
+      #  if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/net.ddos-plan.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
 
       - name: Deploy Container Registry
@@ -202,6 +189,21 @@ jobs:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
       #    template: ./templates/net.fd.diagnostics.json
       #    parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+
+      - name: Get UAMI Info
+        if: success()
+        run: |
+          echo "UAMI_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+
+      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
 
       - name: Azure logout

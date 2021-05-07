@@ -99,6 +99,9 @@
         }
     },
     "variables": {
+        "zones": "[
+
+        ]",
 		"userAssignedIdentities": "[
 			if
 			(
