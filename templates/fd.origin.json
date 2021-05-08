@@ -1,0 +1,70 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "frontDoorName": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "originGroupName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "originName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "hostName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "originHostHeader": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "httpPort": {
+            "type": "int",
+            "defaultValue": 80,
+            "minValue": 1,
+            "maxValue": 65535
+        },
+        "httpsPort": {
+            "type": "int",
+            "defaultValue": 443,
+            "minValue": 1,
+            "maxValue": 65535
+        },
+        "priority": {
+            "type": "int",
+            "defaultValue": 1,
+            "minValue": 1,
+            "maxValue": 5
+        },
+        "weight": {
+            "type": "int",
+            "defaultValue": 1000,
+            "minValue": 1,
+            "maxValue": 1000
+        }
+    },
+    "variables": {
+		"apiVersionFd": "2020-09-01",
+        "originHostHeader": "[if(empty(parameters('originHostHeader')), parameters('hostName'), parameters('originHostHeader'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles/originGroups/origins",
+            "name": "[concat(parameters('frontDoorName'), '/', parameters('originGroupName'), '/', parameters('originName'))]",
+            "apiVersion": "[variables('apiVersionFd')]",
+            "properties": {
+                "hostName": "[parameters('hostName')]",
+                "httpPort": "[parameters('httpPort')]",
+                "httpsPort": "[parameters('httpsPort')]",
+                "originHostHeader": "[variables('originHostHeader')]",
+                "priority": "[parameters('priority')]",
+                "weight": "[parameters('weight')]",
+                "enabledState": "Enabled"
+            }
+        }
+    ]
+}

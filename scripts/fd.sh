@@ -31,8 +31,8 @@ wafPolicyId="$(az network front-door waf-policy show --subscription ""$subscript
 #	--parameters frontDoorName="$frontDoorName"
 
 # FD Endpoint
-#az deployment group create --subscription "$subscriptionId" -n "fd-profile-endpoint" --verbose \
-#	-g "$resourceGroup" --template-file "../templates/fd.profile-endpoint.json" \
+#az deployment group create --subscription "$subscriptionId" -n "fd-endpoint" --verbose \
+#	-g "$resourceGroup" --template-file "../templates/fd.endpoint.json" \
 #	--parameters \
 #	frontDoorName="$frontDoorName" endpointName="$endpointName" originResponseTimeoutSeconds="$originResponseTimeoutSeconds"
 
@@ -52,6 +52,14 @@ wafPolicyId="$(az network front-door waf-policy show --subscription ""$subscript
 
 
 originGroupId="$(az afd origin-group show --subscription ""$subscriptionId"" -g ""$resourceGroup"" --profile-name ""$frontDoorName"" --origin-group-name ""$originGroupName"" -o tsv --query 'id')"
+
+# FD Origins
+az deployment group create --subscription "$subscriptionId" -n "fd-origin" --verbose \
+	-g "$resourceGroup" --template-file "../templates/fd.origin.json" \
+	--parameters \
+	frontDoorName="$frontDoorName" originGroupName="$originGroupName" originName="" \
+	hostName="" originHostHeader=""
+
 
 # FD Routes
 az deployment group create --subscription "$subscriptionId" -n "fd-route" --verbose \

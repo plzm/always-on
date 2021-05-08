@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  SUFFIX: '15'
+  SUFFIX: '16'
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
@@ -19,7 +19,7 @@ env:
   COSMOS_DB_ACCT_NAME: 'pz-ao'
   FRONT_DOOR_NAME: 'pz-ao'
 
-  VNET_ENABLE_DDOS: 'true'
+  VNET_ENABLE_DDOS: 'false'
 
   COSMOS_DB_MULTI_REGION_WRITE: 'true'
   COSMOS_DB_DATABASE_NAME: 'db1'
@@ -28,6 +28,10 @@ env:
   COSMOS_DB_CONTAINER_THROUGHPUT: '400'
   COSMOS_DB_PARTITION_KEY: '/id'
   COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
+
+  FRONT_DOOR_ORIGIN_TIMEOUT: '16'
+  FRONT_DOOR_SECPOL_NAME: 'secpol1'
+  FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
 
 jobs:
   deploy-stamp:
@@ -53,11 +57,15 @@ jobs:
         if: success()
         run: |
           echo "REGISTRY_NAME=pzao${{ env.SUFFIX }}" >> $GITHUB_ENV
+          echo "FD_WAF_POLICY_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
 
-      #- name: Create Azure resource group
-      #  if: success()
-      #  run: |
-      #    az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+
+
+      - name: Create Azure resource group
+        if: success()
+        run: |
+          az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
 
 
       # Deploy here but do role assignment at end of job to allow time for provisioning
@@ -70,35 +78,35 @@ jobs:
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
 
-      #- name: Deploy Log Analytics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/monitor.log-analytics-workspace.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+      - name: Deploy Log Analytics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/monitor.log-analytics-workspace.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
 
       - name: Get Log Analytics Workspace Resource ID
         if: success()
         run: |
           echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      #- name: Deploy Log Analytics Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/monitor.log-analytics-workspace.diagnostics.json
-      #    parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      - name: Deploy Log Analytics Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/monitor.log-analytics-workspace.diagnostics.json
+          parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
-      #- name: Deploy DDoS Plan
-      #  if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/net.ddos-plan.json
-      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      - name: Deploy DDoS Plan
+        if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/net.ddos-plan.json
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
 
       - name: Deploy Container Registry
@@ -174,21 +182,58 @@ jobs:
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
 
-      #- name: Deploy Front Door
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/net.fd.json
-      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" backendAddress="${{env.APIM_SERVICE_HOSTNAME}}" backendHostHeader="${{env.APIM_SERVICE_HOSTNAME}}"
+      - name: Deploy Front Door WAF Policy
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/fd.waf-policy.json
+          parameters: wafPolicyName="${{env.FD_WAF_POLICY_NAME}}"
 
-      #- name: Deploy Front Door Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-      #    template: ./templates/net.fd.diagnostics.json
-      #    parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      - name: Get Front Door WAF Policy ID
+        if: success()
+        run: |
+          echo "FRONT_DOOR_WAF_POLICY_ID=$(az network front-door waf-policy show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.FD_WAF_POLICY_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy Front Door Profile
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/fd.profile.json
+          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}"
+
+      - name: Deploy Front Door Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/fd.diagnostics.json
+          parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      - name: Deploy Front Door Endpoint
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/fd.endpoint.json
+          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" originResponseTimeoutSeconds="${{env.FRONT_DOOR_ORIGIN_TIMEOUT}}"
+
+      - name: Deploy Front Door Security Policy
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/fd.security-policy.json
+          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" securityPolicyName="${{ env.FRONT_DOOR_SECPOL_NAME }}" wafPolicyId="${{ env.FRONT_DOOR_WAF_POLICY_ID }}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}"
+
+      - name: Deploy Front Door Origin Group
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/fd.origin-group.json
+          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" originGroupName="${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}}"
 
 
       - name: Get UAMI Info
