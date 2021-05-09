@@ -34,7 +34,7 @@ env:
   FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
 
 jobs:
-  deploy-stamp:
+  deploy-global:
     runs-on: ubuntu-latest
     steps:
       - name: Install Azure CLI extensions
