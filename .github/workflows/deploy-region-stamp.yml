@@ -62,6 +62,7 @@ env:
 
   APIM_SKU_NAME: 'Developer'
   #APIM_SKU_NAME: 'Premium'
+  APIM_VNET_TYPE: 'External'
   APIM_SCALE_UNITS: 3
   APIM_API_VERSION_SET_NAME: 'Demo Conference API'
   APIM_API_VERSION_SET_DESCRIPTION: 'Foo'
