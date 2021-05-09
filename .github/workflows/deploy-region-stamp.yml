@@ -64,8 +64,8 @@ env:
   #APIM_SKU_NAME: 'Premium'
   APIM_VNET_TYPE: 'External'
   APIM_SCALE_UNITS: 3
-  APIM_API_VERSION_SET_NAME: 'Demo Conference API'
-  APIM_API_VERSION_SET_DESCRIPTION: 'Foo'
+  APIM_API_VERSION_SET_NAME: 'conference_api_vs'
+  APIM_API_VERSION_SET_DESCRIPTION: 'Conference API Description'
   APIM_API_NAME: 'demo-conference-api'
   APIM_API_DESCRIPTION: 'Foo'
   APIM_API_SERVICE_URL: 'https://conferenceapi.azurewebsites.net'
