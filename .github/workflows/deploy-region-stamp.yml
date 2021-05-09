@@ -532,11 +532,11 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-version-set
           template: ./templates/apim.api-version-set.json
-          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} displayName=${{ env.APIM_API_VERSION_SET_NAME }} description=${{ env.APIM_API_VERSION_SET_DESCRIPTION }}
+          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" displayName="${{ env.APIM_API_VERSION_SET_NAME }}" description="${{ env.APIM_API_VERSION_SET_DESCRIPTION }}"
 
       - name: Get APIM API Version Set Resource ID
         if: success()
-        run: echo "APIM_API_VERSION_SET_ID=$(az apim api versionset list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --service-name ${{ env.APIM_SERVICE_NAME }} -o tsv --query '[0].id')" >> $GITHUB_ENV
+        run: echo "APIM_API_VERSION_SET_ID=$(az apim api versionset list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --service-name "${{ env.APIM_SERVICE_NAME }}" -o tsv --query '[0].id')" >> $GITHUB_ENV
 
       - name: Deploy APIM Logger
         if: success()
@@ -554,7 +554,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-api
           template: ./templates/apim.api.json
-          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} apiName=${{ env.APIM_API_NAME }} displayName=${{ env.APIM_API_NAME }} description=${{ env.APIM_API_DESCRIPTION }} serviceUrl=${{ env.APIM_API_SERVICE_URL }} path=${{ env.APIM_API_SERVICE_PATH }} apiVersionSetResourceId=${{ env.APIM_API_VERSION_SET_ID }}
+          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} apiName=${{ env.APIM_API_NAME }} displayName=${{ env.APIM_API_NAME }} description="${{ env.APIM_API_DESCRIPTION }}" serviceUrl=${{ env.APIM_API_SERVICE_URL }} path=${{ env.APIM_API_SERVICE_PATH }} apiVersionSetResourceId=${{ env.APIM_API_VERSION_SET_ID }}
 
       - name: Get APIM Info
         if: success()
