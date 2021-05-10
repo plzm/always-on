@@ -1,4 +1,4 @@
-name: Configure Always On Global Stamp
+name: Infra - Config Global
 
 on: 
   workflow_dispatch:
