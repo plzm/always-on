@@ -2,10 +2,6 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.1",
 	"parameters": {
-		"timestamp": {
-			"type": "string",
-			"defaultValue": "[utcNow('u')]"
-		},
 		"location": {
 			"type": "string",
 			"metadata": {
@@ -246,9 +242,6 @@
 				)
 			)
 		]",
-		"resourceTags": {
-			"Timestamp": "[parameters('timestamp')]"
-		},
 		"apiVersionAks": "2021-03-01"
 	},
 	"resources": [
@@ -257,7 +250,6 @@
 			"apiVersion": "[variables('apiVersionAks')]",
 			"name": "[parameters('clusterName')]",
 			"location": "[parameters('location')]",
-			"tags": "[variables('resourceTags')]",
 			"identity": {
 				"type": "[parameters('managedIdentityType')]",
 				"userAssignedIdentities": "[variables('userAssignedIdentity')]"

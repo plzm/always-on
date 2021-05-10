@@ -2,10 +2,6 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-		"timestamp": {
-			"type": "string",
-			"defaultValue": "[utcNow('u')]"
-		},
 		"location": {
 			"type": "string",
 			"defaultValue": "",
@@ -143,9 +139,6 @@
 			)
 		]",
 		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
-		"resourceTags": {
-			"Timestamp": "[parameters('timestamp')]"
-		},
 		"apiVersionApim": "2021-01-01-preview"
     },
     "resources": [
@@ -159,7 +152,6 @@
                 "name": "[parameters('skuName')]",
                 "capacity": "[variables('scaleUnits')]"
             },
-			"tags": "[variables('resourceTags')]",
 			"identity": {
 				"type": "[parameters('managedIdentityType')]",
 				"userAssignedIdentities": "[variables('userAssignedIdentities')]"
