@@ -1,4 +1,4 @@
-name: Delete Always On Region Stamp
+name: Infra - Delete Region
 
 on: 
   workflow_dispatch:

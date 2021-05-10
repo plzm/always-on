@@ -1,4 +1,4 @@
-name: Configure Always On Region Stamp
+name: Infra - Config Region
 
 on: 
   workflow_dispatch:

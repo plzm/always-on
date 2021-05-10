@@ -1,4 +1,4 @@
-name: Deploy Always On Global Stamp
+name: Infra - Deploy Global
 
 on: 
   workflow_dispatch:
