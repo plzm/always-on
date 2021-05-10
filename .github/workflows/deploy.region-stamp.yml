@@ -100,15 +100,16 @@ jobs:
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           UAMI_NAME=${{ env.PREFIX }}-uami
+          LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
-
+          echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
-
-          echo "LA_WORKSPACE_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
+          echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
 
           echo "APP_NSG_NAME=ao-app-${{ matrix.region }}" >> $GITHUB_ENV
           echo "APIM_NSG_NAME=ao-apim-${{ matrix.region }}" >> $GITHUB_ENV
@@ -121,8 +122,7 @@ jobs:
 
           echo "EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-          echo "AKS_DNS_PREFIX=${PREFIX//-/}${{ matrix.region }}" >> $GITHUB_ENV
+          echo "AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}" >> $GITHUB_ENV
 
           echo "APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}" >> $GITHUB_ENV
@@ -142,7 +142,6 @@ jobs:
           echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
 
-          echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
 
