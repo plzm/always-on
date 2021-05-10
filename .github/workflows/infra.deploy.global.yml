@@ -51,10 +51,18 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          echo "UAMI_NAME=${{ env.PREFIX }}-uami" >> $GITHUB_ENV
+          UAMI_NAME=${{ env.PREFIX }}-uami
+          LA_WORKSPACE_NAME=${{ env.PREFIX }}
+          APP_INSIGHTS_NAME=${{ env.PREFIX }}
+          FRONT_DOOR_NAME=${{ env.PREFIX }}
+
+          echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
+          echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
+
           echo "DDOS_PLAN_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
-          echo "LA_WORKSPACE_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
-          echo "APP_INSIGHTS_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
+
           echo "COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
           echo "REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV

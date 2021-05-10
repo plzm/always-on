@@ -111,6 +111,9 @@ jobs:
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
 
+          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
+
           echo "APP_NSG_NAME=ao-app-${{ matrix.region }}" >> $GITHUB_ENV
           echo "APIM_NSG_NAME=ao-apim-${{ matrix.region }}" >> $GITHUB_ENV
 
@@ -133,9 +136,6 @@ jobs:
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME" >> $GITHUB_ENV
 
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
-
-          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
 
           echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
 
