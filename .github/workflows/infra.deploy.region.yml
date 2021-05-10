@@ -7,8 +7,11 @@ env:
   PREFIX: 'pz-ao'
   SUFFIX: '18'
 
+  RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
+  RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+  RBAC_ROLE_ID_VM_CONTRIBUTOR: '9980e02c-c2be-4d73-94e8-173b1dc7cf3c'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
@@ -198,15 +201,6 @@ jobs:
           template: ./templates/net.vnet.json
           parameters: |
             location=${{ matrix.region }} vnetName=${{ env.VNET_NAME }} vnetPrefix=${{ env.VNET_PREFIX }} enableDdosProtection=${{ env.VNET_ENABLE_DDOS }} ddosProtectionPlanResourceGroup=${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} ddosProtectionPlanName=${{ env.DDOS_PLAN_NAME }}
-
-      - name: Grant UAMI Network Contributor on VNet for kubenet config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.VNET_NAME }}-role-assignment
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
       - name: Deploy VNet Diagnostics
         if: success()
@@ -411,6 +405,35 @@ jobs:
         run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
+
+      - name: Grant UAMI Contributor on Region RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-contrib
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+
+      - name: Grant UAMI Managed Identity Operator on Region RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-mio
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+
+      - name: Grant UAMI Network Contributor on VNet for kubenet config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
+
+
       ## Deploy AKS - ARM Template - but does not support kubelet identity
       #- name: Deploy AKS Cluster (ARM)
       #  if: success()
@@ -458,18 +481,38 @@ jobs:
           template: ./templates/aks.cluster.diagnostics.json
           parameters: clusterName=${{ env.AKS_CLUSTER_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Get AKS Cluster Resource ID
-        if: success()
-        run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity after AKS Deploy creates the RG
+      - name: Grant UAMI Contributor on AKS Nodes RG after AKS Deploy creates the RG
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: aks-nodes-rg-role-assignment
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-rbac-contrib
           template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_READER }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+
+      - name: Grant UAMI Managed Identity Operator on AKS Nodes RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-rbac-mio
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+
+      - name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-rbac-vm-contrib
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+
+
+      - name: Get AKS Cluster Resource ID
+        if: success()
+        run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
       #- name: Deploy AKS User Node Pool
       #  if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}

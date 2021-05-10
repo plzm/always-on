@@ -212,6 +212,26 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Security
 
+A User-Assigned Managed Identity (UAMI) is provisioned and assigned to resources which support/need a Managed Identity (MI). The same UAMI is used throughout for simplicity.
+
+The UAMI requires the following RBAC assignments so IaC and app deploys can succeed.
+
+   | **Name** | **Scope** | **Notes**
+   | - | - |
+   | Contributor | Region RG | Needed for AppGW but at RG level for simplicity.
+   | Contributor | Region AKS Node RG |
+   | Reader | Region AKS Node RG | Pod Managed Identity but superseded by Contributor
+   | Network Contributor | Region VNet | Superseded by Region RG Contributor but here to be explicit.
+   | Managed Identity Operator | Region RG | Superseded by Region RG Contributor but here to be explicit.
+   | Managed Identity Operator | Region AKS Node RG |
+   | Virtual Machine Contributor | Region AKS Node RG |
+
+References
+
+- [https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment](https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment)
+- [https://github.com/Azure/aad-pod-identity/blob/master/hack/role-assignment.sh](https://github.com/Azure/aad-pod-identity/blob/master/hack/role-assignment.sh)
+- [https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing#set-up-aad-pod-identity](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing#set-up-aad-pod-identity)
+
 #### CD - Global / Regional Stamp
 
 ##### Global/Single Resources

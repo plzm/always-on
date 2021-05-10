@@ -15,7 +15,7 @@ resourceGroup="always-on-""$infix"
 rbacRoleIdReader="acdd72a7-3385-48ef-bd42-f606fba81ae7"
 
 # UAMI
-managedIdentityName="pz-ao-uami-""$infix"
+managedIdentityName="pz-ao-uami-"
 managedIdentityType="UserAssigned"
 identityResourceId="$(az identity show --subscription ""$subscriptionId"" -g ""$resourceGroup"" -n ""$managedIdentityName"" -o tsv --query 'id')"
 identityPrincipalId="$(az identity show --subscription ""$subscriptionId"" -g ""$resourceGroup"" -n ""$managedIdentityName"" -o tsv --query 'principalId')"
