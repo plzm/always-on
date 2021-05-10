@@ -4,10 +4,16 @@ on:
   workflow_dispatch:
 
 env:
+  SUFFIX: '18'
+
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
+
+  FRONT_DOOR_NAME: 'pz-ao'
+  FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
+  FRONT_DOOR_ROUTE_NAME: 'api'
 
 jobs:
   delete-stamp:
@@ -16,9 +22,9 @@ jobs:
       matrix:
         region: [centralus]
     steps:
-      #- name: Install Azure CLI extensions
-      #  run: |
-      #    az extension add --name front-door
+      - name: Install Azure CLI extensions
+        run: |
+          az extension add --name front-door
 
       - name: Azure login
         if: success()
@@ -26,15 +32,29 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      #- name: Delete FD backend pool backend
-      #  if: success()
-      #  run: az network front-door backend-pool backend remove -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -f 
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+          echo "FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
+
+
+      - name: Delete FD Route
+        if: success()
+        run: az afd route delete --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --profile-name "${{ env.FRONT_DOOR_NAME }}" --endpoint-name "${{env.FRONT_DOOR_ENDPOINT_NAME}}" route-name "${{ env.FRONT_DOOR_ROUTE_NAME }}" --yes
+
+      - name: Delete FD Origin
+        if: success()
+        run: az afd origin delete --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --profile-name "${{ env.FRONT_DOOR_NAME }}" --origin-group-name "${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" origin-name=${{ matrix.region }} --yes
+
 
       - name: Destroy regional stamp Resource Group
         if: success()
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           az group delete --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --name $AZURE_RESOURCE_GROUP --yes
+
 
       - name: Azure logout
         run: az logout
