@@ -14,13 +14,6 @@ env:
 
   AZURE_LOCATIONS: 'eastus,westus2,northeurope'
 
-  UAMI_NAME: '$PREFIX-uami'
-  DDOS_PLAN_NAME: '$PREFIX'
-  LA_WORKSPACE_NAME: '$PREFIX'
-  APP_INSIGHTS_NAME: '$PREFIX'
-  COSMOS_DB_ACCT_NAME: '$PREFIX'
-  FRONT_DOOR_NAME: '$PREFIX'
-
   VNET_ENABLE_DDOS: 'false'
 
   COSMOS_DB_MULTI_REGION_WRITE: 'true'
@@ -58,6 +51,12 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          echo "UAMI_NAME=${{ env.PREFIX }}-uami" >> $GITHUB_ENV
+          echo "DDOS_PLAN_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
+          echo "COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
+          echo "FRONT_DOOR_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
           echo "REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}" >> $GITHUB_ENV
           echo "FD_WAF_POLICY_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
