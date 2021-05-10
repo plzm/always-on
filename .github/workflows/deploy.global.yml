@@ -12,7 +12,7 @@ env:
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
 
-  AZURE_LOCATIONS: 'eastus,westus2'
+  AZURE_LOCATIONS: 'eastus,westus2,northeurope'
 
   UAMI_NAME: '$PREFIX-uami'
   DDOS_PLAN_NAME: '$PREFIX'
