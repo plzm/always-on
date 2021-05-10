@@ -2,10 +2,6 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "timestamp": {
-            "type": "string",
-            "defaultValue": "[utcNow('u')]"
-        },
         "location": {
             "type": "string",
             "defaultValue": "[resourceGroup().location]",
@@ -43,9 +39,6 @@
         }
     },
     "variables": {
-        "resourceTags": {
-            "Timestamp": "[parameters('timestamp')]"
-        },
         "apiVersionCosmosDb": "2021-03-01-preview"
     },
     "resources": [
@@ -54,7 +47,6 @@
             "apiVersion": "[variables('apiVersionCosmosDb')]",
             "name": "[concat(parameters('cosmosDbAccountName'), '/', parameters('databaseName'))]",
             "location": "[parameters('location')]",
-            "tags": "[variables('resourceTags')]",
             "properties": {
                 "resource": {
                     "id": "[parameters('databaseName')]"

@@ -2,10 +2,6 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"timestamp": {
-			"type": "string",
-			"defaultValue": "[utcNow('u')]"
-		},
 		"location": {
 			"type": "string",
 			"metadata": {
@@ -51,9 +47,6 @@
 	},
 	"variables": {
 		"replicationLocations": "[if(equals(toLower(trim(parameters('skuName'))), 'premium'), split(parameters('replicationLocations'), ','), json('[]'))]",
-		"resourceTags": {
-			"Timestamp": "[parameters('timestamp')]"
-		},
 		"apiVersionRegistry": "2020-11-01-preview"
 	},
 	"resources": [
@@ -66,7 +59,6 @@
                 "name": "[parameters('skuName')]",
                 "tier": "[parameters('skuName')]"
             },
-			"tags": "[variables('resourceTags')]",
             "properties": {
                 "adminUserEnabled": false,
                 "networkRuleSet": {

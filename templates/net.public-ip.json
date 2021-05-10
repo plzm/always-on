@@ -2,10 +2,6 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"timestamp": {
-			"type": "string",
-			"defaultValue": "[utcNow('u')]"
-		},
 		"location": {
 			"type": "string",
 			"defaultValue": "",
@@ -63,9 +59,6 @@
 		}
 	},
 	"variables": {
-		"resourceTags": {
-			"Timestamp": "[parameters('timestamp')]"
-		},
 		"apiVersionNetwork": "2020-11-01"
 	},
 	"resources": [
@@ -74,7 +67,6 @@
 			"type": "Microsoft.Network/publicIpAddresses",
 			"apiVersion": "[variables('apiVersionNetwork')]",
 			"location": "[parameters('location')]",
-			"tags": "[variables('resourceTags')]",
 			"properties": {
 				"publicIpAllocationMethod": "[parameters('publicIpType')]",
 				"dnsSettings": {

@@ -2,10 +2,6 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"timestamp": {
-			"type": "string",
-			"defaultValue": "[utcNow('u')]"
-		},
 		"location": {
 			"type": "string",
 			"metadata": {
@@ -39,9 +35,6 @@
 		}
 	},
 	"variables": {
-		"resourceTags": {
-			"Timestamp": "[parameters('timestamp')]"
-		},
 		"apiVersionAppInsights": "2020-02-02-preview",
 		"apiVersionAppInsightsDetection": "2018-05-01-preview"
 	},
@@ -52,7 +45,6 @@
             "name": "[parameters('appInsightsName')]",
             "location": "[parameters('location')]",
             "kind": "web",
-            "tags": "[variables('resourceTags')]",
             "properties": {
                 "Application_Type": "web",
                 "Flow_Type": "Redfield",

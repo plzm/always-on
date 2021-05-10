@@ -2,10 +2,6 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
-		"timestamp": {
-			"type": "string",
-			"defaultValue": "[utcNow('u')]"
-		},
 		"location": {
 			"type": "string",
 			"metadata": {
@@ -54,9 +50,6 @@
 		}
 	},
 	"variables": {
-		"resourceTags": {
-			"Timestamp": "[parameters('timestamp')]"
-		},
 		"apiVersionLogAnalytics": "2020-10-01"
 	},
 	"resources": [
@@ -65,7 +58,6 @@
             "apiVersion": "[variables('apiVersionLogAnalytics')]",
             "name": "[parameters('workspaceName')]",
             "location": "[parameters('location')]",
-            "tags": "[variables('resourceTags')]",
             "properties": {
                 "sku": {
                     "name": "[parameters('skuName')]"
