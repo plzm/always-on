@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
 
 env:
+  PREFIX: 'pz-ao'
   SUFFIX: '18'
 
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
@@ -13,12 +14,12 @@ env:
 
   AZURE_LOCATIONS: 'eastus,westus2'
 
-  UAMI_NAME: 'pz-ao-uami'
-  DDOS_PLAN_NAME: 'pz-ao'
-  LA_WORKSPACE_NAME: 'pz-ao'
-  APP_INSIGHTS_NAME: 'pz-ao'
-  COSMOS_DB_ACCT_NAME: 'pz-ao'
-  FRONT_DOOR_NAME: 'pz-ao'
+  UAMI_NAME: '$PREFIX-uami'
+  DDOS_PLAN_NAME: '$PREFIX'
+  LA_WORKSPACE_NAME: '$PREFIX'
+  APP_INSIGHTS_NAME: '$PREFIX'
+  COSMOS_DB_ACCT_NAME: '$PREFIX'
+  FRONT_DOOR_NAME: '$PREFIX'
 
   VNET_ENABLE_DDOS: 'false'
 
@@ -57,10 +58,9 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          echo "REGISTRY_NAME=pzao${{ env.SUFFIX }}" >> $GITHUB_ENV
+          echo "REGISTRY_NAME=${{ env.PREFIX//-/ }}${{ env.SUFFIX }}" >> $GITHUB_ENV
           echo "FD_WAF_POLICY_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
-
 
 
       - name: Create Azure resource group
@@ -69,7 +69,6 @@ jobs:
           az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
 
 
-      # Deploy here but do role assignment at end of job to allow time for provisioning
       - name: Deploy User-Assigned MI
         if: success()
         uses: azure/arm-deploy@v1
@@ -133,7 +132,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./templates/monitor.app-insights.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceGroup=${{env.AZURE_RESOURCE_GROUP_GLOBAL}} logAnalyticsWorkspaceName=${{env.LA_WORKSPACE_NAME}}
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
       - name: Deploy App Insights Diagnostics
         if: success()
@@ -237,19 +236,19 @@ jobs:
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" originGroupName="${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}}"
 
 
-      - name: Get UAMI Info
-        if: success()
-        run: |
-          echo "UAMI_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+      #- name: Get UAMI Info
+      #  if: success()
+      #  run: |
+      #    echo "UAMI_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+      #    echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
-      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
+      #- name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
 
       - name: Azure logout

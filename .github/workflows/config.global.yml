@@ -1,0 +1,73 @@
+name: Configure Always On Global Stamp
+
+on: 
+  workflow_dispatch:
+
+env:
+  SUFFIX: '18'
+
+  RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
+
+  AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
+
+  UAMI_NAME: 'pz-ao-uami'
+  LA_WORKSPACE_NAME: 'pz-ao'
+  APP_INSIGHTS_NAME: 'pz-ao'
+  FRONT_DOOR_NAME: 'pz-ao'
+
+  VNET_ENABLE_DDOS: 'false'
+
+  COSMOS_DB_MULTI_REGION_WRITE: 'true'
+  COSMOS_DB_DATABASE_NAME: 'db1'
+  COSMOS_DB_DATABASE_THROUGHPUT: '400'
+  COSMOS_DB_CONTAINER_NAME: 'c1'
+  COSMOS_DB_CONTAINER_THROUGHPUT: '400'
+  COSMOS_DB_PARTITION_KEY: '/id'
+  COSMOS_DB_INCLUDED_INDEX: '/foo/?,/bar/?'
+
+  FRONT_DOOR_ORIGIN_TIMEOUT: '16'
+  FRONT_DOOR_SECPOL_NAME: 'secpol1'
+  FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
+
+jobs:
+  deploy-global:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Azure CLI extensions
+        run: |
+          az extension add --name aks-preview
+          az extension add --name application-insights
+          az extension add --name front-door
+
+      - name: Checkout repository
+        if: success()
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          echo "UAMI_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --app ${{env.APP_INSIGHTS_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --app ${{env.APP_INSIGHTS_NAME}} -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
+          echo "REGISTRY_NAME=pzao${{ env.SUFFIX }}" >> $GITHUB_ENV
+
+
+      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./templates/authorization.role-assignment.json
+          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
+
+
+      - name: Azure logout
+        run: |
+          az logout

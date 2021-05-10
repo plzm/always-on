@@ -4,17 +4,19 @@ on:
   workflow_dispatch:
 
 env:
+  PREFIX: 'pz-ao'
   SUFFIX: '18'
 
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
-  UAMI_NAME: 'pz-ao-uami'
-  DDOS_PLAN_NAME: 'pz-ao'
-  LA_WORKSPACE_NAME: 'pz-ao'
-  APP_INSIGHTS_NAME: 'pz-ao'
-  FRONT_DOOR_NAME: 'pz-ao'
+
+  UAMI_NAME: '$PREFIX-uami'
+  DDOS_PLAN_NAME: '$PREFIX'
+  LA_WORKSPACE_NAME: '$PREFIX'
+  APP_INSIGHTS_NAME: '$PREFIX'
+  FRONT_DOOR_NAME: '$PREFIX'
 
   NSG_IN_SRC: '75.68.47.183/32'
 
@@ -102,7 +104,7 @@ jobs:
         if: success()
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          AKS_CLUSTER_NAME=pz-ao-${{ matrix.region }}
+          AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
 
@@ -111,18 +113,18 @@ jobs:
 
           echo "VNET_NAME=ao-${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "KEY_VAULT_NAME=pz-ao-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
+          echo "KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
 
-          echo "EVENT_HUB_NS_NAME=pz-ao-${{ matrix.region }}" >> $GITHUB_ENV
+          echo "EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-          echo "AKS_DNS_PREFIX=pzao${{ matrix.region }}" >> $GITHUB_ENV
+          echo "AKS_DNS_PREFIX=${{ env.PREFIX//-/ }}${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "APPGW_NAME=pz-ao-${{ matrix.region }}" >> $GITHUB_ENV
-          echo "APPGW_PUBLIC_IP_NAME=pz-ao-appgw-${{ matrix.region }}" >> $GITHUB_ENV
+          echo "APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
+          echo "APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}" >> $GITHUB_ENV
 
-          echo "APIM_SERVICE_NAME=pz-ao-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
-          echo "APIM_PUBLIC_IP_NAME=pz-ao-apim-${{ matrix.region }}" >> $GITHUB_ENV
+          echo "APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
+          echo "APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}-apim-${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME" >> $GITHUB_ENV
 

@@ -17,11 +17,7 @@
 			"type": "string",
 			"defaultValue": ""
 		},
-		"logAnalyticsWorkspaceResourceGroup": {
-			"type": "string",
-			"defaultValue": ""
-		},
-		"logAnalyticsWorkspaceName": {
+		"logAnalyticsWorkspaceResourceId": {
 			"type": "string",
 			"defaultValue": ""
 		},
@@ -43,7 +39,6 @@
 		}
 	},
 	"variables": {
-		"logAnalyticsResourceId": "[resourceId(parameters('logAnalyticsWorkspaceResourceGroup'), 'microsoft.operationalinsights/workspaces', parameters('logAnalyticsWorkspaceName'))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
 		},
@@ -62,7 +57,7 @@
                 "Application_Type": "web",
                 "Flow_Type": "Redfield",
                 "IngestionMode": "LogAnalytics",
-                "WorkspaceResourceId": "[variables('logAnalyticsResourceId')]",
+                "WorkspaceResourceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
                 "publicNetworkAccessForIngestion": "[parameters('publicNetworkAccessForIngestion')]",
                 "publicNetworkAccessForQuery": "[parameters('publicNetworkAccessForQuery')]"
             }
