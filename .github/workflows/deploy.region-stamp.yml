@@ -118,7 +118,7 @@ jobs:
           echo "EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-          echo "AKS_DNS_PREFIX=${{ env.PREFIX//-/ }}${{ matrix.region }}" >> $GITHUB_ENV
+          echo "AKS_DNS_PREFIX=${PREFIX//-/}${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}" >> $GITHUB_ENV
