@@ -1,0 +1,41 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "timestamp": {
+            "type": "string",
+            "defaultValue": "[utcNow('u')]"
+        },
+        "frontDoorName": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "skuName": {
+			"type": "string",
+			"defaultValue": "Premium_AzureFrontDoor",
+            "allowedValues": [
+                "Premium_AzureFrontDoor"
+            ]
+		}
+    },
+    "variables": {
+         "resourceTags": {
+            "Timestamp": "[parameters('timestamp')]"
+        },
+		"apiVersionFd": "2020-09-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles",
+            "name": "[parameters('frontDoorName')]",
+            "apiVersion": "[variables('apiVersionFd')]",
+            "location": "Global",
+            "sku": {
+                "name": "[parameters('skuName')]"
+            },
+            "kind": "frontdoor",
+            "tags": "[variables('resourceTags')]",
+            "properties": {}
+        }
+    ]
+}

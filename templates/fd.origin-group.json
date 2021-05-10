@@ -1,0 +1,90 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "frontDoorName": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "originGroupName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "lbSampleSize": {
+            "type": "int",
+            "defaultValue": 4,
+            "minValue": 1,
+            "maxValue": 65535
+        },
+        "lbSuccessfulSamplesRequired": {
+            "type": "int",
+            "defaultValue": 3,
+            "minValue": 1,
+            "maxValue": 65535
+        },
+        "lbLatencySensitivityMilliseconds": {
+            "type": "int",
+            "defaultValue": 50,
+            "minValue": 1,
+            "maxValue": 65535
+        },
+        "healthProbePath": {
+			"type": "string",
+			"defaultValue": "/status-0123456789abcdef"
+		},
+        "healthProbeRequestType": {
+			"type": "string",
+			"defaultValue": "HEAD",
+            "allowedValues": [
+                "HEAD",
+                "GET"
+            ]
+        },
+        "healthProbeProtocol": {
+			"type": "string",
+			"defaultValue": "Http",
+            "allowedValues": [
+                "Http",
+                "Https"
+            ]
+        },
+        "healthProbeIntervalSeconds": {
+            "type": "int",
+            "defaultValue": 30,
+            "minValue": 1,
+            "maxValue": 255
+        },
+        "sessionAffinityState": {
+			"type": "string",
+			"defaultValue": "Disabled",
+            "allowedValues": [
+                "Disabled",
+                "Enabled"
+            ]
+        }
+    },
+    "variables": {
+		"apiVersionFd": "2020-09-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles/originGroups",
+            "name": "[concat(parameters('frontDoorName'), '/', parameters('originGroupName'))]",
+            "apiVersion": "[variables('apiVersionFd')]",
+            "properties": {
+                "loadBalancingSettings": {
+                    "sampleSize": "[parameters('lbSampleSize')]",
+                    "successfulSamplesRequired": "[parameters('lbSuccessfulSamplesRequired')]",
+                    "additionalLatencyInMilliseconds": "[parameters('lbLatencySensitivityMilliseconds')]"
+                },
+                "healthProbeSettings": {
+                    "probePath": "[parameters('healthProbePath')]",
+                    "probeRequestType": "[parameters('healthProbeRequestType')]",
+                    "probeProtocol": "[parameters('healthProbeProtocol')]",
+                    "probeIntervalInSeconds": "[parameters('healthProbeIntervalSeconds')]"
+                },
+                "sessionAffinityState": "[parameters('sessionAffinityState')]"
+            }
+        }
+    ]
+}

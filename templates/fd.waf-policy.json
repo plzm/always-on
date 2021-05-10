@@ -1,0 +1,72 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.1",
+	"parameters": {
+		"wafPolicyName": {
+			"type": "string",
+			"defaultValue": "",
+            "metadata": {
+                "displayName": "WAF Policy Name",
+                "description": "Policy name must start with a letter and contain only numbers and letters"
+            }
+		},
+        "skuName": {
+			"type": "string",
+			"defaultValue": "Premium_AzureFrontDoor",
+            "allowedValues": [
+                "Premium_AzureFrontDoor"
+            ]
+		},
+        "wafMode": {
+            "type": "string",
+            "defaultValue": "Detection",
+            "allowedValues": [
+                "Detection",
+                "Prevention"
+            ],
+            "metadata": {
+                "description": "Describes if it is in detection mode or prevention mode at policy level."
+            }
+        }
+	},
+	"variables": {
+		"apiVersionFdWaf": "2020-11-01"
+	},
+	"resources": [
+        {
+            "name": "[parameters('wafPolicyName')]",
+            "type": "Microsoft.Network/FrontDoorWebApplicationFirewallPolicies",
+            "apiVersion": "[variables('apiVersionFdWaf')]",
+            "location": "Global",
+            "sku": {
+                "name": "[parameters('skuName')]"
+            },
+            "properties": {
+                "policySettings": {
+                    "enabledState": "Enabled",
+                    "mode": "[parameters('wafMode')]",
+                    "requestBodyCheck": "Enabled"
+                },
+                "customRules": {
+                    "rules": []
+                },
+                "managedRules": {
+                    "managedRuleSets": [
+                        {
+                            "ruleSetType": "DefaultRuleSet",
+                            "ruleSetVersion": "1.0",
+                            "ruleGroupOverrides": [],
+                            "exclusions": []
+                        },
+                        {
+                            "ruleSetType": "Microsoft_BotManagerRuleSet",
+                            "ruleSetVersion": "1.0",
+                            "ruleGroupOverrides": [],
+                            "exclusions": []
+                        }
+                    ]
+                }
+            }
+        }
+	]
+}

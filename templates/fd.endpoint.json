@@ -1,0 +1,35 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "frontDoorName": {
+            "defaultValue": "",
+            "type": "string"
+        },
+        "endpointName": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "originResponseTimeoutSeconds": {
+            "type": "int",
+            "defaultValue": 30,
+            "minValue": 16,
+            "maxValue": 240
+        }
+    },
+    "variables": {
+		"apiVersionFd": "2020-09-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Cdn/profiles/afdEndpoints",
+            "name": "[concat(parameters('frontDoorName'), '/', parameters('endpointName'))]",
+            "apiVersion": "[variables('apiVersionFd')]",
+            "location": "Global",
+            "properties": {
+                "originResponseTimeoutSeconds": "[parameters('originResponseTimeoutSeconds')]",
+                "enabledState": "Enabled"
+            }
+        }
+    ]
+}

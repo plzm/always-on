@@ -31,7 +31,7 @@
         },
 		"availabilityZones": {
 			"type": "string",
-			"defaultValue": "1,2,3",
+			"defaultValue": "",
 			"metadata": {
 				"displayName": "Azure availability zone(s) (AZs)",
 				"description": "Optional. One or more AZs, comma-delimited. Example: 1,2,3. If not provided, a non-zonal App GW will be deployed. See https://azure.microsoft.com/regions/ for which regions support AZs."
@@ -68,18 +68,6 @@
             "type": "string",
             "defaultValue": "paelaz@microsoft.com"
         },
-        "vnetResourceGroup": {
-            "type": "string",
-			"defaultValue": ""
-        },
-        "vnetName": {
-            "type": "string",
-			"defaultValue": ""
-        },
-        "subnetName": {
-            "type": "string",
-			"defaultValue": ""
-        },
 		"publicIpResourceGroup": {
             "type": "string",
 			"defaultValue": ""
@@ -97,6 +85,10 @@
                 "Internal"
             ]
         },
+		"subnetResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		},
         "enableHttp2": {
             "type": "bool",
 			"defaultValue": true
@@ -107,6 +99,37 @@
         }
     },
     "variables": {
+        "zones": "[
+            if
+            (
+                or(empty(parameters('availabilityZones')), not(equals(parameters('skuName'), 'Premium'))),
+                json('[]'),
+                split(parameters('availabilityZones'), ',')
+            )
+        ]",
+        "scaleUnits": "[
+            if
+            (
+                equals(parameters('skuName'), 'Premium'),
+                parameters('scaleUnits'),
+                if
+                (
+                    equals(parameters('skuName'), 'Standard'),
+                    min(parameters('scaleUnits'), 4),
+                    if
+                    (
+                        equals(parameters('skuName'), 'Basic'),
+                        min(parameters('scaleUnits'), 2),
+                        if
+                        (
+                            equals(parameters('skuName'), 'Developer'),
+                            min(parameters('scaleUnits'), 1),
+                            0
+                        )
+                    )
+                )
+            )
+        ]",
 		"userAssignedIdentities": "[
 			if
 			(
@@ -119,8 +142,6 @@
 				json('null')
 			)
 		]",
-        "vnetId": "[if(or(empty(parameters('vnetResourceGroup')), empty(parameters('vnetName'))), json('null'), resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')))]",
-        "subnetId": "[if(or(empty(variables('vnetId')), empty(parameters('subnetName'))), json('null'), concat(variables('vnetId'), '/subnets/', parameters('subnetName')))]",
 		"publicIpId": "[resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]",
 		"resourceTags": {
 			"Timestamp": "[parameters('timestamp')]"
@@ -133,17 +154,10 @@
             "apiVersion": "[variables('apiVersionApim')]",
             "name": "[parameters('apimServiceName')]",
             "location": "[parameters('location')]",
-			"zones": "[
-				if
-				(
-					empty(parameters('availabilityZones')),
-					json('[]'),
-					split(parameters('availabilityZones'), ',')
-				)
-			]",
+			"zones": "[variables('zones')]",
             "sku": {
                 "name": "[parameters('skuName')]",
-                "capacity": "[parameters('scaleUnits')]"
+                "capacity": "[variables('scaleUnits')]"
             },
 			"tags": "[variables('resourceTags')]",
 			"identity": {
@@ -162,7 +176,7 @@
                     }
                 ],
                 "virtualNetworkConfiguration": {
-                    "subnetResourceId": "[variables('subnetId')]"
+                    "subnetResourceId": "[if(empty(parameters('subnetResourceId')), json('null'), parameters('subnetResourceId'))]"
                 },
                 "customProperties": {
                     "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2": "[parameters('enableHttp2')]"
