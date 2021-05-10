@@ -60,7 +60,7 @@ jobs:
         uses: Azure/k8s-deploy@v1.4
         with:
           namespace: 'always-on'
-          manifests: '../../aks/azure-vote.yaml'
+          manifests: 'aks/azure-vote.yaml'
           kubectl-version: 'latest'
           force: true
 
