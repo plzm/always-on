@@ -12,7 +12,7 @@ env:
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
 
-  AZURE_LOCATIONS: 'eastus,westus2,northeurope'
+  AZURE_LOCATIONS: 'eastus,northeurope'
 
   VNET_ENABLE_DDOS: 'false'
 
