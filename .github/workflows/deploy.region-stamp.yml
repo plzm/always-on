@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region: [northeurope]
+        region: [eastus,westus2]
     steps:
       - name: Install Azure CLI extensions
         run: |
