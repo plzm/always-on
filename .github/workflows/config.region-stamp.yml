@@ -1,4 +1,4 @@
-name: Deploy Always On Region Stamp
+name: Configure Always On Region Stamp
 
 on: 
   workflow_dispatch:

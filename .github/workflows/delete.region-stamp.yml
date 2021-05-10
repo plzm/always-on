@@ -1,4 +1,4 @@
-name: Delete Azure environment
+name: Delete Always On Region Stamp
 
 on: 
   workflow_dispatch:
