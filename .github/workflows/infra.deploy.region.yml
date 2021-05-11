@@ -238,7 +238,7 @@ jobs:
       #    template: ./templates/net.vnet.subnet.json
       #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} subnetPrefix=${{ env.APPGW_SUBNET_PREFIX }}
 
-      #- name: Deploy App Subnet without NSG
+      #- name: Deploy App Subnet without NSG until after AKS deploy
       #  if: success()
       #  uses: azure/arm-deploy@v1
       #  with:
