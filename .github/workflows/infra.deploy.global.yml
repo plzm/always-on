@@ -5,12 +5,12 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '19'
+  SUFFIX: '20'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
 
-  AZURE_LOCATIONS: 'eastus,westus2'
+  AZURE_LOCATIONS: 'eastus'
 
   VNET_ENABLE_DDOS: 'false'
 
