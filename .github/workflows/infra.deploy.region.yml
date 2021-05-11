@@ -238,14 +238,14 @@ jobs:
       #    template: ./templates/net.vnet.subnet.json
       #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} subnetPrefix=${{ env.APPGW_SUBNET_PREFIX }}
 
-      #- name: Deploy App Subnet
+      #- name: Deploy App Subnet without NSG
       #  if: success()
       #  uses: azure/arm-deploy@v1
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APP_SUBNET_NAME }}
       #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }}
+      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
       - name: Get Subnet Resource IDs
         if: success()
@@ -278,14 +278,14 @@ jobs:
       #    template: ./templates/authorization.role-assignment.json
       #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      - name: Grant UAMI Network Contributor on VNet for kubenet config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
+      #- name: Grant UAMI Network Contributor on VNet for kubenet config
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
 
 
@@ -523,26 +523,21 @@ jobs:
       #    template: ./templates/aks.node-pool.json
       #    parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
-      - name: Configure AKS Add-ons - Monitoring
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
-
-      - name: Enable Pod Identity
-        if: success()
-        run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
-
-      - name: Add Pod Identity
-        if: success()
-        run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
-
-      #- name: Configure AKS Add-ons - Monitoring, AGIC
+      #- name: Configure AKS Add-ons - Monitoring
       #  if: success()
-      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring,ingress-appgw --workspace-resource-id ${{ env.LA_WORKSPACE_ID }} --appgw-id ${{ env.APPGW_ID }}
+      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
 
-
-      #- name: Get AKS credentials and kubectl
+      #- name: Enable Pod Identity
       #  if: success()
-      #  run: az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
+      #  run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
+
+      #- name: Add Pod Identity
+      #  if: success()
+      #  run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
+
+      - name: Configure AKS Add-ons - AGIC
+        if: success()
+        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
       #- name: Configure AKS control plane authorized IP ranges
       #  if: success()

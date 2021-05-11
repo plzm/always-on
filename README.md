@@ -203,6 +203,7 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
 - [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
 
+- [Azure VNet Service Tags](https://docs.microsoft.com/azure/virtual-network/service-tags-overview)
 - [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
 - [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
 
