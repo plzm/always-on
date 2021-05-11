@@ -209,6 +209,9 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
 - [App Gateway Ingress Annotations](https://azure.github.io/application-gateway-kubernetes-ingress/annotations/)
 
+- [Enable AKS Pod Identity](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
+- [Install AGIC on existing App GW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing)
+
 - [Kubernetes Documentation](https://kubernetes.io/docs/home/)
 - [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/)
 
@@ -230,17 +233,10 @@ The UAMI requires the following RBAC assignments so IaC and app deploys can succ
    | - | - |
    | Contributor | Region RG | Needed for AppGW but at RG level for simplicity.
    | Contributor | Region AKS Node RG |
-   | Reader | Region AKS Node RG | Pod Managed Identity but superseded by Contributor
    | Network Contributor | Region VNet | Superseded by Region RG Contributor but here to be explicit.
    | Managed Identity Operator | Region RG | Superseded by Region RG Contributor but here to be explicit.
    | Managed Identity Operator | Region AKS Node RG |
    | Virtual Machine Contributor | Region AKS Node RG |
-
-References
-
-- [https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment](https://azure.github.io/aad-pod-identity/docs/getting-started/role-assignment)
-- [https://github.com/Azure/aad-pod-identity/blob/master/hack/role-assignment.sh](https://github.com/Azure/aad-pod-identity/blob/master/hack/role-assignment.sh)
-- [https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing#set-up-aad-pod-identity](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing#set-up-aad-pod-identity)
 
 #### CD - Global / Regional Stamp
 
