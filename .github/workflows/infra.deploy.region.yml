@@ -182,11 +182,6 @@ jobs:
           template: ./templates/identity.user-assigned-mi.json
           parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
-      - name: Get UAMI Principal ID after deployment
-        if: success()
-        run: |
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
-
 
       - name: Deploy NSG for APIM Subnet
         if: success()
@@ -300,6 +295,11 @@ jobs:
             --secret-permissions backup delete get list purge recover restore set \
             --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
 
+      - name: Get UAMI Principal ID to set Key Vault access permission
+        if: success()
+        run: |
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
+
       - name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
         if: success()
         run: |
@@ -311,77 +311,77 @@ jobs:
             --certificate-permissions get
 
 
-      - name: Deploy Event Hub
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
-          template: ./templates/event-hub.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} capacity=${{ env.EVENT_HUB_CAPACITY }}
+      #- name: Deploy Event Hub
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
+      #    template: ./templates/event-hub.json
+      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} capacity=${{ env.EVENT_HUB_CAPACITY }}
 
-      - name: Deploy Event Hub Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
-          template: ./templates/event-hub.diagnostics.json
-          parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      #- name: Deploy Event Hub Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
+      #    template: ./templates/event-hub.diagnostics.json
+      #    parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy Event Hub NS Send Auth Rule
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
-          template: ./templates/event-hub.ns-auth-rule.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Send" ruleName="Send"
+      #- name: Deploy Event Hub NS Send Auth Rule
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
+      #    template: ./templates/event-hub.ns-auth-rule.json
+      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Send" ruleName="Send"
 
-      - name: Deploy Event Hub NS Listen Auth Rule
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-listen
-          template: ./templates/event-hub.ns-auth-rule.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Listen" ruleName="Listen"
+      #- name: Deploy Event Hub NS Listen Auth Rule
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-listen
+      #    template: ./templates/event-hub.ns-auth-rule.json
+      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Listen" ruleName="Listen"
 
-      - name: Deploy Event Hub, um, Event Hub
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
-          template: ./templates/event-hub.event-hub.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
+      #- name: Deploy Event Hub, um, Event Hub
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
+      #    template: ./templates/event-hub.event-hub.json
+      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
 
-      - name: Deploy Event Hub Consumer Group
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
-          template: ./templates/event-hub.consumer-group.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }} consumerGroupName=${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
+      #- name: Deploy Event Hub Consumer Group
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
+      #    template: ./templates/event-hub.consumer-group.json
+      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }} consumerGroupName=${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
 
-      - name: Deploy Event Hub Network Rule Set
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-net-ruleset
-          template: ./templates/event-hub.network-rule-set.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+      #- name: Deploy Event Hub Network Rule Set
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-net-ruleset
+      #    template: ./templates/event-hub.network-rule-set.json
+      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
-      - name: Deploy Event Hub VNet Rule
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-vnet-rule
-          template: ./templates/event-hub.vnet-rule.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+      #- name: Deploy Event Hub VNet Rule
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-vnet-rule
+      #    template: ./templates/event-hub.vnet-rule.json
+      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
 
       - name: Deploy Public IP for App GW
@@ -427,11 +427,6 @@ jobs:
       #    deploymentName: ${{ env.APPGW_NAME }}-diag
       #    template: ./templates/net.app-gw.diagnostics.json
       #    parameters: appGatewayName=${{ env.APPGW_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
-
-      #- name: Get App GW Resource ID
-      #  if: success()
-      #  run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-
 
 
       #- name: Grant UAMI Contributor on Region RG
