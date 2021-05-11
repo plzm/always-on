@@ -23,12 +23,12 @@ env:
 
   VNET_PREFIX: '10.0.0.0/16'
   VNET_ENABLE_DDOS: 'false'
-  APIM_SUBNET_NAME: 'Apim'
+  APIM_SUBNET_NAME: 'apim'
   APIM_SUBNET_PREFIX: '10.0.1.0/24'
   APIM_SUBNET_FRONTDOOR_INBOUND_ONLY: 'true'
-  APPGW_SUBNET_NAME: 'AppGw'
+  APPGW_SUBNET_NAME: 'appgw'
   APPGW_SUBNET_PREFIX: '10.0.2.0/24'
-  APP_SUBNET_NAME: 'App'
+  APP_SUBNET_NAME: 'app'
   APP_SUBNET_PREFIX: '10.0.5.0/24'
   APP_SUBNET_SERVICE_ENDPOINTS: 'Microsoft.AzureCosmosDB,Microsoft.EventHub,Microsoft.KeyVault'
 
@@ -102,33 +102,59 @@ jobs:
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          APP_NSG_NAME=app-${{ matrix.region }}
+          APIM_NSG_NAME=apim-${{ matrix.region }}
+          DDOS_PLAN_NAME=${{ env.PREFIX }}
           VNET_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
+          EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
           APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}
+          AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME
+          APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}-apim-${{ matrix.region }}
+          APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
+          FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}
 
-
+          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
+          echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
+          echo "APIM_NSG_NAME=$APIM_NSG_NAME" >> $GITHUB_ENV
+          echo "DDOS_PLAN_NAME=$DDOS_PLAN_NAME" >> $GITHUB_ENV
+          echo "VNET_NAME=$VNET_NAME" >> $GITHUB_ENV
+          echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
+          echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
+          echo "APPGW_PUBLIC_IP_NAME=$APPGW_PUBLIC_IP_NAME" >> $GITHUB_ENV
+          echo "APPGW_NAME=$APPGW_NAME" >> $GITHUB_ENV
+          echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
+          echo "AKS_DNS_PREFIX=$AKS_DNS_PREFIX" >> $GITHUB_ENV
+          echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP_AKS_NODES" >> $GITHUB_ENV
+          echo "APIM_PUBLIC_IP_NAME=$APIM_PUBLIC_IP_NAME" >> $GITHUB_ENV
+          echo "APIM_SERVICE_NAME=$APIM_SERVICE_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
 
 
           LA_WORKSPACE_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME
           APP_INSIGHTS_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.insights/components/$APP_INSIGHTS_NAME
           FRONT_DOOR_ORIGIN_GROUP_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Cdn/profiles/$FRONT_DOOR_NAME/originGroups/${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}
 
-          UAMI_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$UAMI_NAME
-          APIM_SUBNET_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/virtualNetworks/$VNET_NAME/subnets/${{ env.APIM_SUBNET_NAME }}
-          APP_SUBNET_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/virtualNetworks/$VNET_NAME/subnets/${{ env.APP_SUBNET_NAME }}
-          APPGW_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/applicationGateways/$APPGW_NAME
-          AKS_CLUSTER_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.ContainerService/managedClusters/$AKS_CLUSTER_NAME
-
           echo "LA_WORKSPACE_ID=$LA_WORKSPACE_ID" >> $GITHUB_ENV
           echo "APP_INSIGHTS_ID=$APP_INSIGHTS_ID" >> $GITHUB_ENV
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$FRONT_DOOR_ORIGIN_GROUP_ID" >> $GITHUB_ENV
+
+
+          UAMI_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$UAMI_NAME
+          APIM_SUBNET_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.Network/virtualNetworks/$VNET_NAME/subnets/${{ env.APIM_SUBNET_NAME }}
+          APP_SUBNET_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.Network/virtualNetworks/$VNET_NAME/subnets/${{ env.APP_SUBNET_NAME }}
+          APPGW_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.Network/applicationGateways/$APPGW_NAME
+          AKS_CLUSTER_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.ContainerService/managedClusters/$AKS_CLUSTER_NAME
 
           echo "UAMI_ID=$UAMI_ID" >> $GITHUB_ENV
           echo "APIM_SUBNET_ID=$APIM_SUBNET_ID" >> $GITHUB_ENV
@@ -137,266 +163,244 @@ jobs:
           echo "AKS_CLUSTER_ID=$AKS_CLUSTER_ID" >> $GITHUB_ENV
 
 
-
-
-          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
-          echo "VNET_NAME=$VNET_NAME" >> $GITHUB_ENV
-          echo "APPGW_NAME=$APPGW_NAME" >> $GITHUB_ENV
-          echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-
-
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
-
-          echo "APP_NSG_NAME=ao-app-${{ matrix.region }}" >> $GITHUB_ENV
-          echo "APIM_NSG_NAME=ao-apim-${{ matrix.region }}" >> $GITHUB_ENV
-
-          echo "DDOS_PLAN_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
-
-          echo "KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
-
-          echo "EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
-
-          echo "AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}" >> $GITHUB_ENV
-
-          echo "APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}" >> $GITHUB_ENV
-
-          echo "APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
-          echo "APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}-apim-${{ matrix.region }}" >> $GITHUB_ENV
-
-          echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
-
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
 
-          echo "FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
 
 
-      #- name: Create Azure resource group
-      #  if: success()
-      #  run: |
-      #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
+      - name: Create Azure resource group
+        if: success()
+        run: |
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
 
-      #- name: Deploy NSG for APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_NSG_NAME }}
-      #    template: ./templates/apim.nsg.json
-      #    parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
+      - name: Deploy User-Assigned MI
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./templates/identity.user-assigned-mi.json
+          parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
-      #- name: Deploy NSG for APIM Subnet Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_NSG_NAME }}-diag
-      #    template: ./templates/net.nsg.diagnostics.json
-      #    parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
-
-      #- name: Deploy NSG for App Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APP_NSG_NAME }}
-      #    template: ./templates/net.nsg.json
-      #    parameters: location=${{ matrix.region }} nsgName=${{ env.APP_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }}
-
-      #- name: Deploy NSG for App Subnet Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APP_NSG_NAME }}-diag
-      #    template: ./templates/net.nsg.diagnostics.json
-      #    parameters: nsgName=${{ env.APP_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Get UAMI Principal ID after deployment
+        if: success()
+        run: |
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
 
-      #- name: Deploy VNet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.VNET_NAME }}
-      #    template: ./templates/net.vnet.json
-      #    parameters: |
-      #      location=${{ matrix.region }} vnetName=${{ env.VNET_NAME }} vnetPrefix=${{ env.VNET_PREFIX }} enableDdosProtection=${{ env.VNET_ENABLE_DDOS }} ddosProtectionPlanResourceGroup=${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} ddosProtectionPlanName=${{ env.DDOS_PLAN_NAME }}
+      - name: Deploy NSG for APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_NSG_NAME }}
+          template: ./templates/apim.nsg.json
+          parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
 
-      #- name: Deploy VNet Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.VNET_NAME }}-diag
-      #    template: ./templates/net.vnet.diagnostics.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Deploy NSG for APIM Subnet Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_NSG_NAME }}-diag
+          template: ./templates/net.nsg.diagnostics.json
+          parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      #- name: Deploy APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_SUBNET_NAME }}
-      #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APIM_SUBNET_NAME }} subnetPrefix=${{ env.APIM_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APIM_NSG_NAME }}
+      - name: Deploy NSG for App Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_NSG_NAME }}
+          template: ./templates/net.nsg.json
+          parameters: location=${{ matrix.region }} nsgName=${{ env.APP_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }}
 
-      #- name: Deploy AppGW Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APPGW_SUBNET_NAME }}
-      #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} subnetPrefix=${{ env.APPGW_SUBNET_PREFIX }}
-
-      #- name: Deploy App Subnet without NSG until after resource deploy
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APP_SUBNET_NAME }}
-      #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
-
-      #- name: Get Subnet Resource IDs
-      #  if: success()
-      #  run: |
-      #    echo "APIM_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APIM_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-      #    echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      - name: Deploy NSG for App Subnet Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_NSG_NAME }}-diag
+          template: ./templates/net.nsg.diagnostics.json
+          parameters: nsgName=${{ env.APP_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
 
-      #- name: Deploy Key Vault
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.KEY_VAULT_NAME }}
-      #    template: ./templates/key-vault.json
-      #    parameters: location=${{ matrix.region }} tenantId=${{ secrets.AZURE_TENANT_ID }} keyVaultName=${{ env.KEY_VAULT_NAME }}
+      - name: Deploy VNet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.VNET_NAME }}
+          template: ./templates/net.vnet.json
+          parameters: |
+            location=${{ matrix.region }} vnetName=${{ env.VNET_NAME }} vnetPrefix=${{ env.VNET_PREFIX }} enableDdosProtection=${{ env.VNET_ENABLE_DDOS }} ddosProtectionPlanResourceGroup=${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} ddosProtectionPlanName=${{ env.DDOS_PLAN_NAME }}
 
-      #- name: Deploy Key Vault Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.KEY_VAULT_NAME }}-diag
-      #    template: ./templates/key-vault.diagnostics.json
-      #    parameters: keyVaultName=${{ env.KEY_VAULT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Deploy VNet Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.VNET_NAME }}-diag
+          template: ./templates/net.vnet.diagnostics.json
+          parameters: vnetName=${{ env.VNET_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      #- name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
-      #  if: success()
-      #  run: |
-      #    az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
-      #      -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
-      #      --object-id ${{ env.AZURE_CRED_SP_OBJECT_ID }} \
-      #      --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
-      #      --secret-permissions backup delete get list purge recover restore set \
-      #      --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
+      - name: Deploy APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_SUBNET_NAME }}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APIM_SUBNET_NAME }} subnetPrefix=${{ env.APIM_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APIM_NSG_NAME }}
 
-      #- name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
-      #  if: success()
-      #  run: |
-      #    az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
-      #      -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
-      #      --object-id ${{ env.UAMI_PRINCIPAL_ID }} \
-      #      --key-permissions get \
-      #      --secret-permissions get \
-      #      --certificate-permissions get
+      - name: Deploy AppGW Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APPGW_SUBNET_NAME }}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} subnetPrefix=${{ env.APPGW_SUBNET_PREFIX }}
 
-
-      #- name: Deploy Event Hub
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
-      #    template: ./templates/event-hub.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} capacity=${{ env.EVENT_HUB_CAPACITY }}
-
-      #- name: Deploy Event Hub Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
-      #    template: ./templates/event-hub.diagnostics.json
-      #    parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
-
-      #- name: Deploy Event Hub NS Send Auth Rule
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
-      #    template: ./templates/event-hub.ns-auth-rule.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Send" ruleName="Send"
-
-      #- name: Deploy Event Hub NS Listen Auth Rule
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-listen
-      #    template: ./templates/event-hub.ns-auth-rule.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Listen" ruleName="Listen"
-
-      #- name: Deploy Event Hub, um, Event Hub
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
-      #    template: ./templates/event-hub.event-hub.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
-
-      #- name: Deploy Event Hub Consumer Group
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
-      #    template: ./templates/event-hub.consumer-group.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }} consumerGroupName=${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
-
-      #- name: Deploy Event Hub Network Rule Set
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-net-ruleset
-      #    template: ./templates/event-hub.network-rule-set.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
-
-      #- name: Deploy Event Hub VNet Rule
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-vnet-rule
-      #    template: ./templates/event-hub.vnet-rule.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+      - name: Deploy App Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_SUBNET_NAME }}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }}
 
 
-      #- name: Deploy Public IP for App GW
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}
-      #    template: ./templates/net.public-ip.json
-      #    parameters: location=${{ matrix.region }} publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APPGW_PUBLIC_IP_NAME }}
+      - name: Deploy Key Vault
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.KEY_VAULT_NAME }}
+          template: ./templates/key-vault.json
+          parameters: location=${{ matrix.region }} tenantId=${{ secrets.AZURE_TENANT_ID }} keyVaultName=${{ env.KEY_VAULT_NAME }}
 
-      #- name: Deploy Public IP for App GW Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}-diag
-      #    template: ./templates/net.public-ip.diagnostics.json
-      #    parameters: publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Deploy Key Vault Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.KEY_VAULT_NAME }}-diag
+          template: ./templates/key-vault.diagnostics.json
+          parameters: keyVaultName=${{ env.KEY_VAULT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+      - name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
+        if: success()
+        run: |
+          az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
+            -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
+            --object-id ${{ env.AZURE_CRED_SP_OBJECT_ID }} \
+            --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
+            --secret-permissions backup delete get list purge recover restore set \
+            --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
+
+      - name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
+        if: success()
+        run: |
+          az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
+            -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
+            --object-id ${{ env.UAMI_PRINCIPAL_ID }} \
+            --key-permissions get \
+            --secret-permissions get \
+            --certificate-permissions get
+
+
+      - name: Deploy Event Hub
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
+          template: ./templates/event-hub.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} capacity=${{ env.EVENT_HUB_CAPACITY }}
+
+      - name: Deploy Event Hub Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
+          template: ./templates/event-hub.diagnostics.json
+          parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+      - name: Deploy Event Hub NS Send Auth Rule
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
+          template: ./templates/event-hub.ns-auth-rule.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Send" ruleName="Send"
+
+      - name: Deploy Event Hub NS Listen Auth Rule
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-listen
+          template: ./templates/event-hub.ns-auth-rule.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Listen" ruleName="Listen"
+
+      - name: Deploy Event Hub, um, Event Hub
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
+          template: ./templates/event-hub.event-hub.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
+
+      - name: Deploy Event Hub Consumer Group
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
+          template: ./templates/event-hub.consumer-group.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }} consumerGroupName=${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
+
+      - name: Deploy Event Hub Network Rule Set
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-net-ruleset
+          template: ./templates/event-hub.network-rule-set.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+
+      - name: Deploy Event Hub VNet Rule
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-vnet-rule
+          template: ./templates/event-hub.vnet-rule.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+
+
+      - name: Deploy Public IP for App GW
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}
+          template: ./templates/net.public-ip.json
+          parameters: location=${{ matrix.region }} publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APPGW_PUBLIC_IP_NAME }}
+
+      - name: Deploy Public IP for App GW Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}-diag
+          template: ./templates/net.public-ip.diagnostics.json
+          parameters: publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
 
       - name: Get App GW Public IP and prepare AKS API Server IP address range restriction
@@ -406,14 +410,14 @@ jobs:
           echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{ env.NSG_IN_SRC }}" >> $GITHUB_ENV
 
 
-      - name: Deploy App GW
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APPGW_NAME }}
-          template: ./templates/net.app-gw.json
-          parameters: location=${{ matrix.region }} appGatewayName=${{ env.APPGW_NAME }} skuName=${{ env.APPGW_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} vnetResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }}
+      #- name: Deploy App GW
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APPGW_NAME }}
+      #    template: ./templates/net.app-gw.json
+      #    parameters: location=${{ matrix.region }} appGatewayName=${{ env.APPGW_NAME }} skuName=${{ env.APPGW_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} vnetResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }}
 
       #- name: Deploy App GW Diagnostics
       #  if: success()
@@ -469,17 +473,17 @@ jobs:
       #    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey=${{ secrets.SSH_KEY }} subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}
 
       # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
-      - name: Deploy AKS Cluster (CLI) if autoscaler enabled
-        if: ${{ success() && (env.AKS_SYSTEM_POOL_AUTOSCALE == 'true') }}
-        run: |
-          az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
-            -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
-            --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
-            --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
-            --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
-            --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
-            --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-            --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }}
+      #- name: Deploy AKS Cluster (CLI) if autoscaler enabled
+      #  if: ${{ success() && (env.AKS_SYSTEM_POOL_AUTOSCALE == 'true') }}
+      #  run: |
+      #    az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
+      #      -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
+      #      --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
+      #      --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
+      #      --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
+      #      --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
+      #      --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
+      #      --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }}
 
       ## Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
       #- name: Deploy AKS Cluster (CLI) if autoscaler NOT enabled
@@ -532,48 +536,48 @@ jobs:
       #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
 
-      - name: Get AKS Cluster Resource ID
-        if: success()
-        run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get AKS Cluster Resource ID
+      #  if: success()
+      #  run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Deploy AKS User Node Pool
-        if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NODE_NAME }}
-          template: ./templates/aks.node-pool.json
-          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+      #- name: Deploy AKS User Node Pool
+      #  if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NODE_NAME }}
+      #    template: ./templates/aks.node-pool.json
+      #    parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
-      - name: Configure AKS Add-ons - Monitoring, AGIC
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring,ingress-appgw --workspace-resource-id ${{ env.LA_WORKSPACE_ID }} --appgw-id ${{ env.APPGW_ID }}
+      #- name: Configure AKS Add-ons - Monitoring, AGIC
+      #  if: success()
+      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring,ingress-appgw --workspace-resource-id ${{ env.LA_WORKSPACE_ID }} --appgw-id ${{ env.APPGW_ID }}
 
-      - name: Enabled Pod Managed identity
-        if: success()
-        run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
+      #- name: Enabled Pod Managed identity
+      #  if: success()
+      #  run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
 
-      - name: Add Pod Identity
-        if: success()
-        run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
+      #- name: Add Pod Identity
+      #  if: success()
+      #  run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
 
       #- name: Get AKS credentials and kubectl
       #  if: success()
       #  run: az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --overwrite-existing
 
-      - name: Configure AKS control plane authorized IP ranges
-        if: success()
-        run: |
-          az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.AKS_CLUSTER_NAME }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" --verbose
+      #- name: Configure AKS control plane authorized IP ranges
+      #  if: success()
+      #  run: |
+      #    az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.AKS_CLUSTER_NAME }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" --verbose
 
-      - name: Deploy App Subnet with NSG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APP_SUBNET_NAME }}
-          template: ./templates/net.vnet.subnet.json
-          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
+      #- name: Deploy App Subnet with NSG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APP_SUBNET_NAME }}
+      #    template: ./templates/net.vnet.subnet.json
+      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
 
       #- name: Deploy Public IP for APIM Service
