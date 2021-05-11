@@ -120,6 +120,7 @@ jobs:
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}
 
+
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
@@ -141,35 +142,12 @@ jobs:
           echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
 
 
-          LA_WORKSPACE_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME
-          APP_INSIGHTS_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.insights/components/$APP_INSIGHTS_NAME
-          FRONT_DOOR_ORIGIN_GROUP_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Cdn/profiles/$FRONT_DOOR_NAME/originGroups/${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}
-
-          echo "LA_WORKSPACE_ID=$LA_WORKSPACE_ID" >> $GITHUB_ENV
-          echo "APP_INSIGHTS_ID=$APP_INSIGHTS_ID" >> $GITHUB_ENV
-          echo "FRONT_DOOR_ORIGIN_GROUP_ID=$FRONT_DOOR_ORIGIN_GROUP_ID" >> $GITHUB_ENV
-
-
-          UAMI_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$UAMI_NAME
-          APPGW_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.Network/applicationGateways/$APPGW_NAME
-          AKS_CLUSTER_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.ContainerService/managedClusters/$AKS_CLUSTER_NAME
-
-          echo "UAMI_ID=$UAMI_ID" >> $GITHUB_ENV
-          echo "APPGW_ID=$APPGW_ID" >> $GITHUB_ENV
-          echo "AKS_CLUSTER_ID=$AKS_CLUSTER_ID" >> $GITHUB_ENV
-
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-          echo "APIM_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP --vnet-name  $VNET_NAME -n ${{ env.APIM_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP --vnet-name  $VNET_NAME -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-
-
-      - name: Debug
-        if: success()
-        run: |
-          echo apim-${{ env.APIM_SUBNET_ID }}
-          echo app-${{ env.APP_SUBNET_ID }}
 
       #- name: Create Azure resource group
       #  if: success()
@@ -269,10 +247,17 @@ jobs:
       #    template: ./templates/net.vnet.subnet.json
       #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }}
 
+      - name: Get Subnet Resource IDs
+        if: success()
+        run: |
+          echo "APIM_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APIM_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
 
       - name: Get UAMI Principal ID
         if: success()
         run: |
+          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
       #- name: Grant UAMI Contributor on Region RG
@@ -293,14 +278,14 @@ jobs:
       #    template: ./templates/authorization.role-assignment.json
       #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      #- name: Grant UAMI Network Contributor on VNet for kubenet config
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
-      #    template: ./templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
+      ##- name: Grant UAMI Network Contributor on VNet for kubenet config
+      ##  if: success()
+      ##  uses: azure/arm-deploy@v1
+      ##  with:
+      ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      ##    deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
+      ##    template: ./templates/authorization.role-assignment.json
+      ##    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
 
 
@@ -453,6 +438,10 @@ jobs:
       #    template: ./templates/net.app-gw.diagnostics.json
       #    parameters: appGatewayName=${{ env.APPGW_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
+      - name: Get App GW Resource ID
+        if: success()
+        run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
 
       ## Deploy AKS - ARM Template - but does not support kubelet identity
       ##- name: Deploy AKS Cluster (ARM)
@@ -486,15 +475,19 @@ jobs:
           template: ./templates/aks.cluster.diagnostics.json
           parameters: clusterName=${{ env.AKS_CLUSTER_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-
-      - name: Grant UAMI Contributor on AKS Nodes RG after AKS Deploy creates the RG
+      - name: Get AKS Cluster Resource ID
         if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-contrib
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+        run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
+
+      #- name: Grant UAMI Contributor on AKS Nodes RG after AKS Deploy creates the RG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-contrib
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
       - name: Grant UAMI Managed Identity Operator on AKS Nodes RG
         if: success()
