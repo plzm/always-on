@@ -1,4 +1,4 @@
-name: Infra - Deploy Global
+name: Infra-DeployGlobal
 
 on: 
   workflow_dispatch:
