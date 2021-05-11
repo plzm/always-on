@@ -39,15 +39,15 @@ jobs:
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          VNET_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          APP_NSG_NAME=app-${{ matrix.region }}
+          APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
           echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
-
-          echo "APP_NSG_NAME=ao-app-${{ matrix.region }}" >> $GITHUB_ENV
-
-          echo "VNET_NAME=ao-${{ matrix.region }}" >> $GITHUB_ENV
-
-          echo "APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}" >> $GITHUB_ENV
+          echo "VNET_NAME=$VNET_NAME" >> $GITHUB_ENV
+          echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
+          echo "APPGW_PUBLIC_IP_NAME=$APPGW_PUBLIC_IP_NAME" >> $GITHUB_ENV
 
 
       - name: Deploy App Subnet - remove NSG
