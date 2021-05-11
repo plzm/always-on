@@ -376,7 +376,7 @@ jobs:
       #    parameters: publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
 
-      - name: Get App GW Public IP for AKS API Server Network Restriction
+      - name: Get App GW Public IP and prepare AKS API Server IP address range restriction
         if: success()
         run: |
           APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'ipAddress')"
@@ -492,23 +492,23 @@ jobs:
       #    template: ./templates/authorization.role-assignment.json
       #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      - name: Grant UAMI Managed Identity Operator on AKS Nodes RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-rbac-mio
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      #- name: Grant UAMI Managed Identity Operator on AKS Nodes RG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-rbac-mio
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      - name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-rbac-vm-contrib
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      #- name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-rbac-vm-contrib
+      #    template: ./templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
 
       #- name: Update AKS control plane authorized IP ranges to open for deploy
