@@ -172,8 +172,8 @@ jobs:
       - name: Debug
         if: success()
         run: |
-          echo ${{ env.APP_SUBNET_ID }}
-          echo ${{ env.APP_SUBNET_ID_2 }}
+          echo subnet1-${{ env.APP_SUBNET_ID }}
+          echo subnet2-${{ env.APP_SUBNET_ID_2 }}
 
       #- name: Create Azure resource group
       #  if: success()
@@ -274,10 +274,10 @@ jobs:
       #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }}
 
 
-      - name: Get UAMI Principal ID
-        if: success()
-        run: |
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
+      #- name: Get UAMI Principal ID
+      #  if: success()
+      #  run: |
+      #    echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
 
       #- name: Grant UAMI Contributor on Region RG
       #  if: success()
