@@ -200,7 +200,17 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Useful References
 
+- [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
+- [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
+
+- [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
 - [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
+
+- [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
+- [App Gateway Ingress Annotations](https://azure.github.io/application-gateway-kubernetes-ingress/annotations/)
+
+- [Kubernetes Documentation](https://kubernetes.io/docs/home/)
+- [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/)
 
 ### 3. Design Decisions
 
