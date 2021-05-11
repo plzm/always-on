@@ -1,7 +1,7 @@
 #!/bin/bash
 
 subscriptionId="$(az account show -o tsv --query 'id')"
-location="northeurope"
+location="eastus"
 
 resourceGroup="always-on-""$location"
 

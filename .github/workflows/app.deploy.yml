@@ -5,11 +5,11 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '20'
+  SUFFIX: '21'
 
   NSG_IN_SRC: '75.68.47.183/32'
 
-  APP_SUBNET_NAME: 'App'
+  APP_SUBNET_NAME: 'app'
   APP_SUBNET_PREFIX: '10.0.5.0/24'
   APP_SUBNET_SERVICE_ENDPOINTS: 'Microsoft.AzureCosmosDB,Microsoft.EventHub,Microsoft.KeyVault'
 
@@ -49,43 +49,35 @@ jobs:
 
           echo "APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}" >> $GITHUB_ENV
 
-      #- name: Get AKS credentials
+
+      #- name: Deploy App Subnet - remove NSG
       #  if: success()
-      #  run: |
-      #    az aks get-credentials --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.AKS_CLUSTER_NAME }}" --overwrite-existing --verbose
-
-      #- name: Deploy app to AKS
-      #  if: success()
-      #  run: |
-      #    kubectl apply -f ../../aks/azure-vote.yaml
-
-      - name: Deploy App Subnet - remove NSG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APP_SUBNET_NAME }}
-          template: ./templates/net.vnet.subnet.json
-          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
-
-      - name: Get App GW Public IP and prepare AKS API Server IP address range restriction
-        if: success()
-        run: |
-          APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'ipAddress')"
-          echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{ env.NSG_IN_SRC }}" >> $GITHUB_ENV
-
-      - name: Update AKS control plane authorized IP ranges to open for deploy
-        if: success()
-        run: |
-          az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.AKS_CLUSTER_NAME }}" --api-server-authorized-ip-ranges "" --verbose
-
-      #- name: Set AKS Context
-      #  if: success()
-      #  uses: azure/aks-set-context@v1
+      #  uses: azure/arm-deploy@v1
       #  with:
-      #    creds: '${{ secrets.AZURE_CREDENTIALS }}'
-      #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
-      #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APP_SUBNET_NAME }}
+      #    template: ./templates/net.vnet.subnet.json
+      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
+
+      #- name: Get App GW Public IP and prepare AKS API Server IP address range restriction
+      #  if: success()
+      #  run: |
+      #    APPGW_PUBLIC_IP_ADDRESS="$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'ipAddress')"
+      #    echo "AKS_API_SERVER_AUTH_IP_RANGES=$APPGW_PUBLIC_IP_ADDRESS/32,${{ env.NSG_IN_SRC }}" >> $GITHUB_ENV
+
+      #- name: Update AKS control plane authorized IP ranges to open for deploy
+      #  if: success()
+      #  run: |
+      #    az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.AKS_CLUSTER_NAME }}" --api-server-authorized-ip-ranges "" --verbose
+
+
+      - name: Set AKS Context
+        if: success()
+        uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
+          cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
       #- name: Deploy app to AKS
       #  if: success()
@@ -94,6 +86,7 @@ jobs:
       #    manifests: 'aks/azure-vote.yaml'
       #    kubectl-version: 'latest'
       #    force: true
+
 
       #- name: Update AKS control plane authorized IP ranges to re-secure
       #  if: success()
@@ -108,6 +101,7 @@ jobs:
       #    deploymentName: ${{ env.APP_SUBNET_NAME }}
       #    template: ./templates/net.vnet.subnet.json
       #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
+
 
       - name: Azure logout
         run: |

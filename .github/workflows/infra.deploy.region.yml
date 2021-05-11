@@ -535,23 +535,23 @@ jobs:
       #  if: success()
       #  run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace "default" --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
 
-      - name: Configure AKS Add-ons - AGIC
+      #- name: Configure AKS Add-ons - AGIC
+      #  if: success()
+      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
+
+      - name: Configure AKS control plane authorized IP ranges
         if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
+        run: |
+          az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.AKS_CLUSTER_NAME }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" --verbose
 
-      #- name: Configure AKS control plane authorized IP ranges
-      #  if: success()
-      #  run: |
-      #    az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.AKS_CLUSTER_NAME }}" --api-server-authorized-ip-ranges "${{ env.AKS_API_SERVER_AUTH_IP_RANGES }}" --verbose
-
-      #- name: Deploy App Subnet with NSG
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APP_SUBNET_NAME }}
-      #    template: ./templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
+      - name: Deploy App Subnet with NSG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_SUBNET_NAME }}
+          template: ./templates/net.vnet.subnet.json
+          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
 
       #- name: Deploy Public IP for APIM Service
