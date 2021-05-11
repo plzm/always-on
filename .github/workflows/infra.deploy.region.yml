@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '20'
+  SUFFIX: '21'
 
   RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
@@ -100,21 +100,47 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           UAMI_NAME=${{ env.PREFIX }}-uami
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
 
-          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
-          echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
+          UAMI_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$UAMI_NAME
+          LA_WORKSPACE_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME
+          APP_INSIGHTS_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.insights/components/$APP_INSIGHTS_NAME
+          FRONT_DOOR_ORIGIN_GROUP_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Cdn/profiles/$FRONT_DOOR_NAME/originGroups/${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}
+
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
 
-          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_ID=$UAMI_ID" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_ID=$LA_WORKSPACE_ID" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_ID=$APP_INSIGHTS_ID" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ORIGIN_GROUP_ID=$FRONT_DOOR_ORIGIN_GROUP_ID" >> $GITHUB_ENV
+
+
+          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+          VNET_NAME=ao-${{ matrix.region }}
+          APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+
+          APIM_SUBNET_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/virtualNetworks/$VNET_NAME/subnets/${{ env.APIM_SUBNET_NAME }}
+          APP_SUBNET_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/virtualNetworks/$VNET_NAME/subnets/${{ env.APP_SUBNET_NAME }}
+          APPGW_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/applicationGateways/$APPGW_NAME
+          AKS_CLUSTER_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.ContainerService/managedClusters/$AKS_CLUSTER_NAME
+
+          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
+          echo "VNET_NAME=$VNET_NAME" >> $GITHUB_ENV
+          echo "APPGW_NAME=$APPGW_NAME" >> $GITHUB_ENV
+          echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
+
+          echo "APIM_SUBNET_ID=$APIM_SUBNET_ID" >> $GITHUB_ENV
+          echo "APP_SUBNET_ID=$APP_SUBNET_ID" >> $GITHUB_ENV
+          echo "APPGW_ID=$APPGW_ID" >> $GITHUB_ENV
+          echo "AKS_CLUSTER_ID=$AKS_CLUSTER_ID" >> $GITHUB_ENV
+
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
 
           echo "APP_NSG_NAME=ao-app-${{ matrix.region }}" >> $GITHUB_ENV
@@ -122,15 +148,12 @@ jobs:
 
           echo "DDOS_PLAN_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
 
-          echo "VNET_NAME=ao-${{ matrix.region }}" >> $GITHUB_ENV
-
           echo "KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
 
           echo "EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}" >> $GITHUB_ENV
 
-          echo "APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}" >> $GITHUB_ENV
 
           echo "APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
@@ -140,12 +163,8 @@ jobs:
 
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
 
-          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
-
-          echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
 
-          echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_NAME=${FRONT_DOOR_NAME//-/}" >> $GITHUB_ENV
 
 
@@ -238,11 +257,11 @@ jobs:
       #    template: ./templates/net.vnet.subnet.json
       #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
-      - name: Get Subnet Resource IDs
-        if: success()
-        run: |
-          echo "APIM_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APIM_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get Subnet Resource IDs
+      #  if: success()
+      #  run: |
+      #    echo "APIM_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APIM_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #    echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
       #- name: Deploy Key Vault
@@ -401,9 +420,9 @@ jobs:
       #    template: ./templates/net.app-gw.diagnostics.json
       #    parameters: appGatewayName=${{ env.APPGW_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Get App GW Resource ID
-        if: success()
-        run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get App GW Resource ID
+      #  if: success()
+      #  run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
 
