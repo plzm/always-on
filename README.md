@@ -1,6 +1,8 @@
 # ALWAYS ON
 
-(Ref. canonical Always On source doc)
+![Infra-DeployGlobal](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml/badge.svg)
+![Infra-DeployRegion](https://github.com/plzm/always-on/actions/workflows/infra.deploy.region.yml/badge.svg)
+![App-Deploy](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml/badge.svg)
 
 ## SUMMARY
 
@@ -222,19 +224,35 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 #### Infrastructure
 
 - [Azure Regions with Availability Zones](https://docs.microsoft.com/azure/availability-zones/az-region) are used for regional stamps.
+- ARM Templates are used for Infra as Code. Other options include Terraform and Bicep but I decided on ARM due to maturity, broad support, and familiarity.
+  - The ARM templates in this repo are as close to single-purpose as possible, for composability into larger deployments. That is, as much as possible each template deploys exactly one type of Azure resource.
+- Global resources will be deployed to a single global Resource Group (RG). Each regional stamp will be deployed to its own regional RG.
+- API Management multi-region will not be used. Instead, a standalone APIM instance will be deployed to each region. This is due to multi-region APIM's single control plane dependency, which would create a dependency from every other regional stamp to the region where APIM's control plane is deployed.
 
 #### Network
 
+- Each regional stamp will have its own NSGs, VNet, subnets, and other network config.
+- There will be no VNet peering between regions as each region is assumed to be independent of the others. Only global resources will know about all regional stamps.
+- Initially no private link/endpoints will be used in regional stamps. AKS and some other components are in the regional VNet. PL/PE may be added to optimize network traffic or for security hardening.
+- AKS internal networking will use kubenet for simplicity. Internal CIDRs are explicitly specified in deployment. AKS networking may be switched to Azure CNI if needed for performance.
+- Azure Front Door will terminate TLS connections. HTTP will be used for intra-stamp communication for simplicity and to avoid TLS overhead.
+
 #### Security
 
-A User-Assigned Managed Identity (UAMI) is provisioned and assigned to resources which support/need a Managed Identity (MI). The same UAMI is used throughout for simplicity.
+A User-Assigned Managed Identity (UAMI) is provisioned and assigned to resources which support/need a Managed Identity (MI).
+
+A distinct UAMI is deployed to each region. This is to facilitate AKS RBAC. When an AKS instance is configured for managed identity, the managed identity is used to deploy an AKS nodes RG.
+
+An AKS cluster with Application Gateway Ingress Controller (AGIC) creates a new UAMI in the Nodes RG and assigns permissions to that new UAMI as well as the cluster UAMI. This is impractical when the UAMI assigned to the AKS cluster is in the global RG (in fact AGIC deploy will partly fail, yielding 502 bad gateway errors).
+
+Additionally, for least privilege a regional UAMI will not need any permissions over global resources when deployed into the region RG.
 
 The UAMI requires the following RBAC assignments so IaC and app deploys can succeed.
 
    | **Name** | **Scope** | **Notes**
    | - | - |
    | Contributor | Region RG | Needed for AppGW but at RG level for simplicity.
-   | Contributor | Region AKS Node RG |
+   | Contributor | Region AKS Node RG | This is assigned automatically during AKS cluster deploy.
    | Network Contributor | Region VNet | Superseded by Region RG Contributor but here to be explicit.
    | Managed Identity Operator | Region RG | Superseded by Region RG Contributor but here to be explicit.
    | Managed Identity Operator | Region AKS Node RG |
@@ -242,9 +260,12 @@ The UAMI requires the following RBAC assignments so IaC and app deploys can succ
 
 #### CD - Global / Regional Stamp
 
+The global deploy can occur without any regional stamps in place and with no regional dependencies.
+
+Regional deploys can occur without dependency on any other region. There are dependencies on global resources, including for monitoring, database, etc.
+
 ##### Global/Single Resources
 
-- APIM? [Multi-Region](https://docs.microsoft.com/en-us/azure/api-management/api-management-howto-deploy-multi-region)
 - App Insights
 - Container Insights
 - Container Registry (Replications)
@@ -252,20 +273,39 @@ The UAMI requires the following RBAC assignments so IaC and app deploys can succ
 - DDoS Plan
 - Front Door
 - Log Analytics
-- Managed Identity
 
 ##### Regional Resources
 
-- AKS
-- App Gateway
-- Event Hub
-- Key Vault
+- Managed Identity
 - NSG
 - PIP
 - VNet and Subnets
+- Event Hub
+- Key Vault
+- App Gateway
+- AKS
+- APIM
+
+### 4. Workloads
+
+Two Workloads are required: Front End API and Back End Worker. These APIs have the following high-level responsibilities.
+
+#### Front End API (FE)
+
+- Get Player Profile
+  - Provided a player GUID, retrieve the player's profile directly from the data store.
+- Save Player Data
+  - Provided a player update, write it to the regional Event Hub.
+
+FE API should include OpenAPI specification for easy import to API Management.
+
+#### Back End Worker (BE)
+
+- Save Player Data
+  - Read player update off regional Event Hub and upsert to data store.
 
 
-### 4. Tech Stack Notes
+### 5. Tech Stack Notes
 
 #### AKS
 
@@ -279,7 +319,7 @@ Connect to cluster: [az aks get-credentials](https://docs.microsoft.com/cli/azur
 
 Enabling preview features (kubelet MI, pod identity) requires separate steps. See [aks-init.sh](./scripts/aks-init.sh) for details of registering previews and updating the AKS RP.
 
-Test [Multi-Container App](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough-rm-template).
+Test [Multi-Container App](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough-rm-template). A version of the deployment is provided in this repo, modified from the original for AGIC instead of Load Balancer (LB) ingress.
 
 ``` bash
 kubectl apply -f ./aks/azure-vote.yaml
@@ -291,10 +331,10 @@ Enable Cluster Monitoring (Container Insights):
 
 [Existing cluster](https://docs.microsoft.com/azure/azure-monitor/containers/container-insights-enable-existing-clusters#integrate-with-an-existing-workspace)
 
-
-### 5. Parking Lot
+### 6. Parking Lot
 
 - Multiple stamps _per region_
-- Custom domain
+- Custom domain instead of azurefd
 - Custom domain SSL cert
-
+- Private link and endpoint in each region
+- Central config store for github workflows instead of reproducing environment var setup in each workflow file
