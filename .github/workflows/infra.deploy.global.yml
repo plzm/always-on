@@ -1,18 +1,16 @@
-name: Infra - Deploy Global
+name: Infra-DeployGlobal
 
 on: 
   workflow_dispatch:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '18'
-
-  RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
+  SUFFIX: '21'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
 
-  AZURE_LOCATIONS: 'eastus,westus2'
+  AZURE_LOCATIONS: 'eastus'
 
   VNET_ENABLE_DDOS: 'false'
 
@@ -34,7 +32,6 @@ jobs:
     steps:
       - name: Install Azure CLI extensions
         run: |
-          az extension add --name aks-preview
           az extension add --name application-insights
           az extension add --name front-door
 
@@ -51,38 +48,39 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          UAMI_NAME=${{ env.PREFIX }}-uami
+          DDOS_PLAN_NAME=${{ env.PREFIX }}
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
+          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+          COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
+          FRONT_DOOR_WAF_POLICY_NAME=${FRONT_DOOR_NAME//-/}
+          FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
-          echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
+          echo "DDOS_PLAN_NAME=$DDOS_PLAN_NAME" >> $GITHUB_ENV
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
+          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+          echo "COSMOS_DB_ACCT_NAME=$COSMOS_DB_ACCT_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
+          echo "FRONT_DOOR_WAF_POLICY_NAME=$FRONT_DOOR_WAF_POLICY_NAME" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
 
-          echo "DDOS_PLAN_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
+          LA_WORKSPACE_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME
+          APP_INSIGHTS_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.insights/components/$APP_INSIGHTS_NAME
+          FRONT_DOOR_WAF_POLICY_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/frontdoorwebapplicationfirewallpolicies/$FRONT_DOOR_WAF_POLICY_NAME
+          FRONT_DOOR_ORIGIN_GROUP_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Cdn/profiles/$FRONT_DOOR_NAME/originGroups/${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}
 
-          echo "COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
-          echo "REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}" >> $GITHUB_ENV
-          echo "FRONT_DOOR_NAME=${{ env.PREFIX }}" >> $GITHUB_ENV
-          echo "FRONT_DOOR_WAF_POLICY_NAME=${PREFIX//-/}" >> $GITHUB_ENV
-          echo "FRONT_DOOR_ENDPOINT_NAME=${PREFIX//-/}" >> $GITHUB_ENV
+          echo "LA_WORKSPACE_ID=$LA_WORKSPACE_ID" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_ID=$APP_INSIGHTS_ID" >> $GITHUB_ENV
+          echo "FRONT_DOOR_WAF_POLICY_ID=$FRONT_DOOR_WAF_POLICY_ID" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ORIGIN_GROUP_ID=$FRONT_DOOR_ORIGIN_GROUP_ID" >> $GITHUB_ENV
 
 
       - name: Create Azure resource group
         if: success()
         run: |
           az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-
-
-      - name: Deploy User-Assigned MI
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/identity.user-assigned-mi.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
 
       - name: Deploy Log Analytics
@@ -92,11 +90,6 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./templates/monitor.log-analytics-workspace.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
-
-      - name: Get Log Analytics Workspace Resource ID
-        if: success()
-        run: |
-          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
       - name: Deploy Log Analytics Diagnostics
         if: success()
@@ -149,12 +142,6 @@ jobs:
           template: ./templates/monitor.app-insights.diagnostics.json
           parameters: appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
-      - name: Get App Insights Resource ID
-        if: success()
-        run: |
-          echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --app ${{env.APP_INSIGHTS_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --app ${{env.APP_INSIGHTS_NAME}} -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
-
 
       - name: Deploy Cosmos DB Account
         if: success()
@@ -197,11 +184,6 @@ jobs:
           template: ./templates/fd.waf-policy.json
           parameters: wafPolicyName="${{env.FRONT_DOOR_WAF_POLICY_NAME}}"
 
-      - name: Get Front Door WAF Policy ID
-        if: success()
-        run: |
-          echo "FRONT_DOOR_WAF_POLICY_ID=$(az network front-door waf-policy show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.FRONT_DOOR_WAF_POLICY_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-
       - name: Deploy Front Door Profile
         if: success()
         uses: azure/arm-deploy@v1
@@ -241,21 +223,6 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./templates/fd.origin-group.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" originGroupName="${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}}"
-
-
-      - name: Get UAMI Info
-        if: success()
-        run: |
-          echo "UAMI_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} -n ${{env.UAMI_NAME}} -o tsv --query 'principalId')" >> $GITHUB_ENV
-
-      - name: Grant UAMI Managed Identity Operator on itself for AKS Pod Managed Identity config
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/authorization.role-assignment.json
-          parameters: roleDefinitionId="${{env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR}}" principalId="${{env.UAMI_PRINCIPAL_ID}}" resourceType="Microsoft.ManagedIdentity/userAssignedIdentities" resourceName="${{env.UAMI_NAME}}"
 
 
       - name: Azure logout

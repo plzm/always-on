@@ -55,7 +55,7 @@
                                     'sourcePortRange', '*',
                                     'destinationPortRange', '*',
                                     'sourceAddressPrefix', parameters('nsgRuleInbound100Src'),
-                                    'destinationAddressPrefix', '*',
+                                    'destinationAddressPrefix', 'VirtualNetwork',
                                     'access', 'Allow',
                                     'priority', 100,
                                     'direction', 'Inbound',

@@ -15,7 +15,7 @@ resourceGroup="always-on-""$infix"
 rbacRoleIdReader="acdd72a7-3385-48ef-bd42-f606fba81ae7"
 
 # UAMI
-managedIdentityName="pz-ao-uami-""$infix"
+managedIdentityName="pz-ao-uami-"
 managedIdentityType="UserAssigned"
 identityResourceId="$(az identity show --subscription ""$subscriptionId"" -g ""$resourceGroup"" -n ""$managedIdentityName"" -o tsv --query 'id')"
 identityPrincipalId="$(az identity show --subscription ""$subscriptionId"" -g ""$resourceGroup"" -n ""$managedIdentityName"" -o tsv --query 'principalId')"
@@ -68,14 +68,14 @@ zones="1 2 3"
 #	subnetResourceId="$subnetAppResourceId"
 
 # Create AKS cluster with control plane and kubelet MI
-az aks create --subscription "$subscriptionId" -g "$resourceGroup" -l "$location" --verbose \
-	-n "$clusterName" --zones $zones --kubernetes-version "$k8sversion" --dns-name-prefix "$dnsPrefix" \
-	--enable-managed-identity --assign-identity "$identityResourceId" --assign-kubelet-identity "$identityResourceId" \
-	--node-resource-group "$nodeResourceGroup" --node-vm-size "$nodeVmSize" \
-	--node-count "$nodeCount" --enable-cluster-autoscaler "$enableNodeAutoscale" --min-count="$nodeCountMin" --max-count "$nodeCountMax" \
-	--admin-username "$nodeAdminUsername" --ssh-key-value "$sshRSAPublicKey" \
-	--vnet-subnet-id "$subnetAppResourceId" --api-server-authorized-ip-ranges "$apiServerAuthorizedIpRanges" \
-	--network-plugin "$networkPlugin" --service-cidr "$serviceCidr" --dns-service-ip "$dnsServiceIp" --pod-cidr "$podCidr" --docker-bridge-address "$dockerBridgeAddress"
+#az aks create --subscription "$subscriptionId" -g "$resourceGroup" -l "$location" --verbose \
+#	-n "$clusterName" --zones $zones --kubernetes-version "$k8sversion" --dns-name-prefix "$dnsPrefix" \
+#	--enable-managed-identity --assign-identity "$identityResourceId" --assign-kubelet-identity "$identityResourceId" \
+#	--node-resource-group "$nodeResourceGroup" --node-vm-size "$nodeVmSize" \
+#	--node-count "$nodeCount" --enable-cluster-autoscaler "$enableNodeAutoscale" --min-count="$nodeCountMin" --max-count "$nodeCountMax" \
+#	--admin-username "$nodeAdminUsername" --ssh-key-value "$sshRSAPublicKey" \
+#	--vnet-subnet-id "$subnetAppResourceId" --api-server-authorized-ip-ranges "$apiServerAuthorizedIpRanges" \
+#	--network-plugin "$networkPlugin" --service-cidr "$serviceCidr" --dns-service-ip "$dnsServiceIp" --pod-cidr "$podCidr" --docker-bridge-address "$dockerBridgeAddress"
 
 
 ## Grant UAMI Reader on AKS Nodes RG for Pod Managed Identity - RG is created by AKS deploy and cannot exist before

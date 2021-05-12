@@ -200,7 +200,21 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Useful References
 
+- [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
+- [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
+
+- [Azure VNet Service Tags](https://docs.microsoft.com/azure/virtual-network/service-tags-overview)
+- [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
 - [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
+
+- [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
+- [App Gateway Ingress Annotations](https://azure.github.io/application-gateway-kubernetes-ingress/annotations/)
+
+- [Enable AKS Pod Identity](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
+- [Install AGIC on existing App GW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing)
+
+- [Kubernetes Documentation](https://kubernetes.io/docs/home/)
+- [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/)
 
 ### 3. Design Decisions
 
@@ -211,6 +225,19 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 #### Network
 
 #### Security
+
+A User-Assigned Managed Identity (UAMI) is provisioned and assigned to resources which support/need a Managed Identity (MI). The same UAMI is used throughout for simplicity.
+
+The UAMI requires the following RBAC assignments so IaC and app deploys can succeed.
+
+   | **Name** | **Scope** | **Notes**
+   | - | - |
+   | Contributor | Region RG | Needed for AppGW but at RG level for simplicity.
+   | Contributor | Region AKS Node RG |
+   | Network Contributor | Region VNet | Superseded by Region RG Contributor but here to be explicit.
+   | Managed Identity Operator | Region RG | Superseded by Region RG Contributor but here to be explicit.
+   | Managed Identity Operator | Region AKS Node RG |
+   | Virtual Machine Contributor | Region AKS Node RG |
 
 #### CD - Global / Regional Stamp
 
