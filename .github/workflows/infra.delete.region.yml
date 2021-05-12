@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  SUFFIX: '18'
+  SUFFIX: '22'
 
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
 

@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '21'
+  SUFFIX: '22'
 
   NSG_IN_SRC: '75.68.47.183/32'
 
