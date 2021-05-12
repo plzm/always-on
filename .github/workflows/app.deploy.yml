@@ -60,7 +60,7 @@ jobs:
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: 'aks/azure-vote.yaml'
+          manifests: 'src/workload-deploy/aks/azure-vote.yaml'
           kubectl-version: 'latest'
           force: true
 
