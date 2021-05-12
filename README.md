@@ -202,6 +202,7 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 - [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
 - [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
+- [ARM Template Functions Reference](https://docs.microsoft.com/azure/azure-resource-manager/templates/template-functions/)
 
 - [Azure VNet Service Tags](https://docs.microsoft.com/azure/virtual-network/service-tags-overview)
 - [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)

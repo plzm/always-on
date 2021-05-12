@@ -69,32 +69,19 @@
                             )
                         )
                     ]",
-                    "[
-                        if
-                        (
-                            empty(trim(parameters('ingressRuleInbound110Src'))),
-                            json('null'),
-                            createObject
-                            (
-                                'name', variables('rule110Name'),
-                                'properties', createObject
-                                (
-                                    'protocol', '*',
-                                    'sourcePortRange', '*',
-                                    'destinationPortRange', '*',
-                                    'sourceAddressPrefix', parameters('ingressRuleInbound110Src'),
-                                    'destinationAddressPrefix', 'VirtualNetwork',
-                                    'access', 'Allow',
-                                    'priority', 110,
-                                    'direction', 'Inbound',
-                                    'sourcePortRanges', json('[]'),
-                                    'destinationPortRanges', json('[]'),
-                                    'sourceAddressPrefixes', json('[]'),
-                                    'destinationAddressPrefixes', json('[]')
-                                )
-                            )
-                        )
-                    ]"
+                    {
+                        "name": "[variables('rule110Name')]",
+                        "properties": {
+                            "protocol": "*",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "*",
+                            "sourceAddressPrefix": "[parameters('ingressRuleInbound110Src')]",
+                            "destinationAddressPrefix": "VirtualNetwork",
+                            "access": "Allow",
+                            "priority": 110,
+                            "direction": "Inbound"
+                        }
+                    }
                 ]
             }
         }

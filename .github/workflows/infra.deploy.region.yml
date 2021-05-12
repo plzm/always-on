@@ -182,13 +182,13 @@ jobs:
           template: ./templates/net.nsg.diagnostics.json
           parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy NSG for App Subnet
+      - name: Deploy NSG for App Subnet without AppGW source address
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APP_NSG_NAME }}
-          template: ./templates/aks.nsg.json
+          template: ./templates/net.nsg.json
           parameters: location=${{ matrix.region }} nsgName=${{ env.APP_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} 
 
       - name: Deploy NSG for App Subnet Diagnostics
