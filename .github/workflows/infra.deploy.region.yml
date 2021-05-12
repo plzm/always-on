@@ -160,7 +160,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./templates/identity.user-assigned-mi.json
+          template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
           parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
 
@@ -170,7 +170,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_NSG_NAME }}
-          template: ./templates/apim.nsg.json
+          template: ./src/infra-deploy/templates/apim.nsg.json
           parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
 
       - name: Deploy NSG for APIM Subnet Diagnostics
@@ -179,7 +179,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_NSG_NAME }}-diag
-          template: ./templates/net.nsg.diagnostics.json
+          template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
           parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy NSG for App Subnet without AppGW source address
@@ -188,7 +188,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APP_NSG_NAME }}
-          template: ./templates/net.nsg.json
+          template: ./src/infra-deploy/templates/net.nsg.json
           parameters: location=${{ matrix.region }} nsgName=${{ env.APP_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} 
 
       - name: Deploy NSG for App Subnet Diagnostics
@@ -197,7 +197,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APP_NSG_NAME }}-diag
-          template: ./templates/net.nsg.diagnostics.json
+          template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
           parameters: nsgName=${{ env.APP_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
 
@@ -207,7 +207,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.VNET_NAME }}
-          template: ./templates/net.vnet.json
+          template: ./src/infra-deploy/templates/net.vnet.json
           parameters: |
             location=${{ matrix.region }} vnetName=${{ env.VNET_NAME }} vnetPrefix=${{ env.VNET_PREFIX }} enableDdosProtection=${{ env.VNET_ENABLE_DDOS }} ddosProtectionPlanResourceGroup=${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} ddosProtectionPlanName=${{ env.DDOS_PLAN_NAME }}
 
@@ -217,7 +217,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.VNET_NAME }}-diag
-          template: ./templates/net.vnet.diagnostics.json
+          template: ./src/infra-deploy/templates/net.vnet.diagnostics.json
           parameters: vnetName=${{ env.VNET_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy APIM Subnet
@@ -226,7 +226,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SUBNET_NAME }}
-          template: ./templates/net.vnet.subnet.json
+          template: ./src/infra-deploy/templates/net.vnet.subnet.json
           parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APIM_SUBNET_NAME }} subnetPrefix=${{ env.APIM_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APIM_NSG_NAME }}
 
       - name: Deploy AppGW Subnet
@@ -235,7 +235,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APPGW_SUBNET_NAME }}
-          template: ./templates/net.vnet.subnet.json
+          template: ./src/infra-deploy/templates/net.vnet.subnet.json
           parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} subnetPrefix=${{ env.APPGW_SUBNET_PREFIX }}
 
       - name: Deploy App Subnet
@@ -244,7 +244,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APP_SUBNET_NAME }}
-          template: ./templates/net.vnet.subnet.json
+          template: ./src/infra-deploy/templates/net.vnet.subnet.json
           parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
       - name: Get Subnet Resource IDs
@@ -266,7 +266,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-contrib
-          template: ./templates/authorization.role-assignment.json
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
       - name: Grant UAMI Managed Identity Operator on Region RG for AKS AAD Pod Identity
@@ -275,7 +275,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-mio
-          template: ./templates/authorization.role-assignment.json
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
       - name: Grant UAMI Network Contributor on VNet for kubenet config
@@ -284,7 +284,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
-          template: ./templates/authorization.role-assignment.json
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
 
@@ -295,7 +295,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.KEY_VAULT_NAME }}
-          template: ./templates/key-vault.json
+          template: ./src/infra-deploy/templates/key-vault.json
           parameters: location=${{ matrix.region }} tenantId=${{ secrets.AZURE_TENANT_ID }} keyVaultName=${{ env.KEY_VAULT_NAME }}
 
       - name: Deploy Key Vault Diagnostics
@@ -304,7 +304,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.KEY_VAULT_NAME }}-diag
-          template: ./templates/key-vault.diagnostics.json
+          template: ./src/infra-deploy/templates/key-vault.diagnostics.json
           parameters: keyVaultName=${{ env.KEY_VAULT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
@@ -334,7 +334,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
-          template: ./templates/event-hub.json
+          template: ./src/infra-deploy/templates/event-hub.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} capacity=${{ env.EVENT_HUB_CAPACITY }}
 
       - name: Deploy Event Hub Diagnostics
@@ -343,7 +343,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
-          template: ./templates/event-hub.diagnostics.json
+          template: ./src/infra-deploy/templates/event-hub.diagnostics.json
           parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy Event Hub NS Send Auth Rule
@@ -352,7 +352,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
-          template: ./templates/event-hub.ns-auth-rule.json
+          template: ./src/infra-deploy/templates/event-hub.ns-auth-rule.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Send" ruleName="Send"
 
       - name: Deploy Event Hub NS Listen Auth Rule
@@ -361,7 +361,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-listen
-          template: ./templates/event-hub.ns-auth-rule.json
+          template: ./src/infra-deploy/templates/event-hub.ns-auth-rule.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Listen" ruleName="Listen"
 
       - name: Deploy Event Hub, um, Event Hub
@@ -370,7 +370,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
-          template: ./templates/event-hub.event-hub.json
+          template: ./src/infra-deploy/templates/event-hub.event-hub.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
 
       - name: Deploy Event Hub Consumer Group
@@ -379,7 +379,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
-          template: ./templates/event-hub.consumer-group.json
+          template: ./src/infra-deploy/templates/event-hub.consumer-group.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }} consumerGroupName=${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
 
       - name: Deploy Event Hub Network Rule Set
@@ -388,7 +388,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-net-ruleset
-          template: ./templates/event-hub.network-rule-set.json
+          template: ./src/infra-deploy/templates/event-hub.network-rule-set.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
       - name: Deploy Event Hub VNet Rule
@@ -397,7 +397,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-vnet-rule
-          template: ./templates/event-hub.vnet-rule.json
+          template: ./src/infra-deploy/templates/event-hub.vnet-rule.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
 
@@ -407,7 +407,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}
-          template: ./templates/net.public-ip.json
+          template: ./src/infra-deploy/templates/net.public-ip.json
           parameters: location=${{ matrix.region }} publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APPGW_PUBLIC_IP_NAME }}
 
       - name: Deploy Public IP for App GW Diagnostics
@@ -416,7 +416,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}-diag
-          template: ./templates/net.public-ip.diagnostics.json
+          template: ./src/infra-deploy/templates/net.public-ip.diagnostics.json
           parameters: publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Get App GW Public IP
@@ -430,7 +430,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APP_NSG_NAME }}
-          template: ./templates/aks.nsg.json
+          template: ./src/infra-deploy/templates/aks.nsg.json
           parameters: location=${{ matrix.region }} nsgName=${{ env.APP_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} ingressRuleInbound110Src=${{ env.APPGW_PUBLIC_IP_ADDRESS }}
 
 
@@ -440,7 +440,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APPGW_NAME }}
-          template: ./templates/net.app-gw.json
+          template: ./src/infra-deploy/templates/net.app-gw.json
           parameters: location=${{ matrix.region }} appGatewayName=${{ env.APPGW_NAME }} skuName=${{ env.APPGW_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} vnetResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }}
 
       - name: Deploy App GW Diagnostics
@@ -449,7 +449,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APPGW_NAME }}-diag
-          template: ./templates/net.app-gw.diagnostics.json
+          template: ./src/infra-deploy/templates/net.app-gw.diagnostics.json
           parameters: appGatewayName=${{ env.APPGW_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Get App GW Resource ID
@@ -464,7 +464,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AKS_CLUSTER_NAME }}
-          template: ./templates/aks.cluster.json
+          template: ./src/infra-deploy/templates/aks.cluster.json
           parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey=${{ secrets.SSH_KEY }} subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}
 
       # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
@@ -486,7 +486,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AKS_CLUSTER_NAME }}-diag
-          template: ./templates/aks.cluster.diagnostics.json
+          template: ./src/infra-deploy/templates/aks.cluster.diagnostics.json
           parameters: clusterName=${{ env.AKS_CLUSTER_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Get AKS Cluster Resource ID
@@ -500,7 +500,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
-          template: ./templates/authorization.role-assignment.json
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
       - name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
@@ -509,7 +509,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
-          template: ./templates/authorization.role-assignment.json
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
 
@@ -519,7 +519,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NODE_NAME }}
-          template: ./templates/aks.node-pool.json
+          template: ./src/infra-deploy/templates/aks.node-pool.json
           parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
       - name: Configure AKS Add-ons - Monitoring
@@ -545,7 +545,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}
-          template: ./templates/net.public-ip.json
+          template: ./src/infra-deploy/templates/net.public-ip.json
           parameters: location=${{ matrix.region }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
 
       - name: Deploy Public IP for APIM Service Diagnostics
@@ -554,7 +554,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}-diag
-          template: ./templates/net.public-ip.diagnostics.json
+          template: ./src/infra-deploy/templates/net.public-ip.diagnostics.json
           parameters: publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy APIM Service
@@ -563,7 +563,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}
-          template: ./templates/apim.service.json
+          template: ./src/infra-deploy/templates/apim.service.json
           parameters: location=${{ matrix.region }} apimServiceName=${{ env.APIM_SERVICE_NAME }} skuName=${{ env.APIM_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} scaleUnits=${{ env.APIM_SCALE_UNITS }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} virtualNetworkType=${{ env.APIM_VNET_TYPE }} subnetResourceId=${{ env.APIM_SUBNET_ID }}
 
       - name: Deploy APIM Service Diagnostics
@@ -572,7 +572,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-diag
-          template: ./templates/apim.service.diagnostics.json
+          template: ./src/infra-deploy/templates/apim.service.diagnostics.json
           parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy APIM API Version Set
@@ -581,7 +581,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-version-set
-          template: ./templates/apim.api-version-set.json
+          template: ./src/infra-deploy/templates/apim.api-version-set.json
           parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" displayName="${{ env.APIM_API_VERSION_SET_NAME }}" description="${{ env.APIM_API_VERSION_SET_DESCRIPTION }}"
 
       - name: Get APIM API Version Set Resource ID
@@ -594,7 +594,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
-          template: ./templates/apim.logger.json
+          template: ./src/infra-deploy/templates/apim.logger.json
           parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
 
       - name: Deploy APIM API (does NOT import API operations - TODO)
@@ -603,7 +603,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-api
-          template: ./templates/apim.api.json
+          template: ./src/infra-deploy/templates/apim.api.json
           parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} apiName=${{ env.APIM_API_NAME }} displayName=${{ env.APIM_API_NAME }} description="${{ env.APIM_API_DESCRIPTION }}" serviceUrl=${{ env.APIM_API_SERVICE_URL }} path=${{ env.APIM_API_SERVICE_PATH }} apiVersionSetResourceId=${{ env.APIM_API_VERSION_SET_ID }}
 
       - name: Get APIM Info
@@ -619,7 +619,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
-          template: ./templates/fd.origin.json
+          template: ./src/infra-deploy/templates/fd.origin.json
           parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
 
       - name: Deploy Front Door Route
@@ -628,7 +628,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
-          template: ./templates/fd.route.json
+          template: ./src/infra-deploy/templates/fd.route.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
 
 

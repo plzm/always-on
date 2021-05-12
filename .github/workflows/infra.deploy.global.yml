@@ -88,7 +88,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.log-analytics-workspace.json
+          template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
 
       - name: Deploy Log Analytics Diagnostics
@@ -96,7 +96,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.log-analytics-workspace.diagnostics.json
+          template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.diagnostics.json
           parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
@@ -105,7 +105,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/net.ddos-plan.json
+          template: ./src/infra-deploy/templates/net.ddos-plan.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
 
@@ -114,7 +114,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/container-registry.json
+          template: ./src/infra-deploy/templates/container-registry.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.AZURE_LOCATIONS}} zoneRedundancy=Enabled
 
       - name: Deploy Container Registry Diagnostics
@@ -122,7 +122,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/container-registry.diagnostics.json
+          template: ./src/infra-deploy/templates/container-registry.diagnostics.json
           parameters: registryName=${{env.REGISTRY_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
@@ -131,7 +131,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.app-insights.json
+          template: ./src/infra-deploy/templates/monitor.app-insights.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
       - name: Deploy App Insights Diagnostics
@@ -139,7 +139,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/monitor.app-insights.diagnostics.json
+          template: ./src/infra-deploy/templates/monitor.app-insights.diagnostics.json
           parameters: appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
@@ -148,7 +148,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/cosmos-db.account.json
+          template: ./src/infra-deploy/templates/cosmos-db.account.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
 
       - name: Deploy Cosmos DB Diagnostics
@@ -156,7 +156,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/cosmos-db.diagnostics.json
+          template: ./src/infra-deploy/templates/cosmos-db.diagnostics.json
           parameters: accountName=${{env.COSMOS_DB_ACCT_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
       - name: Deploy Cosmos DB Database
@@ -164,7 +164,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/cosmos-db.sql.database.json
+          template: ./src/infra-deploy/templates/cosmos-db.sql.database.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_THROUGHPUT}}
 
       - name: Deploy Cosmos DB Container
@@ -172,7 +172,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/cosmos-db.sql.container.json
+          template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_NAME}} partitionKeyPath="${{env.COSMOS_DB_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_INCLUDED_INDEX}}"
 
 
@@ -181,7 +181,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/fd.waf-policy.json
+          template: ./src/infra-deploy/templates/fd.waf-policy.json
           parameters: wafPolicyName="${{env.FRONT_DOOR_WAF_POLICY_NAME}}"
 
       - name: Deploy Front Door Profile
@@ -189,7 +189,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/fd.profile.json
+          template: ./src/infra-deploy/templates/fd.profile.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}"
 
       - name: Deploy Front Door Diagnostics
@@ -197,7 +197,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/fd.diagnostics.json
+          template: ./src/infra-deploy/templates/fd.diagnostics.json
           parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
       - name: Deploy Front Door Endpoint
@@ -205,7 +205,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/fd.endpoint.json
+          template: ./src/infra-deploy/templates/fd.endpoint.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" originResponseTimeoutSeconds="${{env.FRONT_DOOR_ORIGIN_TIMEOUT}}"
 
       - name: Deploy Front Door Security Policy
@@ -213,7 +213,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/fd.security-policy.json
+          template: ./src/infra-deploy/templates/fd.security-policy.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" securityPolicyName="${{ env.FRONT_DOOR_SECPOL_NAME }}" wafPolicyId="${{ env.FRONT_DOOR_WAF_POLICY_ID }}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}"
 
       - name: Deploy Front Door Origin Group
@@ -221,7 +221,7 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./templates/fd.origin-group.json
+          template: ./src/infra-deploy/templates/fd.origin-group.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" originGroupName="${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}}"
 
 
