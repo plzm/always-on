@@ -292,18 +292,48 @@ Two Workloads are required: Front End API and Back End Worker. These APIs have t
 
 #### Front End API (FE)
 
-- Get Player Profile
-  - Provided a player GUID, retrieve the player's profile directly from the data store.
-- Save Player Data
-  - Provided a player update, write it to the regional Event Hub.
+- Get Player Summary
+  - Provided a player GUID, retrieve the player summary from the data store.
+  - Summary should include player profile (static data) and up-to-date progress metrics.
+- Save Player Progress Data
+  - Provided a player progress update, write it to the regional Event Hub.
+  - These will be assumed to be append-only / event sourcing model, i.e. insert only.
+- Save Player Profile
+  - Provided a player profile, write it to the regional Event Hub.
+  - These will be assumed to be upserts, so that new players can be created or existing players can be updated.
 
 FE API should include OpenAPI specification for easy import to API Management.
 
 #### Back End Worker (BE)
 
-- Save Player Data
-  - Read player update off regional Event Hub and upsert to data store.
+- Process Player Progress Data
+  - Pop progress event off Event Hub.
+  - Retrieve player summary from the data store.
+  - Calculate updated player metrics from summary and progress event.
+  - Persist player progress data to data store. (Event sourcing pattern)
+  - Persist updated player summary to data store. (This is the summary combining player static profile data and updated progress metrics.)
 
+- Process Player Profile
+  - Pop profile event off Event Hub.
+  - Retrieve player summary from data store, or prepare new player summary if player doesn't exist.
+  - Write profile data to player summary.
+  - Persist player summary to data store.
+
+#### Data Store and Model
+
+Cosmos DB with multi-region write is used as the data store.
+
+Two collections will be used, as follows:
+
+- PlayerSummaries will store the player summaries combining player profile data and progress metrics.
+- ProgressEvents will store the player progress data events.
+
+Both collections will be configured as follows:
+
+- No indexing, as reads will be point reads (specify partition key and index) and there will not be projections or other complex queries that would benefit from indexing.
+- Autoscale throughput provisioned on each container.
+- Partition key will be player ID in both collections.
+  - This permits point reads for a player summary, and if analytical or other dependent workloads need it, efficient aggregate queries for events for a specified player.
 
 ### 5. Tech Stack Notes
 
