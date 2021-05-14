@@ -38,7 +38,6 @@
             "defaultValue": "consistent",
             "allowedValues": [
                 "consistent",
-                "lazy",
                 "none"
             ]
         },
@@ -47,7 +46,23 @@
             "defaultValue": "",
             "metadata": {
                 "displayName": "Included indexing paths",
-                "description": "Paths to index. By default, the whole document will be indexed. If specifying parts of doc, pass as comma-delimited string of paths. Example: /vin/?,/state/?,/model/?"
+                "description": "Paths to index. Comma-delimited string of paths. Example: /vin/?,/state/?,/model/?"
+            }
+        },
+        "excludedIndexingPaths": {
+            "type": "string",
+            "defaultValue": "/*",
+            "metadata": {
+                "displayName": "Included indexing paths",
+                "description": "Paths to exclude from indexing. Comma-delimited string of paths. Example: /*"
+            }
+        },
+        "uniqueKeys": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "Unique key paths",
+                "description": "Optional. Unique key paths. Comma-delimited string. Example: /foo,/bar,/baz"
             }
         },
         "provisionedThroughput": {
@@ -78,6 +93,7 @@
     },
     "variables": {
         "includedIndexingPaths": "[split(parameters('includedIndexingPaths'), ',')]",
+        "excludedIndexingPaths": "[split(parameters('excludedIndexingPaths'), ',')]",
         "apiVersionCosmosDb": "2021-03-01-preview"
     },
     "resources": [
@@ -90,23 +106,22 @@
                 "resource": {
                     "id": "[parameters('containerName')]",
                     "indexingPolicy": {
-                        "automatic": "[parameters('automaticIndexing')]",
                         "indexingMode": "[parameters('indexingMode')]",
+                        "automatic": "[if(equals(parameters('indexingMode'), 'consistent'), parameters('automaticIndexing'), json('null'))]",
                         "copy": [
                             {
                                 "name": "includedPaths",
-                                "count": "[length(variables('includedIndexingPaths'))]",
+                                "count": "[if(equals(parameters('indexingMode'), 'consistent'), length(variables('includedIndexingPaths')), 0)]",
                                 "input": {
                                     "path": "[trim(variables('includedIndexingPaths')[copyIndex('includedPaths')])]"
                                 }
-                            }
-                        ],
-                        "excludedPaths": [
-                            {
-                                "path": "/*"
                             },
                             {
-                                "path": "/\"_etag\"/?"
+                                "name": "excludedPaths",
+                                "count": "[if(equals(parameters('indexingMode'), 'consistent'), length(variables('excludedIndexingPaths')), 0)]",
+                                "input": {
+                                    "path": "[trim(variables('excludedIndexingPaths')[copyIndex('excludedPaths')])]"
+                                }
                             }
                         ]
                     },
@@ -114,7 +129,18 @@
                         "paths": [ "[parameters('partitionKeyPath')]" ],
                         "kind": "Hash"
                     },
-                    "defaultTtl": "[parameters('defaultTtl')]"
+                    "defaultTtl": "[parameters('defaultTtl')]",
+                    "uniqueKeyPolicy": {
+                        "uniqueKeys": [
+                            {
+                                "paths": "[split(parameters('uniqueKeys'), ',')]"
+                            }
+                        ]
+                    },
+                    "conflictResolutionPolicy": {
+                        "mode": "LastWriterWins",
+                        "conflictResolutionPath": "/_ts"
+                    }
                 },
                 "options": "[
                     if

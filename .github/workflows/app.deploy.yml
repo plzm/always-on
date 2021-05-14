@@ -7,12 +7,6 @@ env:
   PREFIX: 'pz-ao'
   SUFFIX: '22'
 
-  NSG_IN_SRC: '75.68.47.183/32'
-
-  APP_SUBNET_NAME: 'app'
-  APP_SUBNET_PREFIX: '10.0.5.0/24'
-  APP_SUBNET_SERVICE_ENDPOINTS: 'Microsoft.AzureCosmosDB,Microsoft.EventHub,Microsoft.KeyVault'
-
 jobs:
   deploy-app-in-region:
     runs-on: ubuntu-latest

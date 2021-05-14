@@ -35,6 +35,8 @@ env:
   EVENT_HUB_CAPACITY: '1'
   EVENT_HUB_EVENT_HUB_NAME: 'eh1'
   EVENT_HUB_CONSUMER_GROUP_NAME: 'ao'
+  EVENT_HUB_AUTH_RULE_NAME: 'SendListen'
+  EVENT_HUB_AUTH_RULE_RIGHTS: 'Send,Listen'
 
   AKS_ZONES_FOR_CLI: '1 2 3'
   AKS_VERSION: '1.20.5'
@@ -49,14 +51,16 @@ env:
   AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN: '1'
   AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX: '5'
   AKS_SYSTEM_POOL_NODE_SIZE: 'Standard_DS2_v2'
+  AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB: '60'
 
-  AKS_USER_POOL_DEPLOY: 'false'
-  AKS_USER_POOL_NODE_NAME: 'userpool1'
+  AKS_USER_POOL_DEPLOY: 'true'
+  AKS_USER_POOL_NODE_NAME: 'aopool'
   AKS_USER_POOL_NODE_COUNT: '0'
   AKS_USER_POOL_AUTOSCALE: 'true'
-  AKS_USER_POOL_AUTOSCALE_COUNT_MIN: '0'
+  AKS_USER_POOL_AUTOSCALE_COUNT_MIN: '1'
   AKS_USER_POOL_AUTOSCALE_COUNT_MAX: '10'
   AKS_USER_POOL_NODE_SIZE: 'Standard_DS2_v2'
+  AKS_USER_POOL_NODE_DISK_SIZE_GB: '60'
 
   APPGW_SKU_NAME: 'Standard_v2'
 
@@ -328,7 +332,7 @@ jobs:
             --certificate-permissions get
 
 
-      - name: Deploy Event Hub
+      - name: Deploy Event Hub Namespace
         if: success()
         uses: azure/arm-deploy@v1
         with:
@@ -346,25 +350,16 @@ jobs:
           template: ./src/infra-deploy/templates/event-hub.diagnostics.json
           parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy Event Hub NS Send Auth Rule
+      - name: Deploy Event Hub Namespace Auth Rule
         if: success()
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
           template: ./src/infra-deploy/templates/event-hub.ns-auth-rule.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Send" ruleName="Send"
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="${{ env.EVENT_HUB_AUTH_RULE_RIGHTS }}" ruleName="${{ env.EVENT_HUB_AUTH_RULE_NAME }}"
 
-      - name: Deploy Event Hub NS Listen Auth Rule
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-listen
-          template: ./src/infra-deploy/templates/event-hub.ns-auth-rule.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="Listen" ruleName="Listen"
-
-      - name: Deploy Event Hub, um, Event Hub
+      - name: Deploy Event Hub
         if: success()
         uses: azure/arm-deploy@v1
         with:
@@ -465,7 +460,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AKS_CLUSTER_NAME }}
           template: ./src/infra-deploy/templates/aks.cluster.json
-          parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey=${{ secrets.SSH_KEY }} subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}
+          parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey=${{ secrets.SSH_KEY }} subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}
 
       # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
       - name: Deploy AKS Cluster (CLI)
@@ -520,7 +515,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NODE_NAME }}
           template: ./src/infra-deploy/templates/aks.node-pool.json
-          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
       - name: Configure AKS Add-ons - Monitoring
         if: success()
