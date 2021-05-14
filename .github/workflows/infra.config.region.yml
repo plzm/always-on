@@ -60,20 +60,20 @@ jobs:
       - name: Write secrets to region Key Vault
         if: success()
         run: |
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
 
 
-      - name: Set AKS Context
-        if: success()
-        uses: azure/aks-set-context@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS }}'
-          resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
-          cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
+      #- name: Set AKS Context
+      #  if: success()
+      #  uses: azure/aks-set-context@v1
+      #  with:
+      #    creds: '${{ secrets.AZURE_CREDENTIALS }}'
+      #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
+      #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
       #- name: Deploy Namespace
       #  if: success()
