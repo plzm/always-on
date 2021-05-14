@@ -28,15 +28,16 @@ namespace ao.fe
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
-
 			services.AddControllers();
 
-			// Register singleton Cosmos DB client
-			services.AddSingleton(async (s) => 
-			{
-				CosmosClient client = await GetCosmosClient(s);
+			services.AddHttpClient();
 
-				return client;
+			// Register singleton Cosmos DB service
+			services.AddSingleton((s) => 
+			{
+				ICosmosDbService service = InitializeCosmosClientInstanceAsync(s, Configuration.GetSection("CosmosDb")).Result;
+
+				return service;
 			});
 
 			services.AddSwaggerGen(c =>
@@ -65,9 +66,18 @@ namespace ao.fe
 			});
 		}
 
-		private async Task<CosmosClient> GetCosmosClient(IServiceProvider s)
+		private static async Task<ICosmosDbService> InitializeCosmosClientInstanceAsync(IServiceProvider serviceProvider, IConfigurationSection configurationSection)
 		{
-			IHttpClientFactory httpClientFactory = s.GetRequiredService<IHttpClientFactory>();
+			string connectionString = configurationSection.GetSection("ConnectionString").Value;
+			string databaseName = configurationSection.GetSection("DatabaseName").Value;
+			string profileContainerName = configurationSection.GetSection("ProfileContainerName").Value;
+			string progressContainerName = configurationSection.GetSection("ProgressContainerName").Value;
+
+			List<ValueTuple<string, string>> containers = new List<(string, string)>();
+			containers.Add((databaseName, profileContainerName));
+			containers.Add((databaseName, progressContainerName));
+
+			IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
 
 			CosmosClientOptions clientOptions = new CosmosClientOptions()
 			{
@@ -77,14 +87,11 @@ namespace ao.fe
 				HttpClientFactory = httpClientFactory.CreateClient
 			};
 
-			List<ValueTuple<string, string>> dbsColls = new List<(string, string)>();
-			dbsColls.Add(("db1", "profiles"));
-			dbsColls.Add(("db1", "progress"));
-			IReadOnlyList<ValueTuple<string, string>> dbsCollsRo = dbsColls.AsReadOnly();
+			CosmosClient client = await CosmosClient.CreateAndInitializeAsync(connectionString, containers.AsReadOnly(), clientOptions);
 
-			CosmosClient client = await CosmosClient.CreateAndInitializeAsync("foo", dbsCollsRo, clientOptions);
+			CosmosDbService service = new CosmosDbService(client, databaseName, profileContainerName, progressContainerName);
 
-			return client;
+			return service;
 		}
 	}
 }

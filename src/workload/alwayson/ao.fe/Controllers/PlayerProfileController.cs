@@ -12,10 +12,14 @@ namespace ao.fe.Controllers
 	[ApiController]
 	public class PlayerProfileController : ControllerBase
 	{
+		private readonly ICosmosDbService _cosmosDbService;
+
+		public PlayerProfileController(ICosmosDbService cosmosDbService) => _cosmosDbService = cosmosDbService;
+
 		[HttpGet("{id}")]
-		public string Get(string id)
+		public async Task<string> Get(string id)
 		{
-			return $"{{\"foo\": \"{id}\"}}";
+			return await _cosmosDbService.GetPlayerProfileAsync(id);
 		}
 	}
 }
