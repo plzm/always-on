@@ -17,7 +17,7 @@ namespace ao.fe.Controllers
 		public PlayerProfileController(ICosmosDbService cosmosDbService) => _cosmosDbService = cosmosDbService;
 
 		[HttpGet("{id}")]
-		public async Task<string> Get(string id)
+		public async Task<PlayerProfile> Get(string id)
 		{
 			return await _cosmosDbService.GetPlayerProfileAsync(id);
 		}

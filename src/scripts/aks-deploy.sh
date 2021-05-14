@@ -10,4 +10,6 @@ clusterName="pz-ao-""$location"
 
 az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
 
-kubectl apply -f ../aks/azure-vote.yaml
+kubectl apply -f /src/infra-deploy/aks/namespace.yaml
+
+kubectl apply -f /src/workload-deploy/aks/azure-vote.yaml

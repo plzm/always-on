@@ -210,6 +210,7 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
 - [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
 
+- [K8s Ingress Controller Deployment](https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/deployment/)
 - [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
 - [App Gateway Ingress Annotations](https://azure.github.io/application-gateway-kubernetes-ingress/annotations/)
 
@@ -356,10 +357,16 @@ kubectl apply -f ./aks/azure-vote.yaml
 ```
 
 Enable Cluster Monitoring (Container Insights):
-
 [New cluster](https://docs.microsoft.com/azure/aks/kubernetes-walkthrough#enable-cluster-monitoring)
-
 [Existing cluster](https://docs.microsoft.com/azure/azure-monitor/containers/container-insights-enable-existing-clusters#integrate-with-an-existing-workspace)
+
+Use AKV with Secrets Store CSI Driver
+[Dev Best Practices - Use AKV](https://docs.microsoft.com/azure/aks/developer-best-practices-pod-security#use-azure-key-vault-with-secrets-store-csi-driver)
+[Install Secrets Store CSI Driver](https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation.html)
+[AKV Provider for Secret Store CSI Driver](https://github.com/Azure/secrets-store-csi-driver-provider-azure)
+[AKV Provider for Secret Store CSI Driver Docs - Install, Use, Demos, etc.](https://azure.github.io/secrets-store-csi-driver-provider-azure/getting-started/installation/)
+
+
 
 ### 6. Parking Lot
 
