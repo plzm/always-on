@@ -10,8 +10,6 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 
 ### Install Secrets CSI Driver
 # Source: https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation.html
-csiPrefix="https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/"
-
 kubectl apply -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/rbac-secretproviderclass.yaml"
 
 #kubectl apply -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/csidriver.yaml" # Outdated API Version
@@ -25,7 +23,7 @@ kubectl apply -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-stor
 #kubectl apply -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/rbac-secretprovidersyncing.yaml"
 
 # Validate - should see csi-secrets-store running on each node
-kubectl get pods -l app=csi-secrets-store -n kube-system
+kubectl get pods -l app=csi-secrets-store -A
 
 
 ### Install AKS Provider
@@ -40,7 +38,8 @@ kubectl get pods -l app=csi-secrets-store-provider-azure
 ### Configure AAD Pod Identity to access AKV
 # Source: https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/pod-identity-mode/
 
-kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
+#kubectl apply -f https://raw.githubusercontent.com/Azure/aad-pod-identity/master/deploy/infra/deployment-rbac.yaml
+kubectl apply -f ../infra-deploy/aks/deployment-rbac.yaml
 
 kubectl create -f ../infra-deploy/aks/aadpodidentity.yaml
 kubectl create -f ../infra-deploy/aks/aadpodidentitybinding.yaml

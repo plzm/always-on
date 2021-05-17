@@ -7,33 +7,25 @@ clusterName="pz-ao-""$location"
 
 az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
 
-kubectl delete -f ../infra-deploy/aks/secret-store.akv.yaml
+# App
+kubectl delete -f ../workload-deploy/aks/azure-vote.yaml
 
-### Install AKS Provider
-# Source: https://github.com/Azure/secrets-store-csi-driver-provider-azure
+kubectl delete -f ../infra-deploy/aks/secret-provider-class.akv.yaml
+
+kubectl delete -f ../infra-deploy/aks/aadpodidentitybinding.yaml
+kubectl delete -f ../infra-deploy/aks/aadpodidentity.yaml
+
+kubectl delete -f ../infra-deploy/aks/deployment-rbac.yaml
 
 kubectl delete -f https://raw.githubusercontent.com/Azure/secrets-store-csi-driver-provider-azure/master/deployment/provider-azure-installer.yaml
 
-### Install Secrets CSI Driver
-# Source: https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation.html
-csiPrefix="https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/"
+kubectl delete -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/rbac-secretprovidersyncing.yaml"
 
-# If using the driver to sync secrets-store content as Kubernetes Secrets, deploy the additional RBAC permissions required to enable this feature
-kubectl delete -f "$csiPrefix""deploy/rbac-secretprovidersyncing.yaml"
+kubectl delete -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/secrets-store-csi-driver.yaml"
+kubectl delete -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml"
+kubectl delete -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/secrets-store.csi.x-k8s.io_secretproviderclasses.yaml"
 
-kubectl delete -f "$csiPrefix""deploy/secrets-store-csi-driver.yaml"
-kubectl delete -f "$csiPrefix""deploy/secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml"
-kubectl delete -f "$csiPrefix""deploy/secrets-store.csi.x-k8s.io_secretproviderclasses.yaml"
-kubectl delete -f "$csiPrefix""deploy/csidriver.yaml"
-kubectl delete -f "$csiPrefix""deploy/rbac-secretproviderclass.yaml"
+#kubectl delete -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/csidriver.yaml" # Outdated API Version
+kubectl delete -f ../infra-deploy/aks/csidriver.yaml
 
-
-# Validate - should see csi-secrets-store running on each node
-#kubectl get pods -l app=csi-secrets-store -n kube-system
-
- # Validate
-#kubectl get pods -l app=csi-secrets-store-provider-azure
-
-### Install SecretProviderClass
-# Source: https://azure.github.io/secrets-store-csi-driver-provider-azure/getting-started/usage/
-
+kubectl delete -f "https://raw.githubusercontent.com/kubernetes-sigs/secrets-store-csi-driver/master/deploy/rbac-secretproviderclass.yaml"
