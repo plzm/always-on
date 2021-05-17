@@ -25,6 +25,31 @@ spec:
         env:
         - name: ALLOW_EMPTY_PASSWORD
           value: "yes"
+        - name: CosmosDbConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbConnectionString
+        - name: CosmosDbDatabaseName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbDatabaseName
+        - name: CosmosDbProfileContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProfileContainerName
+        - name: CosmosDbProgressContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProgressContainerName
+        - name: EventHubConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConnectionString
         resources:
           requests:
             cpu: 100m
@@ -97,6 +122,31 @@ spec:
         env:
         - name: REDIS
           value: "azure-vote-back"
+        - name: CosmosDbConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbConnectionString
+        - name: CosmosDbDatabaseName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbDatabaseName
+        - name: CosmosDbProfileContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProfileContainerName
+        - name: CosmosDbProgressContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProgressContainerName
+        - name: EventHubConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConnectionString
       volumes:
       - name: secrets-store-inline
         csi:

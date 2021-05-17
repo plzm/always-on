@@ -27,3 +27,10 @@ clusterName="pz-ao-""$location"
 #kubectl get daemonsets -A -o wide
 #kubectl get services -A -o wide
 #kubectl get pods -A -o wide
+
+# Bounce pods
+kubectl -n default rollout restart deploy
+
+# Shell to a pod
+kubectl exec --stdin --tty  azure-vote-front-558d7f864d-srczf -- /bin/bash
+
