@@ -180,6 +180,34 @@
 				"displayName": "API Server Authorized IP Ranges",
 				"description": "Optional. To restrict API Server network access, pass a comma-delimited string of IP ranges. Example: 1.2.3.4/32,13.1.1.0/16. See https://docs.microsoft.com/azure/aks/api-server-authorized-ip-ranges for details."
 			}
+		},
+		"podIdentityEnabled": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"podIdentityKubenetEnabled": {
+			"type": "bool",
+			"defaultValue": false
+		},
+		"podIdentityNamespace": {
+			"type": "string",
+			"defaultValue": "default"
+		},
+		"podIdentityBindingSelector": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"podIdentityResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"podIdentityClientId": {
+			"type": "string",
+			"defaultValue": ""
+		},
+		"podIdentityObjectId": {
+			"type": "string",
+			"defaultValue": ""
 		}
 	},
 	"variables": {
@@ -264,6 +292,22 @@
 				"nodeResourceGroup": "[if(empty(parameters('nodeResourceGroup')), json('null'), parameters('nodeResourceGroup'))]",
 				"servicePrincipalProfile": {
 					"clientId": "msi"
+				},
+				"podIdentityProfile": {
+					"enabled": "[parameters('podIdentityEnabled')]",
+					"allowNetworkPluginKubenet": "[parameters('podIdentityKubenetEnabled')]",
+					"userAssignedIdentities": [
+						{
+							"name": "[reference(parameters('podIdentityResourceId')).name]",
+							"namespace": "[parameters('podIdentityNamespace')]",
+							"bindingSelector": "[parameters('podIdentityBindingSelector')]",
+							"identity": {
+								"resourceId": "[parameters('podIdentityResourceId')]",
+								"clientId": "[parameters('podIdentityClientId')]",
+								"objectId": "[parameters('podIdentityObjectId')]"
+							}
+						}
+					]
 				},
 				"linuxProfile": {
 					"adminUsername": "[parameters('nodeAdminUsername')]",
