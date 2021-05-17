@@ -7,6 +7,8 @@ env:
   PREFIX: 'pz-ao'
   SUFFIX: '22'
 
+  AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
+
   COSMOS_DB_DATABASE_NAME: 'ao'
   COSMOS_DB_CONTAINER_1_NAME: 'profiles'
   COSMOS_DB_CONTAINER_2_NAME: 'progress'
@@ -53,35 +55,27 @@ jobs:
       - name: Prepare dynamic env vars 2
         if: success()
         run: |
-          echo "COSMOS_DB_CONN_STRING=$(az cosmosdb keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.COSMOS_DB_ACCT_NAME }} --type connection-strings -o tsv --query 'connectionStrings[0].connectionString')" >> $GITHUB_ENV
+          echo "COSMOS_DB_CONN_STRING=$(az cosmosdb keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.COSMOS_DB_ACCT_NAME }} --type connection-strings -o tsv --query 'connectionStrings[0].connectionString')" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_CONN_STRING=$(az eventhubs namespace authorization-rule keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --namespace-name ${{ env.EVENT_HUB_NS_NAME }} -n ${{ env.EVENT_HUB_AUTH_RULE_NAME }} -o tsv --query 'primaryConnectionString')" >> $GITHUB_ENV
 
 
       - name: Write secrets to region Key Vault
         if: success()
         run: |
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
 
 
-      - name: Set AKS Context
-        if: success()
-        uses: azure/aks-set-context@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS }}'
-          resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
-          cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
-
-      #- name: Deploy Namespace
+      #- name: Set AKS Context
       #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
+      #  uses: azure/aks-set-context@v1
       #  with:
-      #    manifests: './src/infra-deploy/aks/namespace.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
+      #    creds: '${{ secrets.AZURE_CREDENTIALS }}'
+      #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
+      #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
       #- name: Deploy Secrets Store CSI Driver 1/6
       #  if: success()
@@ -139,11 +133,15 @@ jobs:
       #    kubectl-version: 'latest'
       #    force: true
 
+
+
+
+      
       #- name: Deploy SecretProviderClass
       #  if: success()
       #  uses: Azure/k8s-deploy@v1.4
       #  with:
-      #    manifests: 'src/infra-deploy/aks/secret-store.akv.yaml'
+      #    manifests: './src/infra-deploy/aks/secret-provider-class.akv.yaml'
       #    kubectl-version: 'latest'
       #    force: true
 

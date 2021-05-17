@@ -24,6 +24,6 @@ appGwPublicIp="$(az network public-ip show --ids "${publicIpIds[0]}" -o tsv --qu
 echo $appGwPublicIp
 
 authorizedIps="$extIpRange"",""$appGwPublicIp""/32"
- echo $authorizedIps
+echo $authorizedIps
 
 az aks update --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --api-server-authorized-ip-ranges "$authorizedIps" --verbose

@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: azure-vote-back
-  namespace: ao
 spec:
   replicas: 1
   selector:
@@ -12,16 +11,45 @@ spec:
     metadata:
       labels:
         app: azure-vote-back
+        aadpodidbinding: pz-ao-eastus-binding
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
-        nodeclass: aopool
       containers:
       - name: azure-vote-back
         image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
+        securityContext:
+          capabilities:
+            drop:
+            - NET_RAW
         env:
         - name: ALLOW_EMPTY_PASSWORD
           value: "yes"
+        - name: CosmosDbConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbConnectionString
+        - name: CosmosDbDatabaseName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbDatabaseName
+        - name: CosmosDbProfileContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProfileContainerName
+        - name: CosmosDbProgressContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProgressContainerName
+        - name: EventHubConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConnectionString
         resources:
           requests:
             cpu: 100m
@@ -32,6 +60,10 @@ spec:
         ports:
         - containerPort: 6379
           name: redis
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
       volumes:
       - name: secrets-store-inline
         csi:
@@ -44,7 +76,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: azure-vote-back
-  namespace: ao
 spec:
   ports:
   - port: 6379
@@ -55,7 +86,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: azure-vote-front
-  namespace: ao
 spec:
   replicas: 1
   selector:
@@ -65,13 +95,17 @@ spec:
     metadata:
       labels:
         app: azure-vote-front
+        aadpodidbinding: pz-ao-eastus-binding
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
-        nodeclass: aopool
       containers:
       - name: azure-vote-front
         image: mcr.microsoft.com/azuredocs/azure-vote-front:v1
+        securityContext:
+          capabilities:
+            drop:
+            - NET_RAW
         resources:
           requests:
             cpu: 100m
@@ -81,9 +115,38 @@ spec:
             memory: 256Mi
         ports:
         - containerPort: 80
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
         env:
         - name: REDIS
           value: "azure-vote-back"
+        - name: CosmosDbConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbConnectionString
+        - name: CosmosDbDatabaseName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbDatabaseName
+        - name: CosmosDbProfileContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProfileContainerName
+        - name: CosmosDbProgressContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProgressContainerName
+        - name: EventHubConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConnectionString
       volumes:
       - name: secrets-store-inline
         csi:
@@ -96,7 +159,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: azure-vote-front
-  namespace: ao
 spec:
   ports:
   - port: 80
@@ -107,7 +169,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: azure-vote-front-ingress
-  namespace: ao
   annotations:
     kubernetes.io/ingress.class: azure/application-gateway
 spec:
