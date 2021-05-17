@@ -11,7 +11,7 @@ spec:
     metadata:
       labels:
         app: azure-vote-back
-        aadpodidbinding: ao-pod-identity-binding
+        aadpodidbinding: pz-ao-eastus
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
@@ -70,7 +70,7 @@ spec:
     metadata:
       labels:
         app: azure-vote-front
-        aadpodidbinding: ao-pod-identity-binding
+        aadpodidbinding: pz-ao-eastus
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
