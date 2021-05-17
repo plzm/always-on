@@ -20,7 +20,14 @@ clusterName="pz-ao-""$location"
 #echo "Principal ID: ""$UAMI_PRINCIPAL_ID"
 #echo "Client ID: ""$UAMI_CLIENT_ID"
 
-#az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
+# Purge kubectl
+#kubectl config unset current-context
+#kubectl config unset contexts
+#kubectl config unset clusters
+#kubectl config unset users
+#kubectl config view
+
+az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
 
 #kubectl get deployments -A -o wide
 #kubectl get nodes -A -o wide
@@ -28,9 +35,12 @@ clusterName="pz-ao-""$location"
 #kubectl get services -A -o wide
 #kubectl get pods -A -o wide
 
+kubectl get azureidentity
+kubectl get azureidentitybinding
+
 # Bounce pods
-kubectl -n default rollout restart deploy
+#kubectl -n default rollout restart deploy
 
 # Shell to a pod
-kubectl exec --stdin --tty  azure-vote-front-558d7f864d-srczf -- /bin/bash
+#kubectl exec --stdin --tty azure-vote-front-6b698f4756-swjm5 -- /bin/bash
 

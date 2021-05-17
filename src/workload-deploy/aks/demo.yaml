@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: demo
   labels:
-    aadpodidbinding: pz-ao-eastus
+    aadpodidbinding: pz-ao-eastus-binding
 spec:
   containers:
   - name: demo

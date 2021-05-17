@@ -1,8 +1,0 @@
-apiVersion: "aadpodidentity.k8s.io/v1"
-kind: AzureIdentity
-metadata:
-  name: ao-pod-identity
-spec:
-  type: 0
-  resourceID: /subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourcegroups/always-on-eastus/providers/Microsoft.ManagedIdentity/userAssignedIdentities/pz-ao-eastus
-  clientID: a5afdcc3-b7f5-4422-a655-1299ae0bae21
