@@ -77,14 +77,6 @@ jobs:
       #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
       #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
-      #- name: Deploy Namespace
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: './src/infra-deploy/aks/namespace.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-
       #- name: Deploy Secrets Store CSI Driver 1/6
       #  if: success()
       #  uses: Azure/k8s-deploy@v1.4
@@ -141,11 +133,15 @@ jobs:
       #    kubectl-version: 'latest'
       #    force: true
 
+
+
+
+      
       #- name: Deploy SecretProviderClass
       #  if: success()
       #  uses: Azure/k8s-deploy@v1.4
       #  with:
-      #    manifests: 'src/infra-deploy/aks/secret-store.akv.yaml'
+      #    manifests: './src/infra-deploy/aks/secret-provider-class.akv.yaml'
       #    kubectl-version: 'latest'
       #    force: true
 

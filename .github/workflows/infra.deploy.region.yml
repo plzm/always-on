@@ -49,15 +49,15 @@ env:
   AKS_SYSTEM_POOL_NODE_COUNT: '1'
   AKS_SYSTEM_POOL_AUTOSCALE: 'true'
   AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN: '1'
-  AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX: '5'
+  AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX: '10'
   AKS_SYSTEM_POOL_NODE_SIZE: 'Standard_DS2_v2'
   AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB: '60'
 
-  AKS_USER_POOL_DEPLOY: 'true'
+  AKS_USER_POOL_DEPLOY: 'false'
   AKS_USER_POOL_NODE_NAME: 'aopool'
   AKS_USER_POOL_NODE_COUNT: '0'
   AKS_USER_POOL_AUTOSCALE: 'true'
-  AKS_USER_POOL_AUTOSCALE_COUNT_MIN: '1'
+  AKS_USER_POOL_AUTOSCALE_COUNT_MIN: '0'
   AKS_USER_POOL_AUTOSCALE_COUNT_MAX: '10'
   AKS_USER_POOL_NODE_SIZE: 'Standard_DS2_v2'
   AKS_USER_POOL_NODE_DISK_SIZE_GB: '60'
@@ -258,11 +258,12 @@ jobs:
           echo "APP_SUBNET_ID=$(az network vnet subnet show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --vnet-name ${{ env.VNET_NAME }} -n ${{ env.APP_SUBNET_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
-      - name: Get UAMI Principal ID
+      - name: Get UAMI Info
         if: success()
         run: |
           echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
 
       - name: Grant UAMI Contributor on Region RG
         if: success()
