@@ -100,6 +100,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Install Azure CLI Extensions
+        if: success()
         run: |
           az extension add --name application-insights
           az extension add --name aks-preview
@@ -541,10 +542,6 @@ jobs:
         if: success()
         run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy AKS Add-ons - AGIC
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
-
       - name: Enable Pod Identity
         if: success()
         run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
@@ -552,6 +549,10 @@ jobs:
       - name: Deploy Pod Identity
         if: success()
         run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
+
+      - name: Deploy AKS Add-ons - AGIC
+        if: success()
+        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
 
       #- name: Deploy Public IP for APIM Service
