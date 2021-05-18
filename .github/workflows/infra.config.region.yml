@@ -153,6 +153,7 @@ jobs:
           force: true
           namespace: kube-system
 
+
       - name: Deploy AKS Provider for Secrets Store CSI Driver
         if: success()
         uses: Azure/k8s-deploy@v1.4
@@ -160,17 +161,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
           kubectl-version: 'latest'
           force: true
-
-
-      - name: Debug
-        if: success()
-        run: |
-          pwd
-          ls -la
-          ls -la ./src/infra-deploy/aks
-          cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
-
-
+          namespace: default
 
       - name: Deploy Customized SecretProviderClass
         if: success()
@@ -179,6 +170,7 @@ jobs:
           manifests: '${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
           kubectl-version: 'latest'
           force: true
+          namespace: default
 
 
       - name: Azure logout
