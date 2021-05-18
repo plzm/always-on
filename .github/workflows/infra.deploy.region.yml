@@ -275,15 +275,6 @@ jobs:
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
           echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
 
-      - name: Grant UAMI ACR Pull on global Container Registry so regional AKS cluster can pull images
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
-
       #- name: Grant UAMI Contributor on Region RG
       #  if: success()
       #  uses: azure/arm-deploy@v1
@@ -293,23 +284,32 @@ jobs:
       #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
       #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      #- name: Grant UAMI Managed Identity Operator on Region RG for AKS AAD Pod Identity
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-mio
-      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      ###- name: Grant UAMI ACR Pull on global Container Registry so regional AKS cluster can pull images
+      ###  if: success()
+      ###  uses: azure/arm-deploy@v1
+      ###  with:
+      ###    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+      ###    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
+      ###    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      ###    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
-      #- name: Grant UAMI Network Contributor on VNet for kubenet config
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
-      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
+      ###- name: Grant UAMI Managed Identity Operator on Region RG for AKS AAD Pod Identity
+      ###  if: success()
+      ###  uses: azure/arm-deploy@v1
+      ###  with:
+      ###    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      ###    deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-mio
+      ###    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      ###    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+
+      ###- name: Grant UAMI Network Contributor on VNet for kubenet config
+      ###  if: success()
+      ###  uses: azure/arm-deploy@v1
+      ###  with:
+      ###    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      ###    deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
+      ###    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      ###    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
 
 
@@ -510,23 +510,23 @@ jobs:
         run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
       # Contributor on AKS Nodes RG is automatically granted by cluster create. Adding a couple more explicitly here due to AAD pod identity reqs.
-      - name: Grant UAMI Managed Identity Operator on AKS Nodes RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      ###- name: Grant UAMI Managed Identity Operator on AKS Nodes RG
+      ###  if: success()
+      ###  uses: azure/arm-deploy@v1
+      ###  with:
+      ###    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      ###    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
+      ###    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      ###    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      - name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      ###- name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
+      ###  if: success()
+      ###  uses: azure/arm-deploy@v1
+      ###  with:
+      ###    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      ###    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
+      ###    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      ###    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
 
       - name: Deploy AKS User Node Pool
