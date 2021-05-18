@@ -103,7 +103,7 @@ jobs:
         if: success()
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          UAMI_NAME=${{ env.PREFIX }}
           APP_NSG_NAME=app-${{ matrix.region }}
           APIM_NSG_NAME=apim-${{ matrix.region }}
           DDOS_PLAN_NAME=${{ env.PREFIX }}
@@ -161,13 +161,13 @@ jobs:
       #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
 
-      #- name: Deploy User-Assigned MI
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
-      #    parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
+      ##- name: Deploy User-Assigned MI
+      ##  if: success()
+      ##  uses: azure/arm-deploy@v1
+      ##  with:
+      ##    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      ##    template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
+      ##    parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
 
       #- name: Deploy NSG for APIM Subnet
@@ -264,9 +264,9 @@ jobs:
       - name: Get UAMI Info
         if: success()
         run: |
-          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
-          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
+          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
 
       #- name: Grant UAMI Contributor on Region RG
       #  if: success()
@@ -487,7 +487,7 @@ jobs:
             --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
             --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
             --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
-            --attach-acr ${{ env.REGISTRY_NAME }}
+            --skip-subnet-role-assignment
 
       - name: Deploy AKS Cluster Diagnostics
         if: success()
@@ -503,23 +503,23 @@ jobs:
         run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
       # Contributor on AKS Nodes RG is automatically granted by cluster create. Adding a couple more explicitly here due to AAD pod identity reqs.
-      ###- name: Grant UAMI Managed Identity Operator on AKS Nodes RG
-      ###  if: success()
-      ###  uses: azure/arm-deploy@v1
-      ###  with:
-      ###    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-      ###    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
-      ###    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      ###    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      - name: Grant UAMI Managed Identity Operator on AKS Nodes RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      ###- name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
-      ###  if: success()
-      ###  uses: azure/arm-deploy@v1
-      ###  with:
-      ###    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-      ###    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
-      ###    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      ###    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      - name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
 
       - name: Deploy AKS User Node Pool
