@@ -171,7 +171,6 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
           kubectl-version: 'latest'
           force: true
-          namespace: kube-system
 
       - name: Deploy Customized SecretProviderClass
         if: success()
@@ -180,7 +179,6 @@ jobs:
           manifests: ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
           kubectl-version: 'latest'
           force: true
-          namespace: default
 
 
       - name: Azure logout
