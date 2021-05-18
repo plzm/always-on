@@ -23,15 +23,11 @@ env:
 
   COSMOS_DB_CONTAINER_1_NAME: 'profiles'
   COSMOS_DB_CONTAINER_1_PARTITION_KEY: '/id'
-  COSMOS_DB_CONTAINER_1_INCLUDED_INDEX: ''
-  COSMOS_DB_CONTAINER_1_EXCLUDED_INDEX: '/*'
   COSMOS_DB_CONTAINER_1_PROVISIONED_THROUGHPUT: '400'
   COSMOS_DB_CONTAINER_1_AUTOSCALE_MAX_THROUGHPUT: '0'
 
   COSMOS_DB_CONTAINER_2_NAME: 'progress'
   COSMOS_DB_CONTAINER_2_PARTITION_KEY: '/id'
-  COSMOS_DB_CONTAINER_2_INCLUDED_INDEX: ''
-  COSMOS_DB_CONTAINER_2_EXCLUDED_INDEX: '/*'
   COSMOS_DB_CONTAINER_2_PROVISIONED_THROUGHPUT: '400'
   COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT: '0'
 
@@ -215,7 +211,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_1_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_1_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_CONTAINER_1_INCLUDED_INDEX}}" excludedIndexingPaths="${{env.COSMOS_DB_CONTAINER_1_EXCLUDED_INDEX}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_1_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_1_AUTOSCALE_MAX_THROUGHPUT}}
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_1_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_1_PARTITION_KEY}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_1_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_1_AUTOSCALE_MAX_THROUGHPUT}}
 
       - name: Deploy Cosmos DB Container - Progress
         if: success()
@@ -223,7 +219,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_2_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_2_PARTITION_KEY}}" includedIndexingPaths="${{env.COSMOS_DB_CONTAINER_2_INCLUDED_INDEX}}" excludedIndexingPaths="${{env.COSMOS_DB_CONTAINER_2_EXCLUDED_INDEX}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_2_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT}}
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_2_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_2_PARTITION_KEY}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_2_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT}}
 
 
       - name: Deploy Front Door WAF Policy

@@ -67,7 +67,7 @@
 	},
     "variables": {
         "locations": "[split(parameters('locations'), ',')]",
-        "apiVersionCosmosDb": "2021-03-01-preview"
+        "apiVersionCosmosDb": "2021-04-15"
     },
     "resources": [
         {
