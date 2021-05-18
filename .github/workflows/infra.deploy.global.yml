@@ -134,6 +134,14 @@ jobs:
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
 
 
+      - name: Get UAMI Info
+        if: success()
+        run: |
+          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
+
+
       - name: Deploy Container Registry
         if: success()
         uses: azure/arm-deploy@v1
