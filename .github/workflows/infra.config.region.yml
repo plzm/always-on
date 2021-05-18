@@ -57,6 +57,11 @@ jobs:
           echo "COSMOS_DB_CONN_STRING=$(az cosmosdb keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $COSMOS_DB_ACCT_NAME --type connection-strings -o tsv --query 'connectionStrings[0].connectionString')" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_CONN_STRING=$(az eventhubs namespace authorization-rule keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP --namespace-name $EVENT_HUB_NS_NAME -n ${{ env.EVENT_HUB_AUTH_RULE_NAME }} -o tsv --query 'primaryConnectionString')" >> $GITHUB_ENV
 
+      - name: Debug
+        if: success()
+        run: |
+          pwd
+          ls -la
 
       - name: Write Tenant ID to SecretProviderClass YAML file
         if: success()
