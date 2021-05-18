@@ -524,7 +524,7 @@ jobs:
           template: ./src/infra-deploy/templates/aks.node-pool.json
           parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
-      - name: Configure AKS Add-ons - Monitoring
+      - name: Deploy AKS Add-ons - Monitoring
         if: success()
         run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
 
@@ -532,11 +532,11 @@ jobs:
         if: success()
         run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
 
-      - name: Add Pod Identity
+      - name: Deploy Pod Identity
         if: success()
         run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
 
-      - name: Configure AKS Add-ons - AGIC
+      - name: Deploy AKS Add-ons - AGIC
         if: success()
         run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
