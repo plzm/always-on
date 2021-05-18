@@ -5,7 +5,9 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '22'
+  SUFFIX: '23'
+
+  RBAC_ROLE_ID_ACR_PULL: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
@@ -42,13 +44,7 @@ jobs:
   deploy-global:
     runs-on: ubuntu-latest
     steps:
-      - name: Install Azure CLI extensions
-        run: |
-          az extension add --name application-insights
-          az extension add --name front-door
-
       - name: Checkout repository
-        if: success()
         uses: actions/checkout@v2
 
       - name: Azure login
@@ -57,9 +53,16 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Install Azure CLI extensions
+        if: success()
+        run: |
+          az extension add --name application-insights
+          az extension add --name front-door
+
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          UAMI_NAME=${{ env.PREFIX }}
           DDOS_PLAN_NAME=${{ env.PREFIX }}
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
@@ -69,6 +72,7 @@ jobs:
           FRONT_DOOR_WAF_POLICY_NAME=${FRONT_DOOR_NAME//-/}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
+          echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "DDOS_PLAN_NAME=$DDOS_PLAN_NAME" >> $GITHUB_ENV
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
@@ -93,6 +97,15 @@ jobs:
         if: success()
         run: |
           az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+
+
+      - name: Deploy User-Assigned MI
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
+          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
 
       - name: Deploy Log Analytics
@@ -136,6 +149,15 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/container-registry.diagnostics.json
           parameters: registryName=${{env.REGISTRY_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      - name: Grant UAMI ACR Pull on Container Registry so regional AKS clusters can pull images
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
 
       - name: Deploy App Insights
