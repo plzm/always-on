@@ -138,6 +138,9 @@ jobs:
           valueFile: './src/infra-deploy/aks/secretprovider.ao.akv.yaml'
           propertyPath: 'spec.parameters.tenantId'
           value: '${{ secrets.AZURE_TENANT_ID }}'
+          updateFile: 'true'
+          commitChange: 'false'
+          createPR: 'false'
 
       - name: Write AKV Name to SecretProviderClass YAML file
         if: success()
@@ -146,6 +149,9 @@ jobs:
           valueFile: './src/infra-deploy/aks/secretprovider.ao.akv.yaml'
           propertyPath: 'spec.parameters.keyvaultName'
           value: '${{ env.KEY_VAULT_NAME }}'
+          updateFile: 'true'
+          commitChange: 'false'
+          createPR: 'false'
 
       - name: Debug - show file contents
         if: success()
