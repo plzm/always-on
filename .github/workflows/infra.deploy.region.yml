@@ -279,8 +279,8 @@ jobs:
         if: success()
         uses: azure/arm-deploy@v1
         with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-acr-pull
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
           template: ./src/infra-deploy/templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
