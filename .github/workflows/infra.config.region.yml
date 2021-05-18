@@ -21,6 +21,8 @@ env:
   SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME: 'CosmosDbProgressContainerName'
   SECRET_NAME_EVENT_HUB_NS_CONN_STRING: 'EventHubConnectionString'
 
+  AKS_AKV_PROVIDER_CUSTOM_FILE: './src/infra-deploy/aks/secretprovider.ao.akv.yaml'
+
 jobs:
   deploy-region:
     runs-on: ubuntu-latest
@@ -135,7 +137,7 @@ jobs:
         if: success()
         uses: fjogeleit/yaml-update-action@master
         with:
-          valueFile: './src/infra-deploy/aks/secretprovider.ao.akv.yaml'
+          valueFile: '${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
           propertyPath: 'spec.parameters.tenantId'
           value: '${{ secrets.AZURE_TENANT_ID }}'
           updateFile: 'true'
@@ -146,7 +148,7 @@ jobs:
         if: success()
         uses: fjogeleit/yaml-update-action@master
         with:
-          valueFile: './src/infra-deploy/aks/secretprovider.ao.akv.yaml'
+          valueFile: '${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
           propertyPath: 'spec.parameters.keyvaultName'
           value: '${{ env.KEY_VAULT_NAME }}'
           updateFile: 'true'
@@ -155,13 +157,13 @@ jobs:
 
       - name: Debug - show file contents
         if: success()
-        run: cat ./src/infra-deploy/aks/secretprovider.ao.akv.yaml
+        run: cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
 
       #- name: Deploy Customized SecretProviderClass
       #  if: success()
       #  uses: Azure/k8s-deploy@v1.4
       #  with:
-      #    manifests: './src/infra-deploy/aks/secretprovider.ao.akv.yaml'
+      #    manifests: ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
       #    kubectl-version: 'latest'
       #    force: true
 
