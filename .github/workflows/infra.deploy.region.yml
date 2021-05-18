@@ -99,9 +99,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install Azure CLI App Insights Extension
+      - name: Install Azure CLI Extensions
         run: |
           az extension add --name application-insights
+          az extension add --name aks-preview
+          az extension add --name front-door
 
       - name: Prepare dynamic env vars
         if: success()
@@ -543,11 +545,6 @@ jobs:
         if: success()
         run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
-      - name: Install Azure CLI AKS Preview extension for Pod Identity
-        if: success()
-        run: |
-          az extension add --name aks-preview
-
       - name: Enable Pod Identity
         if: success()
         run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
@@ -630,11 +627,6 @@ jobs:
       #    echo "APIM_SERVICE_ID=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
       #    echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
 
-
-      #- name: Install Azure CLI Front Door extension
-      #  if: success()
-      #  run: |
-      #    az extension add --name front-door
 
       #- name: Deploy Front Door Origin
       #  if: success()
