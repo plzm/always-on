@@ -126,6 +126,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}csidriver.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Provider Classes
         if: success()
@@ -134,6 +135,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasses.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Provider Class Pod Statuses
         if: success()
@@ -142,6 +144,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Store CSI Driver
         if: success()
@@ -150,6 +153,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}secrets-store-csi-driver.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Store K8S Secrets Syncing
         if: success()
@@ -158,6 +162,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretprovidersyncing.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy AKS Provider for Secrets Store CSI Driver
         if: success()
@@ -166,6 +171,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Customized SecretProviderClass
         if: success()
@@ -174,6 +180,7 @@ jobs:
           manifests: ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
           kubectl-version: 'latest'
           force: true
+          namespace: default
 
 
       - name: Azure logout
