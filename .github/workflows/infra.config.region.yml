@@ -176,7 +176,7 @@ jobs:
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
+          manifests: '${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
           kubectl-version: 'latest'
           force: true
 
