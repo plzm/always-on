@@ -117,6 +117,7 @@ jobs:
           manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretproviderclass.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy CSI Driver
         if: success()
