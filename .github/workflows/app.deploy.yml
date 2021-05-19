@@ -64,10 +64,10 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      - name: Debug Back
-        if: success()
-        run: |
-          cat ${{ env.AKS_PATH_ROOT }}workload.back.yaml
+      #- name: Debug Back
+      #  if: success()
+      #  run: |
+      #    cat ${{ env.AKS_PATH_ROOT }}workload.back.yaml
 
       - name: Write Pod Identity Binding Selector to Front End YAML file
         if: success()
@@ -80,46 +80,46 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      - name: Debug Front
+      #- name: Debug Front
+      #  if: success()
+      #  run: |
+      #    cat ${{ env.AKS_PATH_ROOT }}workload.front.yaml
+
+
+      - name: Set AKS Context
         if: success()
-        run: |
-          cat ${{ env.AKS_PATH_ROOT }}workload.front.yaml
+        uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
+          cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
+      - name: Deploy Back End to AKS
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}workload.back.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
 
-      #- name: Set AKS Context
-      #  if: success()
-      #  uses: azure/aks-set-context@v1
-      #  with:
-      #    creds: '${{ secrets.AZURE_CREDENTIALS }}'
-      #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
-      #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
+      - name: Deploy Front End to AKS
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}workload.front.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
 
-      #- name: Deploy Back End to AKS
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}workload.back.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
-
-      #- name: Deploy Front End to AKS
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}workload.front.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
-
-      #- name: Deploy Services and Ingress to AKS
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}workload.services-ingress.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
+      - name: Deploy Services and Ingress to AKS
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}workload.services-ingress.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
 
 
       - name: Azure logout
