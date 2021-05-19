@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: azure-vote-back
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: azure-vote-back
+  template:
+    metadata:
+      labels:
+        app: azure-vote-back
+        aadpodidbinding: PROVIDE
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: azure-vote-back
+        image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
+        securityContext:
+          capabilities:
+            drop:
+            - NET_RAW
+        env:
+        - name: ALLOW_EMPTY_PASSWORD
+          value: "yes"
+        - name: CosmosDbConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbConnectionString
+        - name: CosmosDbDatabaseName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbDatabaseName
+        - name: CosmosDbProfileContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProfileContainerName
+        - name: CosmosDbProgressContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProgressContainerName
+        - name: EventHubConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConnectionString
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 6379
+          name: redis
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+      volumes:
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-secrets-provider"

@@ -43,10 +43,12 @@ jobs:
         if: success()
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+
           COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
+
           echo "COSMOS_DB_ACCT_NAME=$COSMOS_DB_ACCT_NAME" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
 
