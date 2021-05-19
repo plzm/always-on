@@ -125,6 +125,7 @@ jobs:
           AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}
           AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME
+          AKS_POD_IDENTITY_BINDING_SELECTOR=${{ env.PREFIX }}-binding
           APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}-apim-${{ matrix.region }}
           APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
@@ -147,6 +148,7 @@ jobs:
           echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
           echo "AKS_DNS_PREFIX=$AKS_DNS_PREFIX" >> $GITHUB_ENV
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP_AKS_NODES" >> $GITHUB_ENV
+          echo "AKS_POD_IDENTITY_BINDING_SELECTOR=$AKS_POD_IDENTITY_BINDING_SELECTOR" >> $GITHUB_ENV
           echo "APIM_PUBLIC_IP_NAME=$APIM_PUBLIC_IP_NAME" >> $GITHUB_ENV
           echo "APIM_SERVICE_NAME=$APIM_SERVICE_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
@@ -478,7 +480,7 @@ jobs:
       ####    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       ####    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
       ####    template: ./src/infra-deploy/templates/aks.cluster.json
-      ####    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey=${{ secrets.SSH_KEY }} subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityResourceId=${{ env.UAMI_ID }} podIdentityClientId=${{ env.UAMI_CLIENT_ID }} podIdentityObjectId=${{ env.UAMI_PRINCIPAL_ID }}
+      ####    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey=${{ secrets.SSH_KEY }} subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} podIdentityResourceId=${{ env.UAMI_ID }} podIdentityClientId=${{ env.UAMI_CLIENT_ID }} podIdentityObjectId=${{ env.UAMI_PRINCIPAL_ID }}
 
       # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
       - name: Deploy AKS Cluster (CLI)
@@ -546,7 +548,7 @@ jobs:
 
       - name: Deploy Pod Identity
         if: success()
-        run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --identity-resource-id ${{ env.UAMI_ID }}
+        run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --identity-resource-id ${{ env.UAMI_ID }}
 
       - name: Deploy AKS Add-ons - AGIC
         if: success()
