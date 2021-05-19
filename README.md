@@ -2,6 +2,7 @@
 
 ![Infra-DeployGlobal](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml/badge.svg)
 ![Infra-DeployRegion](https://github.com/plzm/always-on/actions/workflows/infra.deploy.region.yml/badge.svg)
+![Infra-ConfigRegion](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml/badge.svg)
 ![App-Deploy](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml/badge.svg)
 
 ## SUMMARY
@@ -180,14 +181,6 @@ Copy the az ad sp create command output (or use az ad sp show later with --id {c
 }
 ```
 
-ALSO NOTE THIS PROBLEM: [https://github.com/Azure/AKS/issues/1517](https://github.com/Azure/AKS/issues/1517).
-
-Azure AD --> App Registrations --> _Service Principal used for Deployment_ --> API Permissions, grant:
-
-- Azure Active Directory Graph --> Application.ReadWrite.OwnedBy  (note this is the legacy API but Azure CLI still uses this internally)
-- Microsoft Graph --> Application.ReadWrite.OwnedBy  (this is the new API, adding here for when Azure CLI transitions to this)
-
-
 Powershell alternative:
 
 ``` Powershell
@@ -221,15 +214,42 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
 - [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
 
-- [K8s Ingress Controller Deployment](https://docs.konghq.com/kubernetes-ingress-controller/1.2.x/concepts/deployment/)
+- [Tutorial: Enable AGIC for existing AKS, AppGW](https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-existing)
+- [Install AGIC with existing AppGW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing) (The tutorial on the preceding line is newer. This link includes obsolete steps but left here for reference.)
 - [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
 - [App Gateway Ingress Annotations](https://azure.github.io/application-gateway-kubernetes-ingress/annotations/)
 
 - [Enable AKS Pod Identity](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
 - [Install AGIC on existing App GW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing)
+- [Understanding Ingress Controllers and AppGW pt1](https://roykim.ca/2020/02/09/understanding-ingress-controllers-and-azure-app-gateway-for-azure-kubernetes-part-1-intro/)
+- [Understanding Ingress Controllers and AppGW pt2](https://roykim.ca/2020/02/16/understanding-ingress-controllers-and-azure-app-gateway-for-azure-kubernetes-part-2-agic/)
+- [Advanced AKS Configuration](https://borzenin.com/azure-kubernetes-service-aks-workshop-2-labs/)
+
+- [Integrate ACR and AKS](https://docs.microsoft.com/azure/aks/cluster-container-registry-integration)
+- [Build a container image and deploy to AKS](https://docs.microsoft.com/azure/aks/kubernetes-action#build-a-container-image-and-deploy-to-azure-kubernetes-service-cluster)
+
+- [Pod security in AKS, and accessing AKV with Secrets Store CSI Driver](https://docs.microsoft.com/azure/aks/developer-best-practices-pod-security#use-azure-key-vault-with-secrets-store-csi-driver)
+- [Use AAD Pod Identity](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
+- [AAD Pod Identity for K8S Docs and Troubleshooting](https://azure.github.io/aad-pod-identity/docs/)
+- [AAD Pod Identity github](https://github.com/Azure/aad-pod-identity)
+
+- [AKV Provider for Secret Store CSI Driver](https://github.com/Azure/secrets-store-csi-driver-provider-azure)
+- [AKV Provider for Secret Store CSI Driver Docs, Configurations, Troubleshooting](https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/pod-identity-mode/)
+- [Secrets Store CSI Driver and Provider Docs](https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation.html)
+- [Secrets Store CSI Driver for K8s Secrets](https://github.com/kubernetes-sigs/secrets-store-csi-driver)
 
 - [Kubernetes Documentation](https://kubernetes.io/docs/home/)
+- [Enable Container Insights](https://docs.microsoft.com/azure/azure-monitor/containers/container-insights-onboard)
+- [Get a Shell in a running container](https://kubernetes.io/docs/tasks/debug-application-cluster/get-shell-running-container/)
 - [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/)
+
+- [GHA Docs](https://docs.github.com/en/actions)
+- [GHA Events that trigger Workflows](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
+- [Use AKV Secrets in GHA Workflow](https://docs.microsoft.com/azure/developer/github/github-key-vault)
+- [GHA: AKS Set Context](https://github.com/Azure/aks-set-context)
+- [GHA Doc: Deploy K8s Manifest](https://github.com/marketplace/actions/deploy-to-kubernetes-cluster)
+- [GHA: Deploy K8s Manifest](https://github.com/Azure/k8s-deploy)
+- [GHA: YAML Update](https://github.com/fjogeleit/yaml-update-action)
 
 ### 3. Design Decisions
 
