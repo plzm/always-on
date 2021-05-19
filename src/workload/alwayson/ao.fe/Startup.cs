@@ -32,29 +32,8 @@ namespace ao.fe
 
 			services.AddHttpClient();
 
-			string cosmosDbConnectionString = Configuration["CosmosDbConnectionString"];
-			string cosmosDbDatabaseName = Configuration["CosmosDbDatabaseName"];
-			string cosmosDbProfileContainerName = Configuration["CosmosDbProfileContainerName"];
-			string cosmosDbProgressContainerName = Configuration["CosmosDbProgressContainerName"];
-			string eventHubConnectionString = Configuration["EventHubConnectionString"];
-
 			// Register singleton Cosmos DB service
-			services.AddSingleton((s) => 
-			{
-				ICosmosDbService service = 
-					InitializeCosmosClientInstanceAsync
-					(
-						s,
-						cosmosDbConnectionString,
-						cosmosDbDatabaseName,
-						cosmosDbProfileContainerName,
-						cosmosDbProgressContainerName
-					)
-					.Result
-				;
-
-				return service;
-			});
+			services.AddSingleton((s) => CosmosDbService.GetInstance(Configuration, s.GetRequiredService<IHttpClientFactory>()).Result);
 
 			services.AddSwaggerGen(c =>
 			{
@@ -80,37 +59,6 @@ namespace ao.fe
 			{
 				endpoints.MapControllers();
 			});
-		}
-
-		private static async Task<ICosmosDbService> InitializeCosmosClientInstanceAsync
-		(
-			IServiceProvider serviceProvider,
-			string connectionString,
-			string databaseName,
-			string profileContainerName,
-			string progressContainerName
-		)
-		{
-
-			List<ValueTuple<string, string>> containers = new List<(string, string)>();
-			containers.Add((databaseName, profileContainerName));
-			containers.Add((databaseName, progressContainerName));
-
-			IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-
-			CosmosClientOptions clientOptions = new CosmosClientOptions()
-			{
-				ConnectionMode = ConnectionMode.Direct,
-				ConsistencyLevel = ConsistencyLevel.Eventual,
-				EnableContentResponseOnWrite = false,
-				HttpClientFactory = httpClientFactory.CreateClient
-			};
-
-			CosmosClient client = await CosmosClient.CreateAndInitializeAsync(connectionString, containers.AsReadOnly(), clientOptions);
-
-			CosmosDbService service = new CosmosDbService(client, databaseName, profileContainerName, progressContainerName);
-
-			return service;
 		}
 	}
 }

@@ -21,5 +21,12 @@ namespace ao.fe.Controllers
 		{
 			return await _cosmosDbService.GetPlayerProfileAsync(id);
 		}
+
+		[HttpPost]
+		public async Task Post([FromBody] string value)
+		{
+
+		}
+
 	}
 }
