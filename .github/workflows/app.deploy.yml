@@ -47,12 +47,6 @@ jobs:
           echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
 
 
-      #- name: Install Azure CLI extensions
-      #  if: success()
-      #  run: |
-      #    az extension add --name aks-preview
-
-
       - name: Write Pod Identity Binding Selector to Back End YAML file
         if: success()
         uses: fjogeleit/yaml-update-action@master
@@ -64,10 +58,10 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      - name: Debug Back
-        if: success()
-        run: |
-          cat ${{ env.AKS_PATH_ROOT }}workload.back.yaml
+      #- name: Debug Back
+      #  if: success()
+      #  run: |
+      #    cat ${{ env.AKS_PATH_ROOT }}workload.back.yaml
 
       - name: Write Pod Identity Binding Selector to Front End YAML file
         if: success()
@@ -80,10 +74,10 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      - name: Debug Front
-        if: success()
-        run: |
-          cat ${{ env.AKS_PATH_ROOT }}workload.front.yaml
+      #- name: Debug Front
+      #  if: success()
+      #  run: |
+      #    cat ${{ env.AKS_PATH_ROOT }}workload.front.yaml
 
 
       - name: Set AKS Context
