@@ -5,13 +5,13 @@ SUFFIX="22"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
 location="eastus"
+resourceGroup="always-on-""$location"
+clusterName="pz-ao-""$location"
 
 AZURE_RESOURCE_GROUP_GLOBAL=always-on-global
 AZURE_RESOURCE_GROUP=always-on-$location
 UAMI_NAME=$PREFIX
 
-resourceGroup="always-on-""$location"
-clusterName="pz-ao-""$location"
 
 #UAMI_ID=$(az identity show --subscription $subscriptionId -g $AZURE_RESOURCE_GROUP_GLOBAL -n $UAMI_NAME -o tsv --query 'id')
 #UAMI_PRINCIPAL_ID=$(az identity show --subscription $subscriptionId -g $AZURE_RESOURCE_GROUP_GLOBAL -n $UAMI_NAME -o tsv --query 'principalId')

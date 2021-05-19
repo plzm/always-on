@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '23'
+  SUFFIX: '24'
 
 jobs:
   deploy-app-in-region:

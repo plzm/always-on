@@ -5,10 +5,13 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '23'
+  SUFFIX: '24'
 
   RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
+  RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
   RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
+  RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+  RBAC_ROLE_ID_VM_CONTRIBUTOR: '9980e02c-c2be-4d73-94e8-173b1dc7cf3c'
   RBAC_ROLE_ID_ACR_PULL: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
@@ -32,7 +35,6 @@ env:
   COSMOS_DB_CONTAINER_2_PARTITION_KEY: '/id'
   COSMOS_DB_CONTAINER_2_PROVISIONED_THROUGHPUT: '400'
   COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT: '0'
-
 
   FRONT_DOOR_ORIGIN_TIMEOUT: '16'
   FRONT_DOOR_SECPOL_NAME: 'secpol1'
@@ -97,15 +99,6 @@ jobs:
           az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
 
 
-      - name: Deploy User-Assigned MI
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
-          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
-
-
       - name: Deploy Log Analytics
         if: success()
         uses: azure/arm-deploy@v1
@@ -130,14 +123,6 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/net.ddos-plan.json
           parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
-
-
-      - name: Get UAMI Info
-        if: success()
-        run: |
-          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
-          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
 
 
       - name: Deploy Container Registry
@@ -262,34 +247,6 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/fd.origin-group.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" originGroupName="${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}}"
-
-
-      - name: Grant UAMI Contributor on Global RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-contrib
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
-
-      - name: Grant UAMI Managed Identity Operator on Global RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-mio
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
-
-      - name: Grant UAMI ACR Pull on Container Registry so regional AKS clusters can pull images
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
 
       - name: Azure logout
