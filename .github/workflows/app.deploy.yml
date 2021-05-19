@@ -64,10 +64,10 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      #- name: Debug Back
-      #  if: success()
-      #  run: |
-      #    cat ${{ env.AKS_PATH_ROOT }}workload.back.yaml
+      - name: Debug Back
+        if: success()
+        run: |
+          cat ${{ env.AKS_PATH_ROOT }}workload.back.yaml
 
       - name: Write Pod Identity Binding Selector to Front End YAML file
         if: success()
