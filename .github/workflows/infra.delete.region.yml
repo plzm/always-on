@@ -51,8 +51,7 @@ jobs:
       - name: Destroy regional stamp Resource Group
         if: success()
         run: |
-          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          az group delete --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --name $AZURE_RESOURCE_GROUP --yes
+          az group delete --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --name ${{ env.AZURE_RESOURCE_GROUP }} --yes
 
 
       - name: Azure logout

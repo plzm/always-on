@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '23'
+  SUFFIX: '24'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
@@ -43,10 +43,12 @@ jobs:
         if: success()
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+
           COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
+
           echo "COSMOS_DB_ACCT_NAME=$COSMOS_DB_ACCT_NAME" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
 
@@ -56,6 +58,7 @@ jobs:
 
           echo "COSMOS_DB_CONN_STRING=$(az cosmosdb keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $COSMOS_DB_ACCT_NAME --type connection-strings -o tsv --query 'connectionStrings[0].connectionString')" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_CONN_STRING=$(az eventhubs namespace authorization-rule keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP --namespace-name $EVENT_HUB_NS_NAME -n ${{ env.EVENT_HUB_AUTH_RULE_NAME }} -o tsv --query 'primaryConnectionString')" >> $GITHUB_ENV
+
 
       - name: Write Tenant ID to SecretProviderClass YAML file
         if: success()
@@ -79,6 +82,11 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
+      #- name: Debug SecretProviderClass YAML file
+      #  if: success()
+      #  run: |
+      #    cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
+
 
       - name: Write secrets to region Key Vault
         if: success()
@@ -88,7 +96,6 @@ jobs:
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
-
 
 
       - name: Set AKS Context
