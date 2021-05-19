@@ -157,10 +157,15 @@ Save the following secrets to the repo(s).
 
 #### AZURE_CREDENTIALS
 
+The SP for GHA should have Owner RBAC on the deployment RG so that role assignments (e.g. AKS cluster UAMI ---> VNet Network Contributor for kubenet config) will succeed.
+
 Use these commands to create a SP and prep the JSON block:
+
+``` bash
 subscriptionId="$(az account show -o tsv --query 'id')" # This assumes your default sub is the one to use
 spName="pz-always-on-deploy"
-az ad sp create-for-rbac --name "$spName" --role contributor --scopes "/subscriptions/""$subscriptionId" --sdk-auth
+az ad sp create-for-rbac --name "$spName" --role owner --scopes "/subscriptions/""$subscriptionId" --sdk-auth
+```
 
 Copy the az ad sp create command output (or use az ad sp show later with --id {clientId}) and paste the whole JSON block into the secret. Example:
 
@@ -175,7 +180,13 @@ Copy the az ad sp create command output (or use az ad sp show later with --id {c
 }
 ```
 
-This SP should have Owner RBAC on the deployment RG so that role assignments (e.g. AKS cluster UAMI ---> VNet Network Contributor for kubenet config) will succeed.
+ALSO NOTE THIS PROBLEM: [https://github.com/Azure/AKS/issues/1517](https://github.com/Azure/AKS/issues/1517).
+
+Azure AD --> App Registrations --> _Service Principal used for Deployment_ --> API Permissions, grant:
+
+- Azure Active Directory Graph --> Application.ReadWrite.OwnedBy  (note this is the legacy API but Azure CLI still uses this internally)
+- Microsoft Graph --> Application.ReadWrite.OwnedBy  (this is the new API, adding here for when Azure CLI transitions to this)
+
 
 Powershell alternative:
 

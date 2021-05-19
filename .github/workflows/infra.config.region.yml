@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '22'
+  SUFFIX: '23'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
@@ -21,7 +21,7 @@ env:
   SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME: 'CosmosDbProgressContainerName'
   SECRET_NAME_EVENT_HUB_NS_CONN_STRING: 'EventHubConnectionString'
 
-  AKS_AKV_PROVIDER_CUSTOM_FILE: './src/infra-deploy/aks/secretprovider.ao.akv.yaml'
+  AKS_PATH_ROOT: './src/infra-deploy/aks/'
 
 jobs:
   deploy-region:
@@ -44,19 +44,18 @@ jobs:
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}
-          KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
-          AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
           echo "COSMOS_DB_ACCT_NAME=$COSMOS_DB_ACCT_NAME" >> $GITHUB_ENV
-          echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
-          echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
+
+          echo "KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}" >> $GITHUB_ENV
+          echo "AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}" >> $GITHUB_ENV
+          echo "AKS_AKV_PROVIDER_CUSTOM_FILE=${{ env.AKS_PATH_ROOT }}secretprovider.ao.akv.yaml" >> $GITHUB_ENV
 
           echo "COSMOS_DB_CONN_STRING=$(az cosmosdb keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $COSMOS_DB_ACCT_NAME --type connection-strings -o tsv --query 'connectionStrings[0].connectionString')" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_CONN_STRING=$(az eventhubs namespace authorization-rule keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP --namespace-name $EVENT_HUB_NS_NAME -n ${{ env.EVENT_HUB_AUTH_RULE_NAME }} -o tsv --query 'primaryConnectionString')" >> $GITHUB_ENV
-
 
       - name: Write Tenant ID to SecretProviderClass YAML file
         if: success()
@@ -79,11 +78,6 @@ jobs:
           updateFile: 'true'
           commitChange: 'false'
           createPR: 'false'
-
-      - name: Debug - show file contents
-        if: success()
-        run: cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
-
 
 
       - name: Write secrets to region Key Vault
@@ -109,65 +103,74 @@ jobs:
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '.src/infra-deploy/aks/rbac-secretproviderclass.yaml'
+          manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretproviderclass.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy CSI Driver
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '.src/infra-deploy/aks/csidriver.yaml'
+          manifests: '${{ env.AKS_PATH_ROOT }}csidriver.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Provider Classes
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '.src/infra-deploy/aks/secrets-store.csi.x-k8s.io_secretproviderclasses.yaml'
+          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasses.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Provider Class Pod Statuses
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '.src/infra-deploy/aks/secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml'
+          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Store CSI Driver
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '.src/infra-deploy/aks/secrets-store-csi-driver.yaml'
+          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store-csi-driver.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
 
       - name: Deploy Secrets Store K8S Secrets Syncing
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '.src/infra-deploy/aks/rbac-secretprovidersyncing.yaml'
+          manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretprovidersyncing.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: kube-system
+
 
       - name: Deploy AKS Provider for Secrets Store CSI Driver
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '.src/infra-deploy/aks/provider-azure-installer.yaml'
+          manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: default
 
       - name: Deploy Customized SecretProviderClass
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
+          manifests: '${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
           kubectl-version: 'latest'
           force: true
+          namespace: default
 
 
       - name: Azure logout

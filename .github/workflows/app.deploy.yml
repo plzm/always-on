@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '22'
+  SUFFIX: '23'
 
 jobs:
   deploy-app-in-region:
@@ -54,9 +54,10 @@ jobs:
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: 'src/workload-deploy/aks/azure-vote.yaml'
+          manifests: './src/workload-deploy/aks/azure-vote.yaml'
           kubectl-version: 'latest'
           force: true
+          namespace: default
 
 
       - name: Azure logout

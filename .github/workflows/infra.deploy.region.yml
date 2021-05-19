@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '22'
+  SUFFIX: '23'
 
   RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
@@ -89,14 +89,7 @@ jobs:
       matrix:
         region: [eastus]
     steps:
-      - name: Install Azure CLI extensions
-        run: |
-          az extension add --name aks-preview
-          az extension add --name application-insights
-          az extension add --name front-door
-
       - name: Checkout repository
-        if: success()
         uses: actions/checkout@v2
 
       - name: Azure login
@@ -105,11 +98,18 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Install Azure CLI Extensions
+        if: success()
+        run: |
+          az extension add --name application-insights
+          az extension add --name aks-preview
+          az extension add --name front-door
+
       - name: Prepare dynamic env vars
         if: success()
         run: |
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          UAMI_NAME=${{ env.PREFIX }}
           APP_NSG_NAME=app-${{ matrix.region }}
           APIM_NSG_NAME=apim-${{ matrix.region }}
           DDOS_PLAN_NAME=${{ env.PREFIX }}
@@ -117,6 +117,7 @@ jobs:
           KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
+          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
           APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
@@ -139,6 +140,7 @@ jobs:
           echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
+          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=$APPGW_PUBLIC_IP_NAME" >> $GITHUB_ENV
           echo "APPGW_NAME=$APPGW_NAME" >> $GITHUB_ENV
@@ -163,15 +165,6 @@ jobs:
         if: success()
         run: |
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
-
-
-      - name: Deploy User-Assigned MI
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
-          parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
 
       - name: Deploy NSG for APIM Subnet
@@ -257,6 +250,7 @@ jobs:
           template: ./src/infra-deploy/templates/net.vnet.subnet.json
           parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
+
       - name: Get Subnet Resource IDs
         if: success()
         run: |
@@ -267,9 +261,9 @@ jobs:
       - name: Get UAMI Info
         if: success()
         run: |
-          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
-          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
+          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
 
       - name: Grant UAMI Contributor on Region RG
         if: success()
@@ -480,7 +474,8 @@ jobs:
             --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
             --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
             --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-            --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }}
+            --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
+            --skip-subnet-role-assignment
 
       - name: Deploy AKS Cluster Diagnostics
         if: success()

@@ -4,9 +4,8 @@ on:
   workflow_dispatch:
 
 env:
+  PREFIX: 'pz-ao'
   SUFFIX: '22'
-
-  RBAC_ROLE_ID_MANAGED_ID_OPERATOR: 'f1a07417-d97a-45cb-824c-7a7467783830'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
@@ -20,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region: [centralus]
+        region: [eastus]
     steps:
       - name: Install Azure CLI extensions
         run: |

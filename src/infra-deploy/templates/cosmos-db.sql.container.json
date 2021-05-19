@@ -26,43 +26,7 @@
             "defaultValue": "",
             "metadata": {
                 "displayName": "Partition Key Path",
-                "description": "Specify a partition key path, starting with /. See https://docs.microsoft.com/azure/cosmos-db/partitioning-overview#choose-partitionkey"
-            }
-        },
-        "automaticIndexing": {
-            "type": "bool",
-            "defaultValue": true
-        },
-        "indexingMode": {
-            "type": "string",
-            "defaultValue": "consistent",
-            "allowedValues": [
-                "consistent",
-                "none"
-            ]
-        },
-        "includedIndexingPaths": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "displayName": "Included indexing paths",
-                "description": "Paths to index. Comma-delimited string of paths. Example: /vin/?,/state/?,/model/?"
-            }
-        },
-        "excludedIndexingPaths": {
-            "type": "string",
-            "defaultValue": "/*",
-            "metadata": {
-                "displayName": "Included indexing paths",
-                "description": "Paths to exclude from indexing. Comma-delimited string of paths. Example: /*"
-            }
-        },
-        "uniqueKeys": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "displayName": "Unique key paths",
-                "description": "Optional. Unique key paths. Comma-delimited string. Example: /foo,/bar,/baz"
+                "description": "Specify a partition key path. See https://docs.microsoft.com/azure/cosmos-db/partitioning-overview#choose-partitionkey"
             }
         },
         "provisionedThroughput": {
@@ -84,17 +48,10 @@
                 "displayName": "Autoscale Max Throughput",
                 "description": "Set to >=4000 to specify max autoscale throughput for the database. Leave at 0 for no autoscale."
             }
-        },
-        "defaultTtl": {
-            "type": "int",
-            "defaultValue": -1,
-            "minValue": -1
         }
     },
     "variables": {
-        "includedIndexingPaths": "[split(parameters('includedIndexingPaths'), ',')]",
-        "excludedIndexingPaths": "[split(parameters('excludedIndexingPaths'), ',')]",
-        "apiVersionCosmosDb": "2021-03-01-preview"
+        "apiVersionCosmosDb": "2021-04-15"
     },
     "resources": [
         {
@@ -106,36 +63,11 @@
                 "resource": {
                     "id": "[parameters('containerName')]",
                     "indexingPolicy": {
-                        "indexingMode": "[parameters('indexingMode')]",
-                        "automatic": "[if(equals(parameters('indexingMode'), 'consistent'), parameters('automaticIndexing'), json('null'))]",
-                        "copy": [
-                            {
-                                "name": "includedPaths",
-                                "count": "[if(equals(parameters('indexingMode'), 'consistent'), length(variables('includedIndexingPaths')), 0)]",
-                                "input": {
-                                    "path": "[trim(variables('includedIndexingPaths')[copyIndex('includedPaths')])]"
-                                }
-                            },
-                            {
-                                "name": "excludedPaths",
-                                "count": "[if(equals(parameters('indexingMode'), 'consistent'), length(variables('excludedIndexingPaths')), 0)]",
-                                "input": {
-                                    "path": "[trim(variables('excludedIndexingPaths')[copyIndex('excludedPaths')])]"
-                                }
-                            }
-                        ]
+                        "indexingMode": "none"
                     },
                     "partitionKey": {
                         "paths": [ "[parameters('partitionKeyPath')]" ],
                         "kind": "Hash"
-                    },
-                    "defaultTtl": "[parameters('defaultTtl')]",
-                    "uniqueKeyPolicy": {
-                        "uniqueKeys": [
-                            {
-                                "paths": "[split(parameters('uniqueKeys'), ',')]"
-                            }
-                        ]
                     },
                     "conflictResolutionPolicy": {
                         "mode": "LastWriterWins",
