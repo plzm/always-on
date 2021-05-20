@@ -45,5 +45,5 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 
 
 # Shell to a pod
-#kubectl exec --stdin --tty azure-vote-front-6f958bf9cd-wlhv2 -- /bin/bash
+#kubectl exec --stdin --tty azure-vote-back-975ccc989-rf56r -- /bin/bash
 

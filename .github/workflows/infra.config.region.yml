@@ -102,21 +102,21 @@ jobs:
           cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
 
 
-      #- name: Write secrets to region Key Vault
-      #  if: success()
-      #  run: |
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
+      - name: Write secrets to region Key Vault
+        if: success()
+        run: |
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
 
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_CONN_STRING }} --value "${{ env.STORAGE_ACCOUNT_CONN_STRING }}"
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_NAME }} --value "${{ env.STORAGE_ACCOUNT_NAME }}"
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_CONTAINER_NAME }} --value "${{ env.STORAGE_CONTAINER_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_CONN_STRING }} --value "${{ env.STORAGE_ACCOUNT_CONN_STRING }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_NAME }} --value "${{ env.STORAGE_ACCOUNT_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_CONTAINER_NAME }} --value "${{ env.STORAGE_CONTAINER_NAME }}"
 
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_EVENT_HUB_NAME }} --value "${{ env.EVENT_HUB_EVENT_HUB_NAME }}"
-      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_CONSUMER_GROUP_NAME }} --value "${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_EVENT_HUB_NAME }} --value "${{ env.EVENT_HUB_EVENT_HUB_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_CONSUMER_GROUP_NAME }} --value "${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}"
 
 
       - name: Set AKS Context
@@ -127,69 +127,70 @@ jobs:
           resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
           cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
-      #- name: Deploy RBAC Secrets Store Provider Class
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretproviderclass.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: kube-system
+      - name: Deploy RBAC Secrets Store Provider Class
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretproviderclass.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: kube-system
 
-      #- name: Deploy CSI Driver
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}csidriver.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: kube-system
+      - name: Deploy CSI Driver
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}csidriver.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: kube-system
 
-      #- name: Deploy Secrets Provider Classes
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasses.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: kube-system
+      - name: Deploy Secrets Provider Classes
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasses.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: kube-system
 
-      #- name: Deploy Secrets Provider Class Pod Statuses
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: kube-system
+      - name: Deploy Secrets Provider Class Pod Statuses
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: kube-system
 
-      #- name: Deploy Secrets Store CSI Driver
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}secrets-store-csi-driver.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: kube-system
+      - name: Deploy Secrets Store CSI Driver
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store-csi-driver.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: kube-system
 
-      #- name: Deploy Secrets Store K8S Secrets Syncing
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretprovidersyncing.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: kube-system
+      - name: Deploy Secrets Store K8S Secrets Syncing
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretprovidersyncing.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: kube-system
 
 
-      #- name: Deploy AKS Provider for Secrets Store CSI Driver
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
+      - name: Deploy AKS Provider for Secrets Store CSI Driver
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
+
 
       - name: Deploy Customized SecretProviderClass
         if: success()
