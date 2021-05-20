@@ -387,7 +387,8 @@ To update what is retrieved from AKV and synced to pods:
 2. Update [/.github/workflows/infra.config.region.yml](/.github/workflows/infra.config.region.yml). Change the action that writes secrets to the regional AKV as needed (e.g. add new secrets).
 3. Update the workload manifests [back end](/src/workload-deploy/aks/workload.back.yaml) and [front end](/src/workload-deploy/aks/workload.front.yaml) with the secret changes. Deploy these updated manifests to your cluster.
    1. NOTE!! The app.deploy.yml workflow writes a required value into this YAML file. If you are running from the command line with kubectl, you MUST manually add the value for `aadpodidbinding` to the file before applying the manifest. At this time, the binding defaults to $UAMI_NAME-binding (e.g. pz-ao-eastus-binding). This appears to be internally set, with the binding ID specified when adding pod identity to the AKS cluster being a reference to this, NOT the actual name to be used for the binding.
-4. You should now be able to shell to a workload pod, ls or cat the filesystem mounted secret store values, and echo the environment variables successfully.
+4. Run infra.config.region, then app.deploy.
+5. You should now be able to shell to a workload pod, ls or cat the filesystem mounted secret store values, and echo the environment variables successfully.
 
 ### 6. Tech Stack Notes
 
