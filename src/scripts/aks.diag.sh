@@ -39,8 +39,10 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 #kubectl get azureidentity
 #kubectl get azureidentitybinding
 
-# Bounce pods
-#kubectl -n default rollout restart deploy
+# Bounce
+#kubectl -n default rollout restart deployment
+#kubectl -n default rollout restart daemonset
+
 
 # Shell to a pod
 #kubectl exec --stdin --tty azure-vote-front-6f958bf9cd-wlhv2 -- /bin/bash

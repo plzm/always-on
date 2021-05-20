@@ -102,21 +102,21 @@ jobs:
           cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
 
 
-      - name: Write secrets to region Key Vault
-        if: success()
-        run: |
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
+      #- name: Write secrets to region Key Vault
+      #  if: success()
+      #  run: |
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_DATABASE_NAME }} --value "${{ env.COSMOS_DB_DATABASE_NAME }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_1_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_1_NAME }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONTAINER_2_NAME }} --value "${{ env.COSMOS_DB_CONTAINER_2_NAME }}"
 
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_CONN_STRING }} --value "${{ env.STORAGE_ACCOUNT_CONN_STRING }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_NAME }} --value "${{ env.STORAGE_ACCOUNT_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_CONTAINER_NAME }} --value "${{ env.STORAGE_CONTAINER_NAME }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_CONN_STRING }} --value "${{ env.STORAGE_ACCOUNT_CONN_STRING }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_ACCOUNT_NAME }} --value "${{ env.STORAGE_ACCOUNT_NAME }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_STORAGE_CONTAINER_NAME }} --value "${{ env.STORAGE_CONTAINER_NAME }}"
 
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_EVENT_HUB_NAME }} --value "${{ env.EVENT_HUB_EVENT_HUB_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_CONSUMER_GROUP_NAME }} --value "${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_EVENT_HUB_NAME }} --value "${{ env.EVENT_HUB_EVENT_HUB_NAME }}"
+      #    az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_CONSUMER_GROUP_NAME }} --value "${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}"
 
 
       - name: Set AKS Context
@@ -200,6 +200,10 @@ jobs:
           force: true
           namespace: default
 
+      - name: Restart Daemonset csi-secrets-store-provider-azure in case updated list of AKV secrets
+        if: success()
+        run: |
+          kubectl -n default rollout restart daemonset/csi-secrets-store-provider-azure
 
       - name: Azure logout
         run: |
