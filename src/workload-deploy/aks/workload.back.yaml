@@ -50,6 +50,16 @@ spec:
             secretKeyRef:
               name: ao-secrets
               key: EventHubConnectionString
+        - name: EventHubName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubName
+        - name: EventHubConsumerGroup
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConsumerGroup
         resources:
           requests:
             cpu: 100m

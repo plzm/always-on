@@ -374,7 +374,20 @@ Both collections will be configured as follows:
 - Partition key will be player ID in both collections.
   - This permits point reads for a player summary, and if analytical or other dependent workloads need it, efficient aggregate queries for events for a specified player.
 
-### 5. Tech Stack Notes
+### 5. Workload Implementation / Tech Notes
+
+#### Config Store
+
+Azure Key Vault is used to store Secrets. These are synced to AKS pods, ultimately accessible as environment variables. Among other benefits, this allows .NET services to retrieve configuration values with the built-in Configuration provider, which by default checks environment variables in addition to other configuration sources.
+
+To update what is retrieved from AKV and synced to pods:
+
+1. Update [/.github/workflows/infra.config.region.yml](/.github/workflows/infra.config.region.yml). Change the action that writes secrets to the regional AKV as needed (e.g. add new secrets). Run this workflow.
+2. Update [/src/infra-deploy/secretprovider.ao.akv/yaml](src/infra-deploy/aks/secretprovider.ao.akv.yaml) and add the correct secret names in both _secretobjects_ and _objects_ sections. The _objects_ section makes secrets available in the file system mount (/mnt/secrets-store), and the _secretobjects_ section makes the secrets available as Kubernetes secrets, which in turn are then exposed as environment variables. Deploy this updated manifest to your cluster.
+3. Update the workload manifests [back end](/src/workload-deploy/aks/workload.back.yaml) and [front end](/src/workload-deploy/aks/workload.front.yaml) with the secret changes. Deploy these updated manifests to your cluster.
+4. You should now be able to shell to a workload pod, ls or cat the filesystem mounted secret store values, and echo the environment variables successfully.
+
+### 6. Tech Stack Notes
 
 #### AKS
 
