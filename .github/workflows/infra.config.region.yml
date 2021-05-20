@@ -86,10 +86,10 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      #- name: Debug SecretProviderClass YAML file
-      #  if: success()
-      #  run: |
-      #    cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
+      - name: Debug SecretProviderClass YAML file
+        if: success()
+        run: |
+          cat ${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}
 
 
       #- name: Write secrets to region Key Vault
