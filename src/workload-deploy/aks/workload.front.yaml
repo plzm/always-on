@@ -63,6 +63,16 @@ spec:
             secretKeyRef:
               name: ao-secrets
               key: EventHubConnectionString
+        - name: EventHubName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubName
+        - name: EventHubConsumerGroup
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConsumerGroup
       volumes:
       - name: secrets-store-inline
         csi:

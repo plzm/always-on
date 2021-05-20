@@ -206,6 +206,8 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Useful References
 
+##### IaC
+
 - [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
 - [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
 - [ARM Template Functions Reference](https://docs.microsoft.com/azure/azure-resource-manager/templates/template-functions/)
@@ -250,6 +252,11 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [GHA Doc: Deploy K8s Manifest](https://github.com/marketplace/actions/deploy-to-kubernetes-cluster)
 - [GHA: Deploy K8s Manifest](https://github.com/Azure/k8s-deploy)
 - [GHA: YAML Update](https://github.com/fjogeleit/yaml-update-action)
+
+##### Workload
+
+- [.NET DI Service Registration Methods](https://docs.microsoft.com/dotnet/core/extensions/dependency-injection#service-registration-methods)
+
 
 ### 3. Design Decisions
 
@@ -367,7 +374,22 @@ Both collections will be configured as follows:
 - Partition key will be player ID in both collections.
   - This permits point reads for a player summary, and if analytical or other dependent workloads need it, efficient aggregate queries for events for a specified player.
 
-### 5. Tech Stack Notes
+### 5. Workload Implementation / Tech Notes
+
+#### Config Store
+
+Azure Key Vault is used to store Secrets. These are synced to AKS pods, ultimately accessible as environment variables. Among other benefits, this allows .NET services to retrieve configuration values with the built-in Configuration provider, which by default checks environment variables in addition to other configuration sources.
+
+To update what is retrieved from AKV and synced to pods:
+
+1. Update [/.github/workflows/infra.config.region.yml](/.github/workflows/infra.config.region.yml). Change the action that writes secrets to the regional AKV as needed (e.g. add new secrets). Run this workflow.
+2. Update [/src/infra-deploy/secretprovider.ao.akv.yaml](src/infra-deploy/aks/secretprovider.ao.akv.yaml) and add the correct secret names in both _secretobjects_ and _objects_ sections. The _objects_ section makes secrets available in the file system mount (/mnt/secrets-store), and the _secretobjects_ section makes the secrets available as Kubernetes secrets, which in turn are then exposed as environment variables. Deploy this updated manifest to your cluster.
+   1. NOTE!! The infra.config.region.yml workflow writes two required values into this YAML file. If you are running from the command line with kubectl, you MUST manually add two values, `tenantId` and `keyVaultName` to the file before applying the manifest.
+3. Update the workload manifests [back end](/src/workload-deploy/aks/workload.back.yaml) and [front end](/src/workload-deploy/aks/workload.front.yaml) with the secret changes. Deploy these updated manifests to your cluster.
+   1. NOTE!! The app.deploy.yml workflow writes a required value into this YAML file. If you are running from the command line with kubectl, you MUST manually add the value for `aadpodidbinding` to the file before applying the manifest. At this time, the binding defaults to $UAMI_NAME-binding (e.g. pz-ao-eastus-binding). This appears to be internally set, with the binding ID specified when adding pod identity to the AKS cluster being a reference to this, NOT the actual name to be used for the binding.
+4. You should now be able to shell to a workload pod, ls or cat the filesystem mounted secret store values, and echo the environment variables successfully.
+
+### 6. Tech Stack Notes
 
 #### AKS
 

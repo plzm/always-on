@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using ao.common;
 
 namespace ao.fe
 {
@@ -32,13 +33,23 @@ namespace ao.fe
 
 			services.AddHttpClient();
 
-			// Register singleton Cosmos DB service
-			services.AddSingleton((s) => 
-			{
-				ICosmosDbService service = InitializeCosmosClientInstanceAsync(s, Configuration.GetSection("CosmosDb")).Result;
 
-				return service;
-			});
+			// Register singleton Cosmos DB service
+			var cosmosDbConnectionString = Configuration["CosmosDbConnectionString"];
+			var cosmosDbDatabaseName = Configuration["CosmosDbDatabaseName"];
+			var cosmosDbProfileContainerName = Configuration["CosmosDbProfileContainerName"];
+			var cosmosDbProgressContainerName = Configuration["CosmosDbProgressContainerName"];
+
+			services.AddSingleton<ICosmosDbService, CosmosDbService>(s => new CosmosDbService(cosmosDbConnectionString, cosmosDbDatabaseName, cosmosDbProfileContainerName, cosmosDbProgressContainerName, s.GetRequiredService<IHttpClientFactory>()));
+
+
+			// Register singleton Event Hub service
+			var eventHubNamespaceConnectionString = Configuration["EventHubConnectionString"];
+			var eventHubName = Configuration["EventHubName"];
+			//var eventHubConsumerGroup = Configuration["EventHubConsumerGroup"];
+
+			services.AddSingleton<IEventHubService, EventHubService>(s => new EventHubService(eventHubNamespaceConnectionString, eventHubName));
+
 
 			services.AddSwaggerGen(c =>
 			{
@@ -64,34 +75,6 @@ namespace ao.fe
 			{
 				endpoints.MapControllers();
 			});
-		}
-
-		private static async Task<ICosmosDbService> InitializeCosmosClientInstanceAsync(IServiceProvider serviceProvider, IConfigurationSection configurationSection)
-		{
-			string connectionString = configurationSection.GetSection("ConnectionString").Value;
-			string databaseName = configurationSection.GetSection("DatabaseName").Value;
-			string profileContainerName = configurationSection.GetSection("ProfileContainerName").Value;
-			string progressContainerName = configurationSection.GetSection("ProgressContainerName").Value;
-
-			List<ValueTuple<string, string>> containers = new List<(string, string)>();
-			containers.Add((databaseName, profileContainerName));
-			containers.Add((databaseName, progressContainerName));
-
-			IHttpClientFactory httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
-
-			CosmosClientOptions clientOptions = new CosmosClientOptions()
-			{
-				ConnectionMode = ConnectionMode.Direct,
-				ConsistencyLevel = ConsistencyLevel.Eventual,
-				EnableContentResponseOnWrite = false,
-				HttpClientFactory = httpClientFactory.CreateClient
-			};
-
-			CosmosClient client = await CosmosClient.CreateAndInitializeAsync(connectionString, containers.AsReadOnly(), clientOptions);
-
-			CosmosDbService service = new CosmosDbService(client, databaseName, profileContainerName, progressContainerName);
-
-			return service;
 		}
 	}
 }
