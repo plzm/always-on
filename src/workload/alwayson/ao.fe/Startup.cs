@@ -32,8 +32,21 @@ namespace ao.fe
 
 			services.AddHttpClient();
 
+
 			// Register singleton Cosmos DB service
-			services.AddSingleton((s) => CosmosDbService.GetInstance(Configuration, s.GetRequiredService<IHttpClientFactory>()).Result);
+			var cosmosDbConnectionString = Configuration["CosmosDbConnectionString"];
+			var cosmosDbDatabaseName = Configuration["CosmosDbDatabaseName"];
+			var cosmosDbProfileContainerName = Configuration["CosmosDbProfileContainerName"];
+			var cosmosDbProgressContainerName = Configuration["CosmosDbProgressContainerName"];
+
+			services.AddSingleton<ICosmosDbService, CosmosDbService>(s => new CosmosDbService(cosmosDbConnectionString, cosmosDbDatabaseName, cosmosDbProfileContainerName, cosmosDbProgressContainerName, s.GetRequiredService<IHttpClientFactory>()));
+
+
+			// Register singleton Event Hub service
+			var eventHubNamespaceConnectionString = Configuration["EventHubConnectionString"];
+			var eventHubName = Configuration["EventHubName"];
+			var eventHubConsumerGroup = Configuration["EventHubConsumerGroup"];
+
 
 			services.AddSwaggerGen(c =>
 			{

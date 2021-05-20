@@ -206,6 +206,8 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Useful References
 
+##### IaC
+
 - [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
 - [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
 - [ARM Template Functions Reference](https://docs.microsoft.com/azure/azure-resource-manager/templates/template-functions/)
@@ -250,6 +252,11 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [GHA Doc: Deploy K8s Manifest](https://github.com/marketplace/actions/deploy-to-kubernetes-cluster)
 - [GHA: Deploy K8s Manifest](https://github.com/Azure/k8s-deploy)
 - [GHA: YAML Update](https://github.com/fjogeleit/yaml-update-action)
+
+##### Workload
+
+- [.NET DI Service Registration Methods](https://docs.microsoft.com/dotnet/core/extensions/dependency-injection#service-registration-methods)
+
 
 ### 3. Design Decisions
 

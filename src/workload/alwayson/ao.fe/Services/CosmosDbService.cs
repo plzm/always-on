@@ -18,42 +18,48 @@ namespace ao.fe
 		public string ProfileContainerName { get; private set; }
 		public string ProgressContainerName { get; private set; }
 
+		public IHttpClientFactory HttpClientFactory { get; private set; }
+
 		public CosmosClient CosmosClient { get; private set; }
 
 		public Container ProfileContainer { get; private set; }
 		public Container ProgressContainer { get; private set; }
 
-		public static async Task<ICosmosDbService> GetInstance(IConfiguration configuration, IHttpClientFactory httpClientFactory = null)
-		{
-			CosmosDbService result = new CosmosDbService()
-			{
-				ConnectionString = configuration["CosmosDbConnectionString"],
-				DatabaseName = configuration["CosmosDbDatabaseName"],
-				ProfileContainerName = configuration["CosmosDbProfileContainerName"],
-				ProgressContainerName = configuration["CosmosDbProgressContainerName"]
-			};
+		private CosmosDbService() { }
 
+		public CosmosDbService(string connectionString, string databaseName, string profileContainerName, string progressContainerName, IHttpClientFactory httpClientFactory = null)
+		{
+			this.ConnectionString = connectionString;
+			this.DatabaseName = databaseName;
+			this.ProfileContainerName = profileContainerName;
+			this.ProgressContainerName = progressContainerName;
+			this.HttpClientFactory = httpClientFactory;
+
+			Initialize().Wait();
+		}
+
+		private async Task Initialize()
+		{
+			// Cosmos DB client configuration options
 			CosmosClientOptions clientOptions = new CosmosClientOptions()
 			{
 				ConnectionMode = ConnectionMode.Direct,
 				ConsistencyLevel = ConsistencyLevel.Eventual,
 				EnableContentResponseOnWrite = false,
-				HttpClientFactory = (httpClientFactory != null ? httpClientFactory.CreateClient : null)
+				HttpClientFactory = (this.HttpClientFactory != null ? this.HttpClientFactory.CreateClient : null)
 			};
 
-			// This list is to pre-warm the Cosmos client
+			// This list is to pre-warm the Cosmos DB client
 			List<ValueTuple<string, string>> containers = new List<(string, string)>();
-			containers.Add((result.DatabaseName, result.ProfileContainerName));
-			containers.Add((result.DatabaseName, result.ProgressContainerName));
+			containers.Add((this.DatabaseName, this.ProfileContainerName));
+			containers.Add((this.DatabaseName, this.ProgressContainerName));
 
 			// Get the actual Cosmos DB client
-			result.CosmosClient = await CosmosClient.CreateAndInitializeAsync(result.ConnectionString, containers.AsReadOnly(), clientOptions);
+			this.CosmosClient = await CosmosClient.CreateAndInitializeAsync(this.ConnectionString, containers.AsReadOnly(), clientOptions);
 
 			// Container proxies
-			result.ProfileContainer = result.CosmosClient.GetContainer(result.DatabaseName, result.ProfileContainerName);
-			result.ProgressContainer = result.CosmosClient.GetContainer(result.DatabaseName, result.ProgressContainerName);
-
-			return result;
+			this.ProfileContainer = this.CosmosClient.GetContainer(this.DatabaseName, this.ProfileContainerName);
+			this.ProgressContainer = this.CosmosClient.GetContainer(this.DatabaseName, this.ProgressContainerName);
 		}
 
 		public async Task<PlayerProfile> GetPlayerProfileAsync(string id)
