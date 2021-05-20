@@ -43,5 +43,5 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 #kubectl -n default rollout restart deploy
 
 # Shell to a pod
-#kubectl exec --stdin --tty azure-vote-back-665b65975f-g2kdg -- /bin/bash
+#kubectl exec --stdin --tty azure-vote-front-6f958bf9cd-wlhv2 -- /bin/bash
 

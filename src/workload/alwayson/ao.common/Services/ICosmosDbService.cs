@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using ao.common;
 
-namespace ao.fe
+namespace ao.common
 {
 	public interface ICosmosDbService
 	{
-		Task<PlayerProfile> GetPlayerProfileAsync(string id);
+		Task<Profile> GetPlayerProfileAsync(string id);
 	}
 }

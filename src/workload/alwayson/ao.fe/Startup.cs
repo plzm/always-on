@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using ao.common;
 
 namespace ao.fe
 {
@@ -45,7 +46,9 @@ namespace ao.fe
 			// Register singleton Event Hub service
 			var eventHubNamespaceConnectionString = Configuration["EventHubConnectionString"];
 			var eventHubName = Configuration["EventHubName"];
-			var eventHubConsumerGroup = Configuration["EventHubConsumerGroup"];
+			//var eventHubConsumerGroup = Configuration["EventHubConsumerGroup"];
+
+			services.AddSingleton<IEventHubService, EventHubService>(s => new EventHubService(eventHubNamespaceConnectionString, eventHubName));
 
 
 			services.AddSwaggerGen(c =>

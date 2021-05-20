@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Fluent;
 using ao.common;
-using Microsoft.Extensions.Configuration;
-using System.Net.Http;
 
-namespace ao.fe
+namespace ao.common
 {
 	public class CosmosDbService : ICosmosDbService
 	{
@@ -62,11 +60,11 @@ namespace ao.fe
 			this.ProgressContainer = this.CosmosClient.GetContainer(this.DatabaseName, this.ProgressContainerName);
 		}
 
-		public async Task<PlayerProfile> GetPlayerProfileAsync(string id)
+		public async Task<Profile> GetPlayerProfileAsync(string id)
 		{
 			try
 			{
-				ItemResponse<PlayerProfile> response = await this.ProfileContainer.ReadItemAsync<PlayerProfile>(id, new PartitionKey(id));
+				ItemResponse<Profile> response = await this.ProfileContainer.ReadItemAsync<Profile>(id, new PartitionKey(id));
 
 				return response.Resource;
 			}

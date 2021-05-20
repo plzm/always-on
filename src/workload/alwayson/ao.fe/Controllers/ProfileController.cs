@@ -10,23 +10,27 @@ namespace ao.fe.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class PlayerProfileController : ControllerBase
+	public class ProfileController : ControllerBase
 	{
 		private readonly ICosmosDbService _cosmosDbService;
+		private readonly IEventHubService _eventHubService;
 
-		public PlayerProfileController(ICosmosDbService cosmosDbService) => _cosmosDbService = cosmosDbService;
+		public ProfileController(ICosmosDbService cosmosDbService, IEventHubService eventHubService)
+		{
+			_cosmosDbService = cosmosDbService;
+			_eventHubService = eventHubService;
+		}
 
 		[HttpGet("{id}")]
-		public async Task<PlayerProfile> Get(string id)
+		public async Task<Profile> Get(string id)
 		{
 			return await _cosmosDbService.GetPlayerProfileAsync(id);
 		}
 
 		[HttpPost]
-		public async Task Post([FromBody] string value)
+		public async Task Post([FromBody] Profile value)
 		{
-
+			await _eventHubService.SendAsync<Profile>(value);
 		}
-
 	}
 }

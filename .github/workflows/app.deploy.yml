@@ -106,14 +106,14 @@ jobs:
           force: true
           namespace: default
 
-      #- name: Deploy Services and Ingress to AKS
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.AKS_PATH_ROOT }}workload.services-ingress.yaml'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
+      - name: Deploy Services and Ingress to AKS
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.AKS_PATH_ROOT }}workload.services-ingress.yaml'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
 
 
       - name: Azure logout
