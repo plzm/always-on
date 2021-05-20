@@ -45,6 +45,21 @@ spec:
             secretKeyRef:
               name: ao-secrets
               key: CosmosDbProgressContainerName
+        - name: StorageAccountConnString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: StorageAccountConnString
+        - name: StorageAccountName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: StorageAccountName
+        - name: StorageContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: StorageContainerName
         - name: EventHubConnectionString
           valueFrom:
             secretKeyRef:

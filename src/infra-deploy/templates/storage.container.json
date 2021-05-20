@@ -1,0 +1,25 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccountName": {
+            "type": "String"
+        },
+        "containerName": {
+            "type": "String"
+        }
+    },
+    "variables": {
+        "apiVersionStorage": "2021-02-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "[variables('apiVersionStorage')]",
+            "name": "[concat(parameters('storageAccountName'), '/default/', parameters('containerName'))]",
+            "properties": {
+                "publicAccess": "none"
+            }
+        }
+    ]
+}
