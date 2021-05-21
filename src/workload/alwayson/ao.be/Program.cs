@@ -1,4 +1,5 @@
 ﻿using System;
+using ao.common;
 
 namespace ao.be
 {
@@ -6,7 +7,8 @@ namespace ao.be
 	{
 		static void Main(string[] args)
 		{
-			var processor = new Processor();
+			var processor = new EventHubReceiverService();
+			processor.RunAsync().Wait();
 		}
 	}
 }

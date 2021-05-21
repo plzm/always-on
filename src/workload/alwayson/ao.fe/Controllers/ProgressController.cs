@@ -12,17 +12,17 @@ namespace ao.fe.Controllers
 	[ApiController]
 	public class ProgressController : ControllerBase
 	{
-		private readonly IEventHubService _eventHubService;
+		private readonly IEventHubSenderService _eventHubSenderService;
 
-		public ProgressController(IEventHubService eventHubService)
+		public ProgressController(IEventHubSenderService eventHubSenderService)
 		{
-			_eventHubService = eventHubService;
+			_eventHubSenderService = eventHubSenderService;
 		}
 
 		[HttpPost]
 		public async Task Post([FromBody] Progress value)
 		{
-			await _eventHubService.SendAsync<Progress>(value);
+			await _eventHubSenderService.SendAsync<Progress>(value);
 		}
 	}
 }

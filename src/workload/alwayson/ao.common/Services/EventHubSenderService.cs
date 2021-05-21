@@ -3,25 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Producer;
-using ao.common;
 
 namespace ao.common
 {
-	public class EventHubService : IEventHubService
+	public class EventHubSenderService : IEventHubSenderService
 	{
-		private const string MESSAGE_TYPE = "MessageType";
-
 		public string NamespaceConnectionString { get; private set; }
 		public string EventHubName { get; private set; }
 
 		public EventHubProducerClient EventHubProducerClient { get; private set; }
 
-		private EventHubService() { }
+		private EventHubSenderService() { }
 
-		public EventHubService(string namespaceConnectionString, string eventHubName)
+		public EventHubSenderService(string namespaceConnectionString, string eventHubName)
 		{
 			this.NamespaceConnectionString = namespaceConnectionString;
 			this.EventHubName = eventHubName;
@@ -51,35 +47,40 @@ namespace ao.common
 			this.EventHubProducerClient = new EventHubProducerClient(this.NamespaceConnectionString, this.EventHubName, clientOptions);
 		}
 
-		public async Task SendAsync<T>(T message)
+		public async Task SendAsync<T>(T message, List<ValueTuple<string, string>> metadata = null)
+			where T : IItem
 		{
-			string json = JsonSerializer.Serialize(message);
-
-			await SendAsync(new string[] { json }, typeof(T).Name);
-		}
-
-		public async Task SendAsync(string messageBody, string messageType)
-		{
-			if (string.IsNullOrWhiteSpace(messageBody))
+			if (message == null)
 				return;
 
-			await SendAsync(new string[] { messageBody }, messageType);
+			await SendAsync(new T[] { message }, metadata);
 		}
 
-		public async Task SendAsync(IEnumerable<string> messageBodies, string messageType)
+		public async Task SendAsync<T>(IEnumerable<T> messages, List<ValueTuple<string, string>> metadata = null)
+			where T : IItem
 		{
-			if (messageBodies == null)
+			if (messages == null)
 				return;
 
-			var eventsToSend = messageBodies.Select(mb => GetEventData(mb, messageType));
+			var eventsToSend = messages.Select(m => GetEventData(m, metadata));
 
 			await this.EventHubProducerClient.SendAsync(eventsToSend);
 		}
 
-		private EventData GetEventData(string messageBody, string messageType)
+		private EventData GetEventData<T>(T message, List<ValueTuple<string, string>> metadata = null)
+			where T : IItem
 		{
-			var result = new EventData(new BinaryData(messageBody));
-			result.Properties.Add(MESSAGE_TYPE, messageType);
+			var result = new EventData(new BinaryData(message));
+
+			result.Properties.Add(Constants.ID, message.Id);
+			result.Properties.Add(Constants.MESSAGE_TYPE, typeof(T).Name);
+
+			if (metadata != null)
+			{
+				foreach (var tuple in metadata)
+					result.Properties.Add(tuple.Item1, tuple.Item2);
+			}
+
 			return result;
 		}
 	}

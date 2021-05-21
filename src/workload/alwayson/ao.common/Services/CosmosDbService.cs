@@ -23,7 +23,12 @@ namespace ao.common
 		public Container ProfileContainer { get; private set; }
 		public Container ProgressContainer { get; private set; }
 
-		private CosmosDbService() { }
+		public CosmosDbService()
+		{
+			GetConfig();
+
+			Initialize().Wait();
+		}
 
 		public CosmosDbService(string connectionString, string databaseName, string profileContainerName, string progressContainerName, IHttpClientFactory httpClientFactory = null)
 		{
@@ -34,6 +39,14 @@ namespace ao.common
 			this.HttpClientFactory = httpClientFactory;
 
 			Initialize().Wait();
+		}
+
+		private void GetConfig()
+		{
+			this.ConnectionString = Environment.GetEnvironmentVariable("CosmosDbConnectionString");
+			this.DatabaseName = Environment.GetEnvironmentVariable("CosmosDbDatabaseName");
+			this.ProfileContainerName = Environment.GetEnvironmentVariable("CosmosDbProfileContainerName");
+			this.ProgressContainerName = Environment.GetEnvironmentVariable("CosmosDbProgressContainerName");
 		}
 
 		private async Task Initialize()
@@ -72,6 +85,26 @@ namespace ao.common
 			{
 				return null;
 			}
+		}
+
+		public async Task SaveProfile(string id, Stream profile)
+		{
+			await this.ProfileContainer.UpsertItemStreamAsync(profile, new PartitionKey(id));
+		}
+
+		public async Task SaveProfile(Profile profile)
+		{
+			await this.ProfileContainer.UpsertItemAsync<Profile>(profile, new PartitionKey(profile.Id));
+		}
+
+		public async Task SaveProgress(string id, Stream progress)
+		{
+			await this.ProgressContainer.CreateItemStreamAsync(progress, new PartitionKey(id));
+		}
+
+		public async Task SaveProgress(Progress progress)
+		{
+			await this.ProgressContainer.CreateItemAsync<Progress>(progress, new PartitionKey(progress.Id));
 		}
 	}
 }

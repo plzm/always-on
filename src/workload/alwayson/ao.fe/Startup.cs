@@ -48,7 +48,7 @@ namespace ao.fe
 			var eventHubName = Configuration["EventHubName"];
 			//var eventHubConsumerGroup = Configuration["EventHubConsumerGroup"];
 
-			services.AddSingleton<IEventHubService, EventHubService>(s => new EventHubService(eventHubNamespaceConnectionString, eventHubName));
+			services.AddSingleton<IEventHubSenderService, EventHubSenderService>(s => new EventHubSenderService(eventHubNamespaceConnectionString, eventHubName));
 
 
 			services.AddSwaggerGen(c =>

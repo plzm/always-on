@@ -2,19 +2,20 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Consumer;
 using Azure.Messaging.EventHubs.Processor;
-using System.Threading;
 
-namespace ao.be
+namespace ao.common
 {
-    public class Processor
-    {
+	public class EventHubReceiverService
+	{
         public string StorageAccountConnectionString { get; private set; }
         public string StorageAccountName { get; private set; }
         public string StorageContainerName { get; private set; }
@@ -23,26 +24,46 @@ namespace ao.be
         public string EventHubName { get; private set; }
         public string EventHubConsumerGroup { get; private set; }
 
+        private CosmosDbService CosmosDbService { get; set; }
         public BlobContainerClient BlobContainerClient { get; private set; }
-
-		public EventProcessorClient EventProcessorClient { get; private set; }
+        public EventProcessorClient EventProcessorClient { get; private set; }
 
         public int EventHubBatchSize { get; set; } = 2;
         private bool CheckpointNeeded { get; set; } = false;
         private ConcurrentDictionary<string, List<EventData>> PartitionEventBatches = new ConcurrentDictionary<string, List<EventData>>();
 
-        //private ConcurrentDictionary<string, int> PartitionEventCount = new ConcurrentDictionary<string, int>();
+        private readonly string _messageTypeProfile = typeof(Profile).Name;
+        private readonly string _messageTypeProgress = typeof(Progress).Name;
 
-        public Processor()
+        public EventHubReceiverService()
 		{
 			GetConfig();
 
 			Initialize();
-
-            Run().Wait();
 		}
 
-		private void GetConfig()
+        public EventHubReceiverService
+        (
+            string storageAccountConnectionString,
+            string storageAccountName,
+            string storageContainerName,
+            string eventHubConnectionString,
+            string eventHubName,
+            string eventHubConsumerGroup
+        )
+		{
+            this.StorageAccountConnectionString = storageAccountConnectionString;
+            this.StorageAccountName = storageAccountName;
+            this.StorageContainerName = storageContainerName;
+
+            this.EventHubConnectionString = eventHubConnectionString;
+            this.EventHubName = eventHubName;
+            this.EventHubConsumerGroup = eventHubConsumerGroup;
+
+            Initialize();
+        }
+
+        private void GetConfig()
 		{
 			this.StorageAccountConnectionString = Environment.GetEnvironmentVariable("StorageAccountConnString");
 			this.StorageAccountName = Environment.GetEnvironmentVariable("StorageAccountName");
@@ -55,17 +76,18 @@ namespace ao.be
 
 		private void Initialize()
 		{
+            this.CosmosDbService = new CosmosDbService();
+
 			this.BlobContainerClient = new BlobContainerClient(this.StorageAccountConnectionString, this.StorageContainerName);
 
 			this.EventProcessorClient = new EventProcessorClient(this.BlobContainerClient, this.EventHubConsumerGroup, this.EventHubConnectionString, this.EventHubName);
 		}
 
-        private async Task Run()
-		{
+        public async Task RunAsync()
+        {
             try
             {
                 using var cancellationSource = new CancellationTokenSource();
-                //cancellationSource.CancelAfter(TimeSpan.FromSeconds(30));
 
                 this.EventProcessorClient.ProcessEventAsync += processEventHandler;
                 this.EventProcessorClient.ProcessErrorAsync += processErrorHandler;
@@ -106,23 +128,31 @@ namespace ao.be
         }
 
         private async Task ProcessEventBatchAsync(List<EventData> partitionBatch, PartitionContext partitionContext, CancellationToken cancellationToken)
-		{
+        {
             try
-			{
+            {
                 foreach (EventData eventData in partitionBatch)
-				{
-                    byte[] eventBodyBytes = eventData.EventBody.ToArray();
-                    Debug.WriteLine($"Read event of length { eventBodyBytes.Length } from { partitionContext.PartitionId }");
+                {
+                    string id = eventData.Properties[Constants.ID].ToString();
+                    string messageType = eventData.Properties[Constants.MESSAGE_TYPE].ToString();
 
-                    string eventBody = Encoding.UTF8.GetString(eventBodyBytes);
-                    Debug.WriteLine(eventBody);
+                    byte[] eventBodyBytes = eventData.EventBody.ToArray();
+                    MemoryStream stream = new MemoryStream(eventBodyBytes);
+
+                    if (messageType.Equals(_messageTypeProfile))
+                        await this.CosmosDbService.SaveProfile(id, stream);
+                    else if (messageType.Equals(_messageTypeProgress))
+                        await this.CosmosDbService.SaveProgress(id, stream);
+
+                    //string eventBody = Encoding.UTF8.GetString(eventBodyBytes);
+                    //Debug.WriteLine(eventBody);
                 }
-			}
+            }
             catch (Exception ex)
-			{
+            {
                 // TODO
-			}
-		}
+            }
+        }
 
         async Task processEventHandler(ProcessEventArgs args)
         {

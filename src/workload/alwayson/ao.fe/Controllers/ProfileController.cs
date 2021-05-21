@@ -13,12 +13,12 @@ namespace ao.fe.Controllers
 	public class ProfileController : ControllerBase
 	{
 		private readonly ICosmosDbService _cosmosDbService;
-		private readonly IEventHubService _eventHubService;
+		private readonly IEventHubSenderService _eventHubSenderService;
 
-		public ProfileController(ICosmosDbService cosmosDbService, IEventHubService eventHubService)
+		public ProfileController(ICosmosDbService cosmosDbService, IEventHubSenderService eventHubSenderService)
 		{
 			_cosmosDbService = cosmosDbService;
-			_eventHubService = eventHubService;
+			_eventHubSenderService = eventHubSenderService;
 		}
 
 		[HttpGet("{id}")]
@@ -30,7 +30,7 @@ namespace ao.fe.Controllers
 		[HttpPost]
 		public async Task Post([FromBody] Profile value)
 		{
-			await _eventHubService.SendAsync<Profile>(value);
+			await _eventHubSenderService.SendAsync<Profile>(value);
 		}
 	}
 }
