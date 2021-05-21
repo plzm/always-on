@@ -1,9 +1,9 @@
 ﻿namespace ao.common
 {
-	public record Profile
+	public record Profile : IItem
 	{
-		public string Id { get; init; }
-		public string AvatarUrl { get; init; }
-		public long TotalXp { get; init; }
+		public string Id { get; set; }
+		public string AvatarUrl { get; set; }
+		public long TotalXp { get; set; }
 	}
 }
