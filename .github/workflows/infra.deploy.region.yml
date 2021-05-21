@@ -13,6 +13,9 @@ env:
   RBAC_ROLE_ID_NETWORK_CONTRIBUTOR: '4d97b98b-1d4f-4787-a291-c67834d212e7'
   RBAC_ROLE_ID_VM_CONTRIBUTOR: '9980e02c-c2be-4d73-94e8-173b1dc7cf3c'
   RBAC_ROLE_ID_ACR_PULL: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
+  RBAC_ROLE_EVENT_HUBS_DATA_RECEIVER: 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
+  RBAC_ROLE_EVENT_HUBS_DATA_SENDER: '2b629674-e913-4c01-ae53-ef4638d8f975'
+  RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
@@ -32,6 +35,8 @@ env:
   APP_SUBNET_NAME: 'app'
   APP_SUBNET_PREFIX: '10.0.5.0/24'
   APP_SUBNET_SERVICE_ENDPOINTS: 'Microsoft.AzureCosmosDB,Microsoft.EventHub,Microsoft.KeyVault'
+
+  STORAGE_CONTAINER_NAME: 'ehproc'
 
   EVENT_HUB_CAPACITY: '1'
   EVENT_HUB_EVENT_HUB_NAME: 'eh1'
@@ -119,6 +124,7 @@ jobs:
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
           APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
@@ -142,6 +148,7 @@ jobs:
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
           echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=$APPGW_PUBLIC_IP_NAME" >> $GITHUB_ENV
           echo "APPGW_NAME=$APPGW_NAME" >> $GITHUB_ENV
@@ -312,7 +319,6 @@ jobs:
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
 
-
       - name: Deploy Key Vault
         if: success()
         uses: azure/arm-deploy@v1
@@ -350,6 +356,34 @@ jobs:
             --key-permissions get \
             --secret-permissions get \
             --certificate-permissions get
+
+
+      - name: Deploy Storage Account for Event Hub Processor
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.account.json
+          parameters: location=${{ matrix.region }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
+
+      - name: Deploy Storage Container for Event Hub Processor
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.container.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
+
+      - name: Grant UAMI Storage Data Contributor on Storage Account
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-rbac-sdc
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Storage/storageAccounts" resourceName=${{ env.STORAGE_ACCOUNT_NAME }}
 
 
       - name: Deploy Event Hub Namespace
@@ -414,6 +448,25 @@ jobs:
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-vnet-rule
           template: ./src/infra-deploy/templates/event-hub.vnet-rule.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+
+      - name: Grant UAMI Event Hubs Data Sender on Region Event Hub
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rbac-sender
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_EVENT_HUBS_DATA_SENDER }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.EventHub/namespaces" resourceName=${{ env.EVENT_HUB_NS_NAME }}
+
+      - name: Grant UAMI Event Hubs Data Receiver on Region Event Hub
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rbac-sender
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_EVENT_HUBS_DATA_RECEIVER }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.EventHub/namespaces" resourceName=${{ env.EVENT_HUB_NS_NAME }}
+
 
 
       - name: Deploy Public IP for App GW
