@@ -206,8 +206,6 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 #### Useful References
 
-##### IaC
-
 - [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
 - [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
 - [ARM Template Functions Reference](https://docs.microsoft.com/azure/azure-resource-manager/templates/template-functions/)
@@ -252,6 +250,9 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [GHA Doc: Deploy K8s Manifest](https://github.com/marketplace/actions/deploy-to-kubernetes-cluster)
 - [GHA: Deploy K8s Manifest](https://github.com/Azure/k8s-deploy)
 - [GHA: YAML Update](https://github.com/fjogeleit/yaml-update-action)
+
+- [Event Hubs SDK Samples](https://github.com/Azure/azure-sdk-for-net/tree/master/sdk/eventhub/Azure.Messaging.EventHubs/samples)
+- [Event Hubs Processor SDK Samples](https://github.com/Azure/azure-sdk-for-net/tree/master/sdk/eventhub/Azure.Messaging.EventHubs.Processor/samples)
 
 ##### Workload
 

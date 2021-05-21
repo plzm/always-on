@@ -15,7 +15,7 @@ env:
   RBAC_ROLE_ID_ACR_PULL: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
   RBAC_ROLE_EVENT_HUBS_DATA_RECEIVER: 'a638d3c7-ab3a-418d-83e6-5f17a39d4fde'
   RBAC_ROLE_EVENT_HUBS_DATA_SENDER: '2b629674-e913-4c01-ae53-ef4638d8f975'
-  RBAC_ROLE_STORAGE_DATA_CONTRIBUTOR: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+  RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
@@ -383,7 +383,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-rbac-sdc
           template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_STORAGE_DATA_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Storage/storageAccounts" resourceName=${{ env.STORAGE_ACCOUNT_NAME }}
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Storage/storageAccounts" resourceName=${{ env.STORAGE_ACCOUNT_NAME }}
 
 
       - name: Deploy Event Hub Namespace
@@ -449,7 +449,7 @@ jobs:
           template: ./src/infra-deploy/templates/event-hub.vnet-rule.json
           parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} subnetResourceId=${{ env.APP_SUBNET_ID }}
 
-      - name: Grant UAMI Event Hubs Sender on Region Event Hub
+      - name: Grant UAMI Event Hubs Data Sender on Region Event Hub
         if: success()
         uses: azure/arm-deploy@v1
         with:
@@ -458,7 +458,7 @@ jobs:
           template: ./src/infra-deploy/templates/authorization.role-assignment.json
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_EVENT_HUBS_DATA_SENDER }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.EventHub/namespaces" resourceName=${{ env.EVENT_HUB_NS_NAME }}
 
-      - name: Grant UAMI Event Hubs Receiver on Region Event Hub
+      - name: Grant UAMI Event Hubs Data Receiver on Region Event Hub
         if: success()
         uses: azure/arm-deploy@v1
         with:
