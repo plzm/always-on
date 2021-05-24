@@ -74,7 +74,8 @@ jobs:
         run: |
           az acr task create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n acr-build-be --verbose \
             --registry ${{ env.REGISTRY_NAME }} --image ${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER} \
-            --context ${{ env.CONTEXT }} --file ${{ env.ROOT_FOLDER_BE }}Dockerfile
+            --context ${{ env.CONTEXT }} --file ${{ env.ROOT_FOLDER_BE }}Dockerfile \
+            --commit-trigger-enabled false --pull-request-trigger-enabled false
 
       #- name: BE - ACR Build
       #  if: success()
