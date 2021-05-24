@@ -11,15 +11,12 @@ env:
   IMAGE_NAME_BE: ao-be
   IMAGE_NAME_FE: ao-fe
 
-  ROOT_FOLDER_BE: './src/workload/always-on/ao.be/'
-  ROOT_FOLDER_FE: './src/workload/always-on/ao.fe/'
+  ROOT_FOLDER_BE: './src/workload/alwayson/ao.be/'
+  ROOT_FOLDER_FE: './src/workload/alwayson/ao.fe/'
 
 jobs:
   build-app:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        region: [eastus]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
