@@ -55,7 +55,7 @@ jobs:
 
           COSMOS_DB_ACCT_NAME=${{ env.PREFIX }}
 
-          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ matrix.region }}
 
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
 

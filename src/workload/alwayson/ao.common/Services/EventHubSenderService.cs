@@ -47,7 +47,7 @@ namespace ao.common
 			this.EventHubProducerClient = new EventHubProducerClient(this.NamespaceConnectionString, this.EventHubName, clientOptions);
 		}
 
-		public async Task SendAsync<T>(T message, List<ValueTuple<string, string>> metadata = null)
+		public async Task SendAsync<T>(T message, IEnumerable<ValueTuple<string, string>> metadata = null)
 			where T : IItem
 		{
 			if (message == null)
@@ -56,7 +56,7 @@ namespace ao.common
 			await SendAsync(new T[] { message }, metadata);
 		}
 
-		public async Task SendAsync<T>(IEnumerable<T> messages, List<ValueTuple<string, string>> metadata = null)
+		public async Task SendAsync<T>(IEnumerable<T> messages, IEnumerable<ValueTuple<string, string>> metadata = null)
 			where T : IItem
 		{
 			if (messages == null)
@@ -67,12 +67,12 @@ namespace ao.common
 			await this.EventHubProducerClient.SendAsync(eventsToSend);
 		}
 
-		private EventData GetEventData<T>(T message, List<ValueTuple<string, string>> metadata = null)
+		private EventData GetEventData<T>(T message, IEnumerable<ValueTuple<string, string>> metadata = null)
 			where T : IItem
 		{
 			var result = new EventData(new BinaryData(message));
 
-			result.Properties.Add(Constants.ID, message.Id);
+			result.Properties.Add(Constants.HANDLE, message.Handle);
 			result.Properties.Add(Constants.MESSAGE_TYPE, typeof(T).Name);
 
 			if (metadata != null)

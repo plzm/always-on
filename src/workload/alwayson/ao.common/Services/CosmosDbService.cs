@@ -73,11 +73,11 @@ namespace ao.common
 			this.ProgressContainer = this.CosmosClient.GetContainer(this.DatabaseName, this.ProgressContainerName);
 		}
 
-		public async Task<Profile> GetPlayerProfileAsync(string id)
+		public async Task<Profile> GetPlayerProfileAsync(string handle)
 		{
 			try
 			{
-				ItemResponse<Profile> response = await this.ProfileContainer.ReadItemAsync<Profile>(id, new PartitionKey(id));
+				ItemResponse<Profile> response = await this.ProfileContainer.ReadItemAsync<Profile>(handle, new PartitionKey(handle));
 
 				return response.Resource;
 			}
@@ -87,24 +87,24 @@ namespace ao.common
 			}
 		}
 
-		public async Task SaveProfile(string id, Stream profile)
+		public async Task SaveProfile(string handle, Stream profile)
 		{
-			await this.ProfileContainer.UpsertItemStreamAsync(profile, new PartitionKey(id));
+			ResponseMessage response = await this.ProfileContainer.UpsertItemStreamAsync(profile, new PartitionKey(handle));
 		}
 
 		public async Task SaveProfile(Profile profile)
 		{
-			await this.ProfileContainer.UpsertItemAsync<Profile>(profile, new PartitionKey(profile.Id));
+			ItemResponse<Profile> response = await this.ProfileContainer.UpsertItemAsync<Profile>(profile, new PartitionKey(profile.Handle));
 		}
 
-		public async Task SaveProgress(string id, Stream progress)
+		public async Task SaveProgress(string handle, Stream progress)
 		{
-			await this.ProgressContainer.CreateItemStreamAsync(progress, new PartitionKey(id));
+			ResponseMessage response = await this.ProgressContainer.CreateItemStreamAsync(progress, new PartitionKey(handle));
 		}
 
 		public async Task SaveProgress(Progress progress)
 		{
-			await this.ProgressContainer.CreateItemAsync<Progress>(progress, new PartitionKey(progress.Id));
+			ItemResponse<Progress> response = await this.ProgressContainer.CreateItemAsync<Progress>(progress, new PartitionKey(progress.Handle));
 		}
 	}
 }

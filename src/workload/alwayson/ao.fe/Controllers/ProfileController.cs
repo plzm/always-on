@@ -21,10 +21,10 @@ namespace ao.fe.Controllers
 			_eventHubSenderService = eventHubSenderService;
 		}
 
-		[HttpGet("{id}")]
-		public async Task<Profile> Get(string id)
+		[HttpGet("{handle}")]
+		public async Task<Profile> Get(string handle)
 		{
-			return await _cosmosDbService.GetPlayerProfileAsync(id);
+			return await _cosmosDbService.GetPlayerProfileAsync(handle);
 		}
 
 		[HttpPost]

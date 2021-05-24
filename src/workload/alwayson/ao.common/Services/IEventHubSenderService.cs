@@ -6,10 +6,10 @@ namespace ao.common
 {
 	public interface IEventHubSenderService
 	{
-		Task SendAsync<T>(T message, List<ValueTuple<string, string>> metadata = null)
+		Task SendAsync<T>(T message, IEnumerable<ValueTuple<string, string>> metadata = null)
 			where T : IItem;
 
-		Task SendAsync<T>(IEnumerable<T> messages, List<ValueTuple<string, string>> metadata = null)
+		Task SendAsync<T>(IEnumerable<T> messages, IEnumerable<ValueTuple<string, string>> metadata = null)
 			where T : IItem;
 	}
 }
