@@ -36,7 +36,7 @@ jobs:
           CONTEXT=https://github.com/${GITHUB_REPOSITORY}.git#$BRANCH_NAME
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
 
-          BE_TAGS=${GITHUB_ACTOR}/${{ env.IMAGE_NAME_BE }}:latest ${GITHUB_ACTOR}/${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}
+          BE_TAGS="${GITHUB_ACTOR}/${{ env.IMAGE_NAME_BE }}:latest ${GITHUB_ACTOR}/${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}"
 
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           echo "CONTEXT=$CONTEXT" >> $GITHUB_ENV
