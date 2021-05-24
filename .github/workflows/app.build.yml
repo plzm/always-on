@@ -1,0 +1,107 @@
+name: App-Build
+
+on: 
+  workflow_dispatch:
+
+env:
+  PREFIX: 'pz-ao'
+  SUFFIX: '24'
+
+  REGISTRY_REPO: ao
+  IMAGE_NAME_BE: ao-be
+  IMAGE_NAME_FE: ao-fe
+
+  ROOT_FOLDER_BE: './src/workload/always-on/ao.be/'
+  ROOT_FOLDER_FE: './src/workload/always-on/ao.fe/'
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        region: [eastus]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+
+          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+
+
+      - name: Setup dotnet
+        if: success()
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+
+      - name: BE - Restore Dependencies
+        if: success()
+        run: dotnet restore
+        working-directory: ${{ env.ROOT_FOLDER_BE }}
+
+      - name: BE - Build
+        if: success()
+        run: dotnet build --no-restore
+        working-directory: ${{ env.ROOT_FOLDER_BE }}
+
+      - name: BE - Test
+        if: success()
+        run: dotnet test --no-build --verbosity normal
+        working-directory: ${{ env.ROOT_FOLDER_BE }}
+
+      - name: BE - ACR Build
+        if: success()
+        uses: ams0/acr-task-github-action@v2
+        with:
+          service_principal: ${{ secrets.SP_CLIENT_ID }}
+          service_principal_password: ${{ secrets.SP_CLIENT_SECRET }}
+          tenant: ${{ secrets.AZURE_TENANT_ID }}
+          registry: ${{ env.REGISTRY_NAME }}
+          repository: ${{ env.REGISTRY_REPO }}
+          image: ${{ env.IMAGE_NAME_BE }}
+          folder: ${{ env.ROOT_FOLDER_BE }}
+
+
+
+      - name: FE - Restore Dependencies
+        if: success()
+        run: dotnet restore
+        working-directory: ${{ env.ROOT_FOLDER_FE }}
+
+      - name: FE - Build
+        if: success()
+        run: dotnet build --no-restore
+        working-directory: ${{ env.ROOT_FOLDER_FE }}
+
+      - name: FE - Test
+        if: success()
+        run: dotnet test --no-build --verbosity normal
+        working-directory: ${{ env.ROOT_FOLDER_FE }}
+
+      - name: FE - ACR Build
+        if: success()
+        uses: ams0/acr-task-github-action@v2
+        with:
+          service_principal: ${{ secrets.SP_CLIENT_ID }}
+          service_principal_password: ${{ secrets.SP_CLIENT_SECRET }}
+          tenant: ${{ secrets.AZURE_TENANT_ID }}
+          registry: ${{ env.REGISTRY_NAME }}
+          repository: ${{ env.REGISTRY_REPO }}
+          image: ${{ env.IMAGE_NAME_FE }}
+          folder: ${{ env.ROOT_FOLDER_FE }}
+
+
+      - name: Azure logout
+        run: |
+          az logout
