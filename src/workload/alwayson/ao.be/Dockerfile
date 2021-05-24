@@ -6,10 +6,10 @@ COPY ["/src/workload/alwayson/ao.common/*.*", "ao.common/"]
 
 RUN dotnet restore "ao.be/ao.be.csproj"
 
-RUN dotnet build "ao.be.csproj" -c Release -o /app/build
+RUN dotnet build "ao.be/ao.be.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "ao.be.csproj" -c Release -o /app/publish
+RUN dotnet publish "ao.be/ao.be.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/runtime:5.0 AS base
 WORKDIR /app
