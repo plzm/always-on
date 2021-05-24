@@ -31,7 +31,7 @@ jobs:
         if: success()
         run: |
           BRANCH_NAME=${GITHUB_REF##*/}
-          CONTEXT=https://github.com/${{ env.GITHUB_REPOSITORY }}.git#$BRANCH_NAME
+          CONTEXT=https://github.com/${GITHUB_REPOSITORY}.git#$BRANCH_NAME
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
 
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
