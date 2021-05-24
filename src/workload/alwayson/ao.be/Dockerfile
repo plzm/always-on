@@ -5,8 +5,8 @@ WORKDIR /app
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["ao.be/ao.be.csproj", "ao.be/"]
-COPY ["ao.common/ao.common.csproj", "ao.common/"]
+COPY ["/src/workload/alwayson/ao.be/ao.be.csproj", "ao.be/"]
+COPY ["/src/workload/alwayson/ao.common/ao.common.csproj", "ao.common/"]
 RUN dotnet restore "ao.be/ao.be.csproj"
 COPY . .
 WORKDIR "/src/ao.be"
