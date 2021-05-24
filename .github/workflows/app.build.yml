@@ -21,11 +21,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      #- name: Azure login
-      #  if: success()
-      #  uses: azure/login@v1
-      #  with:
-      #    creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Prepare dynamic env vars
         if: success()
@@ -38,41 +38,41 @@ jobs:
           echo "CONTEXT=$CONTEXT" >> $GITHUB_ENV
           echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
 
-      - name: Debug
-        if: success()
-        run: |
-          echo ${{ env.BRANCH_NAME }}
-          echo ${{ env.CONTEXT }}
-
-
-      #- name: Setup dotnet
-      #  if: success()
-      #  uses: actions/setup-dotnet@v1
-      #  with:
-      #    dotnet-version: 5.0.x
-
-
-      #- name: BE - Restore Dependencies
-      #  if: success()
-      #  run: dotnet restore
-      #  working-directory: ${{ env.ROOT_FOLDER_BE }}
-
-      #- name: BE - Build
-      #  if: success()
-      #  run: dotnet build --no-restore
-      #  working-directory: ${{ env.ROOT_FOLDER_BE }}
-
-      #- name: BE - Test
-      #  if: success()
-      #  run: dotnet test --no-build --verbosity normal
-      #  working-directory: ${{ env.ROOT_FOLDER_BE }}
-
-      #- name: BE - ACR Build
+      #- name: Debug
       #  if: success()
       #  run: |
-      #    az acr task create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n acr-build-be --verbose \
-      #      --registry ${{ env.REGISTRY_NAME }} --image ${{ env.IMAGE_NAME_BE }} \
-      #      --context https://github.com/${{ env.GITHUB_REPOSITORY }}.git#${{ env.BRANCH_NAME }}
+      #    echo ${{ env.BRANCH_NAME }}
+      #    echo ${{ env.CONTEXT }}
+
+
+      - name: Setup dotnet
+        if: success()
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+
+
+      - name: BE - Restore Dependencies
+        if: success()
+        run: dotnet restore
+        working-directory: ${{ env.ROOT_FOLDER_BE }}
+
+      - name: BE - Build
+        if: success()
+        run: dotnet build --no-restore
+        working-directory: ${{ env.ROOT_FOLDER_BE }}
+
+      - name: BE - Test
+        if: success()
+        run: dotnet test --no-build --verbosity normal
+        working-directory: ${{ env.ROOT_FOLDER_BE }}
+
+      - name: BE - ACR Build
+        if: success()
+        run: |
+          az acr task create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n acr-build-be --verbose \
+            --registry ${{ env.REGISTRY_NAME }} --image ${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER} \
+            --context ${{ env.CONTEXT }} --file ${{ env.ROOT_FOLDER_BE }}Dockerfile
 
       #- name: BE - ACR Build
       #  if: success()
@@ -116,6 +116,6 @@ jobs:
       #    folder: ${{ env.ROOT_FOLDER_FE }}
 
 
-      #- name: Azure logout
-      #  run: |
-      #    az logout
+      - name: Azure logout
+        run: |
+          az logout
