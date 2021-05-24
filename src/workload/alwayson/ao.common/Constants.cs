@@ -8,7 +8,8 @@ namespace ao.common
 {
 	public struct Constants
 	{
-		public const string ID = "Id";
+		//public const string ID = "id";
+		public const string HANDLE = "Handle";
 		public const string MESSAGE_TYPE = "MessageType";
 
 	}

@@ -124,7 +124,7 @@ jobs:
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
-          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ matrix.region }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
           APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
