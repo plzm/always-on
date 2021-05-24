@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ao.be": {
+      "commandName": "Project"
+    },
+    "Docker": {
+      "commandName": "Docker"
+    }
+  }
+}

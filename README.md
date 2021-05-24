@@ -244,6 +244,7 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/)
 
 - [GHA Docs](https://docs.github.com/en/actions)
+- [GHA for Azure](https://github.com/marketplace?type=actions&query=Azure)
 - [GHA Events that trigger Workflows](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
 - [Use AKV Secrets in GHA Workflow](https://docs.microsoft.com/azure/developer/github/github-key-vault)
 - [GHA: AKS Set Context](https://github.com/Azure/aks-set-context)
