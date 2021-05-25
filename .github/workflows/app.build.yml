@@ -10,12 +10,12 @@ env:
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
   REGISTRY_REPO: ao
-  IMAGE_NAME_BE: aobe
-  IMAGE_NAME_FE: aofe
+  BE_IMAGE_NAME: ao.be
+  FE_IMAGE_NAME: ao.fe
 
   ROOT_FOLDER: './src/workload/alwayson/'
-  ROOT_FOLDER_BE: './src/workload/alwayson/ao.be/'
-  ROOT_FOLDER_FE: './src/workload/alwayson/ao.fe/'
+  BE_FOLDER_NAME: 'ao.be'
+  FE_FOLDER_NAME: 'ao.fe'
 
 jobs:
   build-app:
@@ -33,25 +33,31 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          BRANCH_NAME=${GITHUB_REF##*/}
-          CONTEXT=https://github.com/${GITHUB_REPOSITORY}.git#$BRANCH_NAME
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
 
-          BE_TAGS="${{ env.IMAGE_NAME_BE }}:latest,${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}"
+          BE_FOLDER_PATH=${{ env.ROOT_FOLDER }}${{ env.BE_FOLDER_NAME }}/
+          FE_FOLDER_PATH=${{ env.ROOT_FOLDER }}${{ env.FE_FOLDER_NAME }}/
 
-          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
-          echo "CONTEXT=$CONTEXT" >> $GITHUB_ENV
+          BE_FQDN=${REGISTRY_NAME}.azurecr.io/${REGISTRY_REPO}/${BE_IMAGE_NAME}
+          FE_FQDN=${REGISTRY_NAME}.azurecr.io/${REGISTRY_REPO}/${FE_IMAGE_NAME}
+
           echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
 
-          echo "BE_TAGS=$BE_TAGS" >> $GITHUB_ENV
+          echo "BE_FOLDER_PATH=$BE_FOLDER_PATH" >> $GITHUB_ENV
+          echo "FE_FOLDER_PATH=$FE_FOLDER_PATH" >> $GITHUB_ENV
+
+          echo "BE_FQDN=$BE_FQDN" >> $GITHUB_ENV
+          echo "FE_FQDN=$FE_FQDN" >> $GITHUB_ENV
+
 
       - name: Debug
         if: success()
         run: |
-          echo ${{ env.BRANCH_NAME }}
-          echo ${{ env.CONTEXT }}
           echo ${{ env.REGISTRY_NAME }}
-          echo ${{ env.BE_TAGS }}
+          echo ${{ env.BE_FOLDER_PATH }}
+          echo ${{ env.FE_FOLDER_PATH }}
+          echo ${{ env.BE_FQDN }}
+          echo ${{ env.FE_FQDN }}
 
 
       - name: Setup dotnet
@@ -63,12 +69,12 @@ jobs:
       #- name: BE - Build
       #  if: success()
       #  run: dotnet build
-      #  working-directory: ${{ env.ROOT_FOLDER_BE }}
+      #  working-directory: ${{ env.BE_FOLDER_PATH }}
 
       #- name: BE - Test
       #  if: success()
       #  run: dotnet test --no-build --verbosity normal
-      #  working-directory: ${{ env.ROOT_FOLDER_BE }}
+      #  working-directory: ${{ env.BE_FOLDER_PATH }}
 
       - name: Login to ACR
         if: success()
@@ -82,47 +88,8 @@ jobs:
         if: success()
         working-directory: ${{ env.ROOT_FOLDER }}
         run: |
-          docker build -f ao.be/Dockerfile -t ${{ env.IMAGE_NAME_BE }}:latest -t ${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER} .
-          docker push ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}
-
-
-      #- name: BE - ACR Build
-      #  if: success()
-      #  run: |
-      #    az acr task create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n acr-build-be --verbose \
-      #      --registry ${{ env.REGISTRY_NAME }} --image ${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER} \
-      #      --context ${{ env.CONTEXT }} --file ${{ env.ROOT_FOLDER_BE }}Dockerfile \
-      #      --commit-trigger-enabled false --pull-request-trigger-enabled false
-
-
-
-
-      #- name: FE - Restore Dependencies
-      #  if: success()
-      #  run: dotnet restore
-      #  working-directory: ${{ env.ROOT_FOLDER_FE }}
-
-      #- name: FE - Build
-      #  if: success()
-      #  run: dotnet build --no-restore
-      #  working-directory: ${{ env.ROOT_FOLDER_FE }}
-
-      #- name: FE - Test
-      #  if: success()
-      #  run: dotnet test --no-build --verbosity normal
-      #  working-directory: ${{ env.ROOT_FOLDER_FE }}
-
-      #- name: FE - ACR Build
-      #  if: success()
-      #  uses: ams0/acr-task-github-action@v2
-      #  with:
-      #    service_principal: ${{ secrets.SP_CLIENT_ID }}
-      #    service_principal_password: ${{ secrets.SP_CLIENT_SECRET }}
-      #    tenant: ${{ secrets.AZURE_TENANT_ID }}
-      #    registry: ${{ env.REGISTRY_NAME }}
-      #    repository: ${{ env.REGISTRY_REPO }}
-      #    image: ${{ env.IMAGE_NAME_FE }}
-      #    folder: ${{ env.ROOT_FOLDER_FE }}
+          docker build -f ${{ env.BE_FOLDER_NAME }}/Dockerfile -t ${{ env.BE_FQDN }}:latest -t ${{ env.BE_FQDN }}:${GITHUB_RUN_NUMBER} .
+          docker image push ${{ env.BE_FQDN }} -a
 
 
       - name: Azure logout
