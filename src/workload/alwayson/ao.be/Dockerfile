@@ -1,22 +1,14 @@
+# Context is sln directory, NOT proj directory, due to local (project) references
+# docker build -f ao.be/Dockerfile -t ao.be:latest -t ao.be:1.0 .
+
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /app
 
-COPY ["/src/workload/alwayson/ao.be/*.*", "ao.be/"]
-COPY ["/src/workload/alwayson/ao.common/*.*", "ao.common/"]
+COPY . ./
+RUN dotnet publish "ao.be/ao.be.csproj" -c Release -o out
 
-RUN dotnet restore "ao.be/ao.be.csproj"
-RUN dotnet restore "ao.common/ao.common.csproj"
-
-WORKDIR /app/ao.be
-RUN dotnet build "ao.be.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "ao.be.csproj" -c Release -o /app/publish
-
-FROM mcr.microsoft.com/dotnet/runtime:5.0 AS base
+FROM mcr.microsoft.com/dotnet/runtime:5.0 AS run
 WORKDIR /app
 
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/out .
 ENTRYPOINT ["dotnet", "ao.be.dll"]
