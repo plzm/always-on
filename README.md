@@ -256,6 +256,7 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [Event Hubs Processor SDK Samples](https://github.com/Azure/azure-sdk-for-net/tree/master/sdk/eventhub/Azure.Messaging.EventHubs.Processor/samples)
 
 - [Docker build cmd line reference](https://docs.docker.com/engine/reference/commandline/build/)
+- [dotnet docker repo](https://github.com/dotnet/dotnet-docker/)
 
 ##### Workload
 
