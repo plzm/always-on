@@ -80,8 +80,9 @@ jobs:
 
       - name: BE - Build and Push
         if: success()
+        working-directory: ${{ env.ROOT_FOLDER }}
         run: |
-          docker build -f ${{ env.ROOT_FOLDER_BE }}Dockerfile -t ${{ env.IMAGE_NAME_BE }}:latest -t ${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER} .
+          docker build -f ao.be/Dockerfile -t ${{ env.IMAGE_NAME_BE }}:latest -t ${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER} .
           docker push ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}
 
 
