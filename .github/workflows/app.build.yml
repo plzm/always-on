@@ -91,6 +91,7 @@ jobs:
         if: success()
         uses: docker/build-push-action@v2
         with:
+          registry: ${{ env.REGISTRY_NAME }}.azurecr.io
           push: true
           context: ${{ env.ROOT_FOLDER }}
           tags: ${{ env.BE_TAGS }}
