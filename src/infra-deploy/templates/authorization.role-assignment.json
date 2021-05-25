@@ -34,7 +34,7 @@
 				concat(parameters('resourceType'), '/', parameters('resourceName'))
 			)
 		]",
-		"apiVersionAuthRoleAssignment": "2020-10-01-preview"
+		"apiVersionAuthRoleAssignment": "2018-07-01"
 	},
 	"resources": [
 		{
