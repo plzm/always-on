@@ -92,7 +92,7 @@ jobs:
       - name: sed container image URI (fjogeleit action doesn't seem to handle list items/properties)
         if: success()
         run: |
-          sed -i "s/CONTAINER_IMAGE_URI/${{ env.BE_FQDN }}:latest/" ${{ env.WORKLOAD_FILE_BE }}
+          sed -i "s/REGISTRY_NAME/${{ env.REGISTRY_NAME }}/" ${{ env.WORKLOAD_FILE_BE }}
 
       - name: cat Back End YAML file
         if: success()

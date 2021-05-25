@@ -17,7 +17,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: ao.be
-        image: CONTAINER_IMAGE_URI
+        image: REGISTRY_NAME.azurecr.io/ao/ao.be:latest
         securityContext:
           capabilities:
             drop:
