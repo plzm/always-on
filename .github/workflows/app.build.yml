@@ -81,8 +81,9 @@ jobs:
       - name: BE - Build and Push
         if: success()
         run: |
-          docker build -f ${{ env.ROOT_FOLDER_BE }}Dockerfile -t ${{ env.BE_TAGS }} .
+          docker build -f ${{ env.ROOT_FOLDER_BE }}Dockerfile -t ${{ env.IMAGE_NAME_BE }}:latest -t ${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER} .
           docker push ${{ env.REGISTRY_NAME }}.azurecr.io/${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}
+
 
       #- name: BE - ACR Build
       #  if: success()
