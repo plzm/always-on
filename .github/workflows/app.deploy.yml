@@ -7,6 +7,10 @@ env:
   PREFIX: 'pz-ao'
   SUFFIX: '24'
 
+  REGISTRY_REPO: ao
+  BE_IMAGE_NAME: ao.be
+  FE_IMAGE_NAME: ao.fe
+
   AKS_PATH_ROOT: './src/workload-deploy/aks/'
 
 jobs:
@@ -28,20 +32,36 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          WORKLOAD_FILE_FE=${{ env.AKS_PATH_ROOT }}ao.fe.yaml
+          WORKLOAD_FILE_BE=${{ env.AKS_PATH_ROOT }}ao.be.yaml
+          WORKLOAD_FILE_SI=${{ env.AKS_PATH_ROOT }}ao.services-ingress.yaml
+
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
 
           UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           AKS_POD_IDENTITY_BINDING_SELECTOR=$UAMI_NAME-binding
 
+          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+          BE_FQDN=${REGISTRY_NAME}.azurecr.io/${REGISTRY_REPO}/${BE_IMAGE_NAME}
+          FE_FQDN=${REGISTRY_NAME}.azurecr.io/${REGISTRY_REPO}/${FE_IMAGE_NAME}
+
           VNET_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APP_NSG_NAME=app-${{ matrix.region }}
+
+          echo "WORKLOAD_FILE_FE=$WORKLOAD_FILE_FE" >> $GITHUB_ENV
+          echo "WORKLOAD_FILE_BE=$WORKLOAD_FILE_BE" >> $GITHUB_ENV
+          echo "WORKLOAD_FILE_SI=$WORKLOAD_FILE_SI" >> $GITHUB_ENV
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
           echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
 
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "AKS_POD_IDENTITY_BINDING_SELECTOR=$AKS_POD_IDENTITY_BINDING_SELECTOR" >> $GITHUB_ENV
+
+          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+          echo "BE_FQDN=$BE_FQDN" >> $GITHUB_ENV
+          echo "FE_FQDN=$FE_FQDN" >> $GITHUB_ENV
 
           echo "VNET_NAME=$VNET_NAME" >> $GITHUB_ENV
           echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
@@ -51,33 +71,66 @@ jobs:
         if: success()
         uses: fjogeleit/yaml-update-action@master
         with:
-          valueFile: '${{ env.AKS_PATH_ROOT }}workload.back.yaml'
+          valueFile: '${{ env.WORKLOAD_FILE_BE }}'
           propertyPath: 'spec.template.metadata.labels.aadpodidbinding'
           value: '${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}'
           updateFile: 'true'
           commitChange: 'false'
           createPR: 'false'
 
-      - name: Debug Back
+      - name: Write Container Pull Source to Back End YAML file
+        if: success()
+        uses: fjogeleit/yaml-update-action@master
+        with:
+          valueFile: '${{ env.WORKLOAD_FILE_BE }}'
+          propertyPath: 'spec.template.spec.containers.0.image'
+          value: '${{ env.BE_FQDN }}:latest'
+          updateFile: 'true'
+          commitChange: 'false'
+          createPR: 'false'
+
+      #- name: sed Back End YAML file container image URI
+      #  if: success()
+      #  run: |
+      #    sed -i "s/REGISTRY_NAME/${{ env.REGISTRY_NAME }}/" ${{ env.WORKLOAD_FILE_BE }}
+
+      - name: cat Back End YAML file
         if: success()
         run: |
-          cat ${{ env.AKS_PATH_ROOT }}workload.back.yaml
+          cat ${{ env.WORKLOAD_FILE_BE }}
+
 
       - name: Write Pod Identity Binding Selector to Front End YAML file
         if: success()
         uses: fjogeleit/yaml-update-action@master
         with:
-          valueFile: '${{ env.AKS_PATH_ROOT }}workload.front.yaml'
+          valueFile: '${{ env.WORKLOAD_FILE_FE }}'
           propertyPath: 'spec.template.metadata.labels.aadpodidbinding'
           value: '${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}'
           updateFile: 'true'
           commitChange: 'false'
           createPR: 'false'
 
-      - name: Debug Front
+      - name: Write Container Pull Source to Front End YAML file
+        if: success()
+        uses: fjogeleit/yaml-update-action@master
+        with:
+          valueFile: '${{ env.WORKLOAD_FILE_FE }}'
+          propertyPath: 'spec.template.spec.containers.0.image'
+          value: '${{ env.FE_FQDN }}:latest'
+          updateFile: 'true'
+          commitChange: 'false'
+          createPR: 'false'
+
+      #- name: sed Front End YAML file container image URI
+      #  if: success()
+      #  run: |
+      #    sed -i "s/REGISTRY_NAME/${{ env.REGISTRY_NAME }}/" ${{ env.WORKLOAD_FILE_FE }}
+
+      - name: cat Front End YAML file
         if: success()
         run: |
-          cat ${{ env.AKS_PATH_ROOT }}workload.front.yaml
+          cat ${{ env.WORKLOAD_FILE_FE }}
 
 
       - name: Set AKS Context
@@ -92,7 +145,7 @@ jobs:
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '${{ env.AKS_PATH_ROOT }}workload.back.yaml'
+          manifests: '${{ env.WORKLOAD_FILE_BE }}'
           kubectl-version: 'latest'
           force: true
           namespace: default
@@ -101,7 +154,7 @@ jobs:
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '${{ env.AKS_PATH_ROOT }}workload.front.yaml'
+          manifests: '${{ env.WORKLOAD_FILE_FE }}'
           kubectl-version: 'latest'
           force: true
           namespace: default
@@ -110,7 +163,7 @@ jobs:
         if: success()
         uses: Azure/k8s-deploy@v1.4
         with:
-          manifests: '${{ env.AKS_PATH_ROOT }}workload.services-ingress.yaml'
+          manifests: '${{ env.WORKLOAD_FILE_SI }}'
           kubectl-version: 'latest'
           force: true
           namespace: default

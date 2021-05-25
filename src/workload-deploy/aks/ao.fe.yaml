@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ao-fe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ao-fe
+  template:
+    metadata:
+      labels:
+        app: ao-fe
+        aadpodidbinding: PROVIDE
+    spec:
+      nodeSelector:
+        "beta.kubernetes.io/os": linux
+      containers:
+      - name: ao-fe
+        image: REGISTRY_NAME.azurecr.io/ao/ao.fe:latest
+        securityContext:
+          capabilities:
+            drop:
+            - NET_RAW
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 2000m
+            memory: 2048Mi
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
+        env:
+        - name: CosmosDbConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbConnectionString
+        - name: CosmosDbDatabaseName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbDatabaseName
+        - name: CosmosDbProfileContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProfileContainerName
+        - name: CosmosDbProgressContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: CosmosDbProgressContainerName
+        - name: StorageAccountConnString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: StorageAccountConnString
+        - name: StorageAccountName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: StorageAccountName
+        - name: StorageContainerName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: StorageContainerName
+        - name: EventHubConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConnectionString
+        - name: EventHubName
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubName
+        - name: EventHubConsumerGroup
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubConsumerGroup
+      volumes:
+      - name: secrets-store-inline
+        csi:
+          driver: secrets-store.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "azure-kv-secrets-provider"
