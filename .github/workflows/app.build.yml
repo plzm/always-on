@@ -66,15 +66,6 @@ jobs:
         with:
           dotnet-version: 5.0.x
 
-      #- name: BE - Build
-      #  if: success()
-      #  run: dotnet build
-      #  working-directory: ${{ env.BE_FOLDER_PATH }}
-
-      #- name: BE - Test
-      #  if: success()
-      #  run: dotnet test --no-build --verbosity normal
-      #  working-directory: ${{ env.BE_FOLDER_PATH }}
 
       - name: Login to ACR
         if: success()
@@ -84,12 +75,41 @@ jobs:
           username: ${{ secrets.SP_CLIENT_ID }}
           password: ${{ secrets.SP_CLIENT_SECRET }}
 
-      - name: BE - Build and Push
+
+      - name: BE - dotnet build
+        if: success()
+        run: dotnet build
+        working-directory: ${{ env.BE_FOLDER_PATH }}
+
+      - name: BE - dotnet test
+        if: success()
+        run: dotnet test --no-build --verbosity normal
+        working-directory: ${{ env.BE_FOLDER_PATH }}
+
+      - name: BE - docker build and push
         if: success()
         working-directory: ${{ env.ROOT_FOLDER }}
         run: |
           docker build -f ${{ env.BE_FOLDER_NAME }}/Dockerfile -t ${{ env.BE_FQDN }}:latest -t ${{ env.BE_FQDN }}:${GITHUB_RUN_NUMBER} .
           docker image push ${{ env.BE_FQDN }} -a
+
+
+      - name: FE - dotnet build
+        if: success()
+        run: dotnet build
+        working-directory: ${{ env.FE_FOLDER_PATH }}
+
+      - name: FE - dotnet test
+        if: success()
+        run: dotnet test --no-build --verbosity normal
+        working-directory: ${{ env.FE_FOLDER_PATH }}
+
+      - name: FE - docker build and push
+        if: success()
+        working-directory: ${{ env.ROOT_FOLDER }}
+        run: |
+          docker build -f ${{ env.FE_FOLDER_NAME }}/Dockerfile -t ${{ env.FE_FQDN }}:latest -t ${{ env.FE_FQDN }}:${GITHUB_RUN_NUMBER} .
+          docker image push ${{ env.FE_FQDN }} -a
 
 
       - name: Azure logout
