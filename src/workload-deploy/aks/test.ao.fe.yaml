@@ -11,13 +11,13 @@ spec:
     metadata:
       labels:
         app: ao-fe
-        aadpodidbinding: PROVIDE
+        aadpodidbinding: pz-ao-eastus-binding
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
       containers:
       - name: ao-fe
-        image: REGISTRY_NAME.azurecr.io/ao/ao.fe:latest
+        image: pzao24.azurecr.io/ao/ao.fe:latest
         securityContext:
           capabilities:
             drop:

@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ao.be
+  name: ao-be
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ao.be
+      app: ao-be
   template:
     metadata:
       labels:
-        app: ao.be
+        app: ao-be
         aadpodidbinding: PROVIDE
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
       containers:
-      - name: ao.be
+      - name: ao-be
         image: REGISTRY_NAME.azurecr.io/ao/ao.be:latest
         securityContext:
           capabilities:

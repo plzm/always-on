@@ -1,40 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ao-fe
+  name: ao-be
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ao-fe
+      app: ao-be
   template:
     metadata:
       labels:
-        app: ao-fe
-        aadpodidbinding: PROVIDE
+        app: ao-be
+        aadpodidbinding: pz-ao-eastus-binding
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
       containers:
-      - name: ao-fe
-        image: REGISTRY_NAME.azurecr.io/ao/ao.fe:latest
+      - name: ao-be
+        image: pzao24.azurecr.io/ao/ao.be:latest
         securityContext:
           capabilities:
             drop:
             - NET_RAW
-        resources:
-          requests:
-            cpu: 250m
-            memory: 256Mi
-          limits:
-            cpu: 2000m
-            memory: 2048Mi
-        ports:
-        - containerPort: 80
-        volumeMounts:
-        - name: secrets-store-inline
-          mountPath: "/mnt/secrets-store"
-          readOnly: true
         env:
         - name: CosmosDbConnectionString
           valueFrom:
@@ -86,6 +73,17 @@ spec:
             secretKeyRef:
               name: ao-secrets
               key: EventHubConsumerGroup
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 2000m
+            memory: 2048Mi
+        volumeMounts:
+        - name: secrets-store-inline
+          mountPath: "/mnt/secrets-store"
+          readOnly: true
       volumes:
       - name: secrets-store-inline
         csi:
