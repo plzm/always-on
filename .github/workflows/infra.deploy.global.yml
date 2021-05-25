@@ -7,6 +7,8 @@ env:
   PREFIX: 'pz-ao'
   SUFFIX: '24'
 
+  RBAC_ROLE_ID_ACR_PUSH: '8311e382-0749-4cb8-b61a-304f252e45ec'
+
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_GLOBAL: 'eastus'
 
@@ -85,11 +87,12 @@ jobs:
           echo "FRONT_DOOR_WAF_POLICY_ID=$FRONT_DOOR_WAF_POLICY_ID" >> $GITHUB_ENV
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$FRONT_DOOR_ORIGIN_GROUP_ID" >> $GITHUB_ENV
 
+          echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
 
       - name: Create Azure resource group
         if: success()
         run: |
-          az group create --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --location ${{env.AZURE_LOCATION_GLOBAL}} --name ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
 
 
       - name: Deploy Log Analytics
@@ -133,6 +136,15 @@ jobs:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/container-registry.diagnostics.json
           parameters: registryName=${{env.REGISTRY_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      - name: Grant Deploy SP AcrPush on Global Registry
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-push
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PUSH }} principalId=${{ env.AZURE_CRED_SP_OBJECT_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
 
       - name: Deploy App Insights

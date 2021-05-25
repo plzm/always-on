@@ -7,19 +7,19 @@ env:
   PREFIX: 'pz-ao'
   SUFFIX: '24'
 
-  REGISTRY_REPO: ao
-  IMAGE_NAME_BE: ao-be
-  IMAGE_NAME_FE: ao-fe
+  AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
-  ROOT_FOLDER_BE: './src/workload/always-on/ao.be/'
-  ROOT_FOLDER_FE: './src/workload/always-on/ao.fe/'
+  REGISTRY_REPO: ao
+  BE_IMAGE_NAME: ao.be
+  FE_IMAGE_NAME: ao.fe
+
+  ROOT_FOLDER: './src/workload/alwayson/'
+  BE_FOLDER_NAME: 'ao.be'
+  FE_FOLDER_NAME: 'ao.fe'
 
 jobs:
   build-app:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        region: [eastus]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -35,7 +35,29 @@ jobs:
         run: |
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
 
+          BE_FOLDER_PATH=${{ env.ROOT_FOLDER }}${{ env.BE_FOLDER_NAME }}/
+          FE_FOLDER_PATH=${{ env.ROOT_FOLDER }}${{ env.FE_FOLDER_NAME }}/
+
+          BE_FQDN=${REGISTRY_NAME}.azurecr.io/${REGISTRY_REPO}/${BE_IMAGE_NAME}
+          FE_FQDN=${REGISTRY_NAME}.azurecr.io/${REGISTRY_REPO}/${FE_IMAGE_NAME}
+
           echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+
+          echo "BE_FOLDER_PATH=$BE_FOLDER_PATH" >> $GITHUB_ENV
+          echo "FE_FOLDER_PATH=$FE_FOLDER_PATH" >> $GITHUB_ENV
+
+          echo "BE_FQDN=$BE_FQDN" >> $GITHUB_ENV
+          echo "FE_FQDN=$FE_FQDN" >> $GITHUB_ENV
+
+
+      - name: Debug
+        if: success()
+        run: |
+          echo ${{ env.REGISTRY_NAME }}
+          echo ${{ env.BE_FOLDER_PATH }}
+          echo ${{ env.FE_FOLDER_PATH }}
+          echo ${{ env.BE_FQDN }}
+          echo ${{ env.FE_FQDN }}
 
 
       - name: Setup dotnet
@@ -45,61 +67,49 @@ jobs:
           dotnet-version: 5.0.x
 
 
-      - name: BE - Restore Dependencies
+      - name: Login to ACR
         if: success()
-        run: dotnet restore
-        working-directory: ${{ env.ROOT_FOLDER_BE }}
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ env.REGISTRY_NAME }}.azurecr.io
+          username: ${{ secrets.SP_CLIENT_ID }}
+          password: ${{ secrets.SP_CLIENT_SECRET }}
 
-      - name: BE - Build
+
+      - name: BE - dotnet build
         if: success()
-        run: dotnet build --no-restore
-        working-directory: ${{ env.ROOT_FOLDER_BE }}
+        run: dotnet build
+        working-directory: ${{ env.BE_FOLDER_PATH }}
 
-      - name: BE - Test
+      - name: BE - dotnet test
         if: success()
         run: dotnet test --no-build --verbosity normal
-        working-directory: ${{ env.ROOT_FOLDER_BE }}
+        working-directory: ${{ env.BE_FOLDER_PATH }}
 
-      - name: BE - ACR Build
+      - name: BE - docker build and push
         if: success()
-        uses: ams0/acr-task-github-action@v2
-        with:
-          service_principal: ${{ secrets.SP_CLIENT_ID }}
-          service_principal_password: ${{ secrets.SP_CLIENT_SECRET }}
-          tenant: ${{ secrets.AZURE_TENANT_ID }}
-          registry: ${{ env.REGISTRY_NAME }}
-          repository: ${{ env.REGISTRY_REPO }}
-          image: ${{ env.IMAGE_NAME_BE }}
-          folder: ${{ env.ROOT_FOLDER_BE }}
+        working-directory: ${{ env.ROOT_FOLDER }}
+        run: |
+          docker build -f ${{ env.BE_FOLDER_NAME }}/Dockerfile -t ${{ env.BE_FQDN }}:latest -t ${{ env.BE_FQDN }}:${GITHUB_RUN_NUMBER} .
+          docker image push ${{ env.BE_FQDN }} -a
 
 
-
-      - name: FE - Restore Dependencies
+      - name: FE - dotnet build
         if: success()
-        run: dotnet restore
-        working-directory: ${{ env.ROOT_FOLDER_FE }}
+        run: dotnet build
+        working-directory: ${{ env.FE_FOLDER_PATH }}
 
-      - name: FE - Build
-        if: success()
-        run: dotnet build --no-restore
-        working-directory: ${{ env.ROOT_FOLDER_FE }}
-
-      - name: FE - Test
+      - name: FE - dotnet test
         if: success()
         run: dotnet test --no-build --verbosity normal
-        working-directory: ${{ env.ROOT_FOLDER_FE }}
+        working-directory: ${{ env.FE_FOLDER_PATH }}
 
-      - name: FE - ACR Build
+      - name: FE - docker build and push
         if: success()
-        uses: ams0/acr-task-github-action@v2
-        with:
-          service_principal: ${{ secrets.SP_CLIENT_ID }}
-          service_principal_password: ${{ secrets.SP_CLIENT_SECRET }}
-          tenant: ${{ secrets.AZURE_TENANT_ID }}
-          registry: ${{ env.REGISTRY_NAME }}
-          repository: ${{ env.REGISTRY_REPO }}
-          image: ${{ env.IMAGE_NAME_FE }}
-          folder: ${{ env.ROOT_FOLDER_FE }}
+        working-directory: ${{ env.ROOT_FOLDER }}
+        run: |
+          docker build -f ${{ env.FE_FOLDER_NAME }}/Dockerfile -t ${{ env.FE_FQDN }}:latest -t ${{ env.FE_FQDN }}:${GITHUB_RUN_NUMBER} .
+          docker image push ${{ env.FE_FQDN }} -a
 
 
       - name: Azure logout
