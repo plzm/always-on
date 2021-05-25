@@ -23,8 +23,6 @@ spec:
             drop:
             - NET_RAW
         env:
-        - name: ALLOW_EMPTY_PASSWORD
-          value: "yes"
         - name: CosmosDbConnectionString
           valueFrom:
             secretKeyRef:
@@ -80,8 +78,8 @@ spec:
             cpu: 250m
             memory: 256Mi
           limits:
-            cpu: 1000m
-            memory: 1024Mi
+            cpu: 2000m
+            memory: 2048Mi
         volumeMounts:
         - name: secrets-store-inline
           mountPath: "/mnt/secrets-store"

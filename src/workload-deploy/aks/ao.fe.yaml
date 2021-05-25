@@ -17,7 +17,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: ao.fe
-        image: PROVIDE
+        image: REGISTRY_NAME.azurecr.io/ao/ao.fe:latest
         securityContext:
           capabilities:
             drop:
@@ -27,8 +27,8 @@ spec:
             cpu: 250m
             memory: 256Mi
           limits:
-            cpu: 1000m
-            memory: 1024Mi
+            cpu: 2000m
+            memory: 2048Mi
         ports:
         - containerPort: 80
         volumeMounts:
