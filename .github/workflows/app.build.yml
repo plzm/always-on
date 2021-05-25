@@ -10,8 +10,8 @@ env:
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
   REGISTRY_REPO: ao
-  IMAGE_NAME_BE: ao-be
-  IMAGE_NAME_FE: ao-fe
+  IMAGE_NAME_BE: aobe
+  IMAGE_NAME_FE: aofe
 
   ROOT_FOLDER: './src/workload/alwayson/'
   ROOT_FOLDER_BE: './src/workload/alwayson/ao.be/'
@@ -37,13 +37,15 @@ jobs:
           CONTEXT=https://github.com/${GITHUB_REPOSITORY}.git#$BRANCH_NAME
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
 
-          BE_TAGS="${GITHUB_ACTOR}/${{ env.IMAGE_NAME_BE }}:latest,${GITHUB_ACTOR}/${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}"
+          BE_TAGS="${{ env.IMAGE_NAME_BE }}:latest,${{ env.IMAGE_NAME_BE }}:${GITHUB_RUN_NUMBER}"
 
           echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
           echo "CONTEXT=$CONTEXT" >> $GITHUB_ENV
           echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
 
           echo "BE_TAGS=$BE_TAGS" >> $GITHUB_ENV
+
+          echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
 
       - name: Debug
         if: success()
@@ -73,7 +75,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ${{ env.REGISTRY_NAME }}.azurecr.io
-          username: ${{ secrets.SP_CLIENT_ID }}
+          username: ${{ env.AZURE_CRED_SP_OBJECT_ID }}
           password: ${{ secrets.SP_CLIENT_SECRET }}
 
 
