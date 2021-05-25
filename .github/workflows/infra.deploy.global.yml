@@ -143,7 +143,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-push
           template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PUSH }} principalId=${{ secrets.SP_CLIENT_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PUSH }} principalId="204a229d-49f7-493c-be8b-014f37df833f" resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
 
       #- name: Deploy App Insights
