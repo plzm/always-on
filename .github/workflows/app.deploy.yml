@@ -49,6 +49,10 @@ jobs:
           VNET_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APP_NSG_NAME=app-${{ matrix.region }}
 
+          echo "WORKLOAD_FILE_FE=$WORKLOAD_FILE_FE" >> $GITHUB_ENV
+          echo "WORKLOAD_FILE_BE=$WORKLOAD_FILE_BE" >> $GITHUB_ENV
+          echo "WORKLOAD_FILE_SI=$WORKLOAD_FILE_SI" >> $GITHUB_ENV
+
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
           echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
 
