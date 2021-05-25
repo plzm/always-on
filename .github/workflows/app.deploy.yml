@@ -89,7 +89,7 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      #- name: sed Back End YAML file container image URI (fjogeleit action doesn't seem to handle list items/properties)
+      #- name: sed Back End YAML file container image URI
       #  if: success()
       #  run: |
       #    sed -i "s/REGISTRY_NAME/${{ env.REGISTRY_NAME }}/" ${{ env.WORKLOAD_FILE_BE }}
@@ -122,7 +122,7 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      #- name: sed Front End YAML file container image URI (fjogeleit action doesn't seem to handle list items/properties)
+      #- name: sed Front End YAML file container image URI
       #  if: success()
       #  run: |
       #    sed -i "s/REGISTRY_NAME/${{ env.REGISTRY_NAME }}/" ${{ env.WORKLOAD_FILE_FE }}
@@ -133,40 +133,40 @@ jobs:
           cat ${{ env.WORKLOAD_FILE_FE }}
 
 
-      #- name: Set AKS Context
-      #  if: success()
-      #  uses: azure/aks-set-context@v1
-      #  with:
-      #    creds: '${{ secrets.AZURE_CREDENTIALS }}'
-      #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
-      #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
+      - name: Set AKS Context
+        if: success()
+        uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
+          cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
-      #- name: Deploy Back End to AKS
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.WORKLOAD_FILE_BE }}'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
+      - name: Deploy Back End to AKS
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.WORKLOAD_FILE_BE }}'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
 
-      #- name: Deploy Front End to AKS
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.WORKLOAD_FILE_FE }}'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
+      - name: Deploy Front End to AKS
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.WORKLOAD_FILE_FE }}'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
 
-      #- name: Deploy Services and Ingress to AKS
-      #  if: success()
-      #  uses: Azure/k8s-deploy@v1.4
-      #  with:
-      #    manifests: '${{ env.WORKLOAD_FILE_SI }}'
-      #    kubectl-version: 'latest'
-      #    force: true
-      #    namespace: default
+      - name: Deploy Services and Ingress to AKS
+        if: success()
+        uses: Azure/k8s-deploy@v1.4
+        with:
+          manifests: '${{ env.WORKLOAD_FILE_SI }}'
+          kubectl-version: 'latest'
+          force: true
+          namespace: default
 
 
       - name: Azure logout
