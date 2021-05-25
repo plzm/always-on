@@ -78,16 +78,21 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
-      - name: Write Container Pull Source to Back End YAML file
+      #- name: Write Container Pull Source to Back End YAML file
+      #  if: success()
+      #  uses: fjogeleit/yaml-update-action@master
+      #  with:
+      #    valueFile: '${{ env.WORKLOAD_FILE_BE }}'
+      #    propertyPath: 'spec.template.spec.containers[0].image'
+      #    value: '${{ env.BE_FQDN }}:latest'
+      #    updateFile: 'true'
+      #    commitChange: 'false'
+      #    createPR: 'false'
+
+      - name: sed container image URI (fjogeleit action doesn't seem to handle list items/properties)
         if: success()
-        uses: fjogeleit/yaml-update-action@master
-        with:
-          valueFile: '${{ env.WORKLOAD_FILE_BE }}'
-          propertyPath: 'spec.template.spec.containers{0}.image'
-          value: '${{ env.BE_FQDN }}:latest'
-          updateFile: 'true'
-          commitChange: 'false'
-          createPR: 'false'
+        run: |
+          sed -i 's/CONTAINER_IMAGE_URI/${{ env.BE_FQDN }}:latest' ${{ env.WORKLOAD_FILE_BE }}
 
       - name: cat Back End YAML file
         if: success()

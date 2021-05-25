@@ -17,7 +17,7 @@ spec:
         "beta.kubernetes.io/os": linux
       containers:
       - name: ao.be
-        image: PROVIDE
+        image: CONTAINER_IMAGE_URI
         securityContext:
           capabilities:
             drop:
