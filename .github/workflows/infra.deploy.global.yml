@@ -87,6 +87,7 @@ jobs:
           echo "FRONT_DOOR_WAF_POLICY_ID=$FRONT_DOOR_WAF_POLICY_ID" >> $GITHUB_ENV
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$FRONT_DOOR_ORIGIN_GROUP_ID" >> $GITHUB_ENV
 
+          echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
 
       #- name: Create Azure resource group
       #  if: success()
@@ -143,7 +144,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-push
           template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PUSH }} principalId="204a229d-49f7-493c-be8b-014f37df833f" resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PUSH }} principalId=${{ env.AZURE_CRED_SP_OBJECT_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
 
       #- name: Deploy App Insights
