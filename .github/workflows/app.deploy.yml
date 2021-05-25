@@ -83,7 +83,7 @@ jobs:
         uses: fjogeleit/yaml-update-action@master
         with:
           valueFile: '${{ env.WORKLOAD_FILE_BE }}'
-          propertyPath: 'spec.template.spec.containers.image'
+          propertyPath: 'spec.template.spec.containers[0].image'
           value: '${{ env.BE_FQDN }}:latest'
           updateFile: 'true'
           commitChange: 'false'
@@ -95,32 +95,32 @@ jobs:
           cat ${{ env.WORKLOAD_FILE_BE }}
 
 
-      - name: Write Pod Identity Binding Selector to Front End YAML file
-        if: success()
-        uses: fjogeleit/yaml-update-action@master
-        with:
-          valueFile: '${{ env.WORKLOAD_FILE_FE }}'
-          propertyPath: 'spec.template.metadata.labels.aadpodidbinding'
-          value: '${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}'
-          updateFile: 'true'
-          commitChange: 'false'
-          createPR: 'false'
+      #- name: Write Pod Identity Binding Selector to Front End YAML file
+      #  if: success()
+      #  uses: fjogeleit/yaml-update-action@master
+      #  with:
+      #    valueFile: '${{ env.WORKLOAD_FILE_FE }}'
+      #    propertyPath: 'spec.template.metadata.labels.aadpodidbinding'
+      #    value: '${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}'
+      #    updateFile: 'true'
+      #    commitChange: 'false'
+      #    createPR: 'false'
 
-      - name: Write Container Pull Source to Front End YAML file
-        if: success()
-        uses: fjogeleit/yaml-update-action@master
-        with:
-          valueFile: '${{ env.WORKLOAD_FILE_FE }}'
-          propertyPath: 'spec.template.spec.containers.image'
-          value: '${{ env.FE_FQDN }}:latest'
-          updateFile: 'true'
-          commitChange: 'false'
-          createPR: 'false'
+      #- name: Write Container Pull Source to Front End YAML file
+      #  if: success()
+      #  uses: fjogeleit/yaml-update-action@master
+      #  with:
+      #    valueFile: '${{ env.WORKLOAD_FILE_FE }}'
+      #    propertyPath: 'spec.template.spec.containers.image'
+      #    value: '${{ env.FE_FQDN }}:latest'
+      #    updateFile: 'true'
+      #    commitChange: 'false'
+      #    createPR: 'false'
 
-      - name: cat Front End YAML file
-        if: success()
-        run: |
-          cat ${{ env.WORKLOAD_FILE_FE }}
+      #- name: cat Front End YAML file
+      #  if: success()
+      #  run: |
+      #    cat ${{ env.WORKLOAD_FILE_FE }}
 
 
       #- name: Set AKS Context
