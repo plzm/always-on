@@ -45,8 +45,6 @@ jobs:
 
           echo "BE_TAGS=$BE_TAGS" >> $GITHUB_ENV
 
-          echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
-
       - name: Debug
         if: success()
         run: |
@@ -75,7 +73,7 @@ jobs:
         uses: docker/login-action@v1
         with:
           registry: ${{ env.REGISTRY_NAME }}.azurecr.io
-          username: ${{ env.AZURE_CRED_SP_OBJECT_ID }}
+          username: ${{ secrets.SP_CLIENT_ID }}
           password: ${{ secrets.SP_CLIENT_SECRET }}
 
 
