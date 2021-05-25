@@ -83,7 +83,7 @@ jobs:
         uses: fjogeleit/yaml-update-action@master
         with:
           valueFile: '${{ env.WORKLOAD_FILE_BE }}'
-          propertyPath: 'spec.template.spec.containers[0].image'
+          propertyPath: 'spec.template.spec.containers{0}.image'
           value: '${{ env.BE_FQDN }}:latest'
           updateFile: 'true'
           commitChange: 'false'
