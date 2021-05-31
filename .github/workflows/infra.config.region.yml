@@ -49,6 +49,11 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Install Azure CLI Extensions
+        if: success()
+        run: |
+          az extension add --name application-insights
+
       - name: Prepare dynamic env vars
         if: success()
         run: |
