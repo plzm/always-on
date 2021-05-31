@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ao.fe.Controllers
 {
+	[Route("")]
 	[Route("api/[controller]")]
 	[ApiController]
 	public class HealthCheckController : ControllerBase

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 PREFIX="pz-ao"
-SUFFIX="24"
+SUFFIX="26"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
-location="eastus"
+location="eastus2"
 resourceGroup="always-on-""$location"
 clusterName="pz-ao-""$location"
 
