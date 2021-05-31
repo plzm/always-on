@@ -689,9 +689,9 @@ jobs:
         if: success()
         run: |
           az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} --verbose \
-            --path ${{ env.APIM_API_SERVICE_PATH }} --display-name "${{ env.APIM_API_NAME }}"" --description "${{ env.APIM_API_DESCRIPTION }}" \
-            --protocols ${{ env.APIM_API_PROTOCOLS }} --service-url ${{ env.APPGW_FQDN }} \
-            --specification-format OpenApiJson --specification-path "./src/workload/alwayson/ao.fe/swagger.json" \
+            --path ${{ env.APIM_API_SERVICE_PATH }} --display-name "${{ env.APIM_API_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
+            --protocols ${{ env.APIM_API_PROTOCOLS }} --service-url "${{ env.APPGW_FQDN }}" \
+            --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json" \
             --subscription-required false
 
 
