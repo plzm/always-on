@@ -80,6 +80,7 @@ env:
   APIM_SCALE_UNITS: 3
   APIM_API_VERSION_SET_NAME: 'ao_fe_vs'
   APIM_API_VERSION_SET_DESCRIPTION: 'AlwaysOn Front End API Version Set'
+  APIM_API_VERSION: 'v1'
   APIM_API_NAME: 'ao.fe'
   APIM_API_DESCRIPTION: 'AlwaysOn Front End API'
   APIM_API_SERVICE_PATH: '/'
@@ -648,27 +649,27 @@ jobs:
       #    template: ./src/infra-deploy/templates/apim.service.diagnostics.json
       #    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      #- name: Deploy APIM API Version Set
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-version-set
-      #    template: ./src/infra-deploy/templates/apim.api-version-set.json
-      #    parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" displayName="${{ env.APIM_API_VERSION_SET_NAME }}" description="${{ env.APIM_API_VERSION_SET_DESCRIPTION }}"
+      - name: Deploy APIM API Version Set
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_SERVICE_NAME }}-version-set
+          template: ./src/infra-deploy/templates/apim.api-version-set.json
+          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" displayName="${{ env.APIM_API_VERSION_SET_NAME }}" description="${{ env.APIM_API_VERSION_SET_DESCRIPTION }}"
 
       - name: Get APIM API Version Set Resource ID
         if: success()
         run: echo "APIM_API_VERSION_SET_ID=$(az apim api versionset list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --service-name "${{ env.APIM_SERVICE_NAME }}" -o tsv --query '[0].id')" >> $GITHUB_ENV
 
-      #- name: Deploy APIM Logger
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
-      #    template: ./src/infra-deploy/templates/apim.logger.json
-      #    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
+      - name: Deploy APIM Logger
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
+          template: ./src/infra-deploy/templates/apim.logger.json
+          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
 
       - name: Get APIM Info
         if: success()
@@ -676,42 +677,42 @@ jobs:
           echo "APIM_SERVICE_ID=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
 
-      ##- name: Deploy APIM API (does NOT import API operations - TODO)
-      ##  if: success()
-      ##  uses: azure/arm-deploy@v1
-      ##  with:
-      ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      ##    deploymentName: ${{ env.APIM_SERVICE_NAME }}-api
-      ##    template: ./src/infra-deploy/templates/apim.api.json
-      ##    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} apiName=${{ env.APIM_API_NAME }} displayName=${{ env.APIM_API_NAME }} description="${{ env.APIM_API_DESCRIPTION }}" serviceUrl=${{ env.APIM_API_SERVICE_URL }} path=${{ env.APIM_API_SERVICE_PATH }} apiVersionSetResourceId=${{ env.APIM_API_VERSION_SET_ID }}
+      - name: Deploy APIM API (does NOT import API operations)
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_SERVICE_NAME }}-api
+          template: ./src/infra-deploy/templates/apim.api.json
+          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} apiName=${{ env.APIM_API_NAME }} displayName=${{ env.APIM_API_NAME }} description="${{ env.APIM_API_DESCRIPTION }}" apiVersion="${{ env.APIM_API_VERSION }}" serviceUrl=${{ env.APIM_API_SERVICE_URL }} path=${{ env.APIM_API_SERVICE_PATH }} apiVersionSetResourceId=${{ env.APIM_API_VERSION_SET_ID }}
 
-      #- name: Deploy API / Import Swagger
+      - name: Import API Swagger for API Operations
+        if: success()
+        run: |
+          az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} --verbose \
+            --path ${{ env.APIM_API_SERVICE_PATH }} --display-name "${{ env.APIM_API_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
+            --protocols ${{ env.APIM_API_PROTOCOLS }} --service-url "http://${{ env.APPGW_FQDN }}" \
+            --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json" \
+            --subscription-required false
+
+
+      #- name: Deploy Front Door Origin
       #  if: success()
-      #  run: |
-      #    az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} --verbose \
-      #      --path ${{ env.APIM_API_SERVICE_PATH }} --display-name "${{ env.APIM_API_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
-      #      --protocols ${{ env.APIM_API_PROTOCOLS }} --service-url "http://${{ env.APPGW_FQDN }}" \
-      #      --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json" \
-      #      --subscription-required false
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+      #    deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
+      #    template: ./src/infra-deploy/templates/fd.origin.json
+      #    parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
 
-
-      - name: Deploy Front Door Origin
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
-          template: ./src/infra-deploy/templates/fd.origin.json
-          parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
-
-      - name: Deploy Front Door Route
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
-          template: ./src/infra-deploy/templates/fd.route.json
-          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
+      #- name: Deploy Front Door Route
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+      #    deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
+      #    template: ./src/infra-deploy/templates/fd.route.json
+      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
 
 
       - name: Azure logout
