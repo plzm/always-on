@@ -1,22 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-		<ServerGarbageCollection>true</ServerGarbageCollection>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerfileRunEnvironmentFiles>docker.local.env</DockerfileRunEnvironmentFiles>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Remove="C:\Users\paelaz\.nuget\packages\microsoft.azure.cosmos\3.18.0\contentFiles\any\netstandard2.0\ThirdPartyNotice.txt" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="docker.local.env" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="docker.local.env">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\ao.common\ao.common.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.17.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.14" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\ao.common\ao.common.csproj" />
+	</ItemGroup>
 
 </Project>
