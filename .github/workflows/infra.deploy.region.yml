@@ -108,8 +108,6 @@ jobs:
       - name: Install Azure CLI Extensions
         if: success()
         run: |
-          az extension add --name application-insights
-          az extension add --name aks-preview
           az extension add --name front-door
 
       - name: Prepare dynamic env vars
