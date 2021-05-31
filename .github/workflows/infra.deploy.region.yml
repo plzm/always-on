@@ -82,7 +82,7 @@ env:
   APIM_API_VERSION_SET_DESCRIPTION: 'AlwaysOn Front End API Version Set'
   APIM_API_NAME: 'ao.fe'
   APIM_API_DESCRIPTION: 'AlwaysOn Front End API'
-  APIM_API_SERVICE_PATH: ''
+  APIM_API_SERVICE_PATH: '/'
   APIM_API_PROTOCOLS: 'http,https'
 
   FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
