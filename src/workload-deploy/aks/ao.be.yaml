@@ -27,7 +27,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: ao-secrets
-              key: APPLICATIONINSIGHTS_CONNECTION_STRING
+              key: AppInsightsConnectionString
         - name: CosmosDbConnectionString
           valueFrom:
             secretKeyRef:
