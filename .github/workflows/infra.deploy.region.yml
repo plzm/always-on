@@ -78,11 +78,10 @@ env:
   #APIM_SKU_NAME: 'Premium'
   APIM_VNET_TYPE: 'External'
   APIM_SCALE_UNITS: 3
-  #APIM_API_VERSION_SET_NAME: 'conference_api_vs'
-  #APIM_API_VERSION_SET_DESCRIPTION: 'Conference API Description'
+  APIM_API_VERSION_SET_NAME: 'ao_fe_vs'
+  APIM_API_VERSION_SET_DESCRIPTION: 'AlwaysOn Front End API Version Set'
   APIM_API_NAME: 'ao-fe'
   APIM_API_DESCRIPTION: 'AlwaysOn Front End API'
-  #APIM_API_SERVICE_URL: 'https://conferenceapi.azurewebsites.net'
   APIM_API_SERVICE_PATH: ''
   APIM_API_PROTOCOLS: 'http'
 
@@ -562,7 +561,7 @@ jobs:
         if: success()
         run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      # Contributor on AKS Nodes RG is automatically granted by cluster create. Adding a couple more explicitly here due to AAD pod identity reqs.
+      ## Contributor on AKS Nodes RG is automatically granted by cluster create. Adding a couple more explicitly here due to AAD pod identity reqs.
       #- name: Grant UAMI Managed Identity Operator on AKS Nodes RG
       #  if: success()
       #  uses: azure/arm-deploy@v1
@@ -595,59 +594,59 @@ jobs:
       #  if: success()
       #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy AKS Add-ons - AGIC
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
+      #- name: Deploy AKS Add-ons - AGIC
+      #  if: success()
+      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
-      - name: Install Azure CLI AKS Preview extension for Pod Identity
-        if: success()
-        run: |
-          az extension add --name aks-preview
+      #- name: Install Azure CLI AKS Preview extension for Pod Identity
+      #  if: success()
+      #  run: |
+      #    az extension add --name aks-preview
 
-      - name: Enable Pod Identity
-        if: success()
-        run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
+      #- name: Enable Pod Identity
+      #  if: success()
+      #  run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
 
-      - name: Deploy Pod Identity
-        if: success()
-        run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --identity-resource-id ${{ env.UAMI_ID }}
+      #- name: Deploy Pod Identity
+      #  if: success()
+      #  run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --identity-resource-id ${{ env.UAMI_ID }}
 
 
-      - name: Deploy Public IP for APIM Service
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}
-          template: ./src/infra-deploy/templates/net.public-ip.json
-          parameters: location=${{ matrix.region }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
+      #- name: Deploy Public IP for APIM Service
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}
+      #    template: ./src/infra-deploy/templates/net.public-ip.json
+      #    parameters: location=${{ matrix.region }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
 
-      - name: Deploy Public IP for APIM Service Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}-diag
-          template: ./src/infra-deploy/templates/net.public-ip.diagnostics.json
-          parameters: publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      #- name: Deploy Public IP for APIM Service Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}-diag
+      #    template: ./src/infra-deploy/templates/net.public-ip.diagnostics.json
+      #    parameters: publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy APIM Service
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}
-          template: ./src/infra-deploy/templates/apim.service.json
-          parameters: location=${{ matrix.region }} apimServiceName=${{ env.APIM_SERVICE_NAME }} skuName=${{ env.APIM_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} scaleUnits=${{ env.APIM_SCALE_UNITS }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} virtualNetworkType=${{ env.APIM_VNET_TYPE }} subnetResourceId=${{ env.APIM_SUBNET_ID }}
+      #- name: Deploy APIM Service
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}
+      #    template: ./src/infra-deploy/templates/apim.service.json
+      #    parameters: location=${{ matrix.region }} apimServiceName=${{ env.APIM_SERVICE_NAME }} skuName=${{ env.APIM_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} scaleUnits=${{ env.APIM_SCALE_UNITS }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} virtualNetworkType=${{ env.APIM_VNET_TYPE }} subnetResourceId=${{ env.APIM_SUBNET_ID }}
 
-      - name: Deploy APIM Service Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-diag
-          template: ./src/infra-deploy/templates/apim.service.diagnostics.json
-          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      #- name: Deploy APIM Service Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-diag
+      #    template: ./src/infra-deploy/templates/apim.service.diagnostics.json
+      #    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy APIM API Version Set
         if: success()
