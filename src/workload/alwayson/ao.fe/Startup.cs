@@ -51,7 +51,7 @@ namespace ao.fe
 
 			services.AddSwaggerGen(c =>
 			{
-				c.SwaggerDoc("v1", new OpenApiInfo { Title = "ao.fe", Version = "v1" });
+				c.SwaggerDoc("v1", new OpenApiInfo { Title = "aofe", Version = "v1" });
 			});
 		}
 
@@ -64,7 +64,7 @@ namespace ao.fe
 			}
 
 			app.UseSwagger();
-			app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ao.fe v1"));
+			app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "aofe v1"));
 
 			app.UseRouting();
 

@@ -650,27 +650,27 @@ jobs:
       #    template: ./src/infra-deploy/templates/apim.service.diagnostics.json
       #    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy APIM API Version Set
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-version-set
-          template: ./src/infra-deploy/templates/apim.api-version-set.json
-          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" displayName="${{ env.APIM_API_VERSION_SET_NAME }}" description="${{ env.APIM_API_VERSION_SET_DESCRIPTION }}"
+      #- name: Deploy APIM API Version Set
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-version-set
+      #    template: ./src/infra-deploy/templates/apim.api-version-set.json
+      #    parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" displayName="${{ env.APIM_API_VERSION_SET_NAME }}" description="${{ env.APIM_API_VERSION_SET_DESCRIPTION }}"
 
       - name: Get APIM API Version Set Resource ID
         if: success()
         run: echo "APIM_API_VERSION_SET_ID=$(az apim api versionset list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --service-name "${{ env.APIM_SERVICE_NAME }}" -o tsv --query '[0].id')" >> $GITHUB_ENV
 
-      - name: Deploy APIM Logger
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
-          template: ./src/infra-deploy/templates/apim.logger.json
-          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
+      #- name: Deploy APIM Logger
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
+      #    template: ./src/infra-deploy/templates/apim.logger.json
+      #    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
 
       - name: Get APIM Info
         if: success()
@@ -685,16 +685,13 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-api
           template: ./src/infra-deploy/templates/apim.api.json
-          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" apiName="${{ env.APIM_API_ID }}" displayName="${{ env.APIM_API_DISPLAY_NAME }}" description="${{ env.APIM_API_DESCRIPTION }}" apiVersion="${{ env.APIM_API_VERSION }}" serviceUrl="${{ env.APIM_API_SERVICE_URL }}" path="${{ env.APIM_API_SERVICE_PATH }}" apiVersionSetResourceId="${{ env.APIM_API_VERSION_SET_ID }}"
+          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" apiName="${{ env.APIM_API_ID }}" displayName="${{ env.APIM_API_DISPLAY_NAME }}" description="${{ env.APIM_API_DESCRIPTION }}" apiVersion="${{ env.APIM_API_VERSION }}" serviceUrl=""http://${{ env.APPGW_FQDN }}" path="${{ env.APIM_API_SERVICE_PATH }}" apiVersionSetResourceId="${{ env.APIM_API_VERSION_SET_ID }}"
 
       - name: Import API Swagger for API Operations
         if: success()
         run: |
           az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.APIM_SERVICE_NAME }}" --verbose \
-            --path "${{ env.APIM_API_SERVICE_PATH }}" --display-name "${{ env.APIM_API_DISPLAY_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
-            --protocols "${{ env.APIM_API_PROTOCOLS }}" --service-url "http://${{ env.APPGW_FQDN }}" \
-            --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json" \
-            --subscription-required false
+            --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json"
 
 
       #- name: Deploy Front Door Origin
