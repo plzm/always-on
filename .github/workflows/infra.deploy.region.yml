@@ -81,7 +81,7 @@ env:
   APIM_API_VERSION_SET_NAME: 'ao_fe_vs'
   APIM_API_VERSION_SET_DESCRIPTION: 'AlwaysOn Front End API Version Set'
   APIM_API_VERSION: 'v1'
-  APIM_API_ID: 'ao.fe'
+  APIM_API_ID: 'aofe'
   APIM_API_DISPLAY_NAME: 'AlwaysOn Front End API'
   APIM_API_DESCRIPTION: 'AlwaysOn Front End API'
   APIM_API_SERVICE_PATH: '/'
