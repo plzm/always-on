@@ -129,7 +129,7 @@ jobs:
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
           APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
-          APPGW_FQDN=$APPGW_NAME.${{ matrix.region }}.cloudapp.azure.com
+          APPGW_FQDN=$APPGW_PUBLIC_IP_NAME.${{ matrix.region }}.cloudapp.azure.com
           AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}
           AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME
