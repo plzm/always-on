@@ -5,14 +5,14 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '25'
+  SUFFIX: '26'
 
   RBAC_ROLE_ID_ACR_PUSH: '8311e382-0749-4cb8-b61a-304f252e45ec'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
-  AZURE_LOCATION_GLOBAL: 'eastus'
+  AZURE_LOCATION_GLOBAL: 'eastus2'
 
-  AZURE_LOCATIONS: 'eastus'
+  AZURE_LOCATIONS: 'eastus2'
 
   VNET_ENABLE_DDOS: 'false'
 
