@@ -7,16 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="docker.local.env" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Content Include="docker.local.env">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-
-	<ItemGroup>
 		<PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.17.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.14" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
@@ -24,6 +14,12 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\ao.common\ao.common.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="docker.local.env">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>
