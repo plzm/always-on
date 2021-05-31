@@ -5,6 +5,18 @@
     "version": "v1"
   },
   "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "HealthCheck"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/HealthCheck": {
       "get": {
         "tags": [
