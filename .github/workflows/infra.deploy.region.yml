@@ -685,7 +685,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-api
           template: ./src/infra-deploy/templates/apim.api.json
-          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" apiName="${{ env.APIM_API_ID }}" displayName="${{ env.APIM_API_DISPLAY_NAME }}" description="${{ env.APIM_API_DESCRIPTION }}" apiVersion="${{ env.APIM_API_VERSION }}" serviceUrl=""http://${{ env.APPGW_FQDN }}" path="${{ env.APIM_API_SERVICE_PATH }}" apiVersionSetResourceId="${{ env.APIM_API_VERSION_SET_ID }}"
+          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" apiName="${{ env.APIM_API_ID }}" displayName="${{ env.APIM_API_DISPLAY_NAME }}" description="${{ env.APIM_API_DESCRIPTION }}" apiVersion="${{ env.APIM_API_VERSION }}" serviceUrl="http://${{ env.APPGW_FQDN }}" path="${{ env.APIM_API_SERVICE_PATH }}" apiVersionSetResourceId="${{ env.APIM_API_VERSION_SET_ID }}"
 
       - name: Import API Swagger for API Operations
         if: success()
