@@ -695,23 +695,23 @@ jobs:
       #      --subscription-required false
 
 
-      #- name: Deploy Front Door Origin
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-      #    deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
-      #    template: ./src/infra-deploy/templates/fd.origin.json
-      #    parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
+      - name: Deploy Front Door Origin
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
+          template: ./src/infra-deploy/templates/fd.origin.json
+          parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
 
-      #- name: Deploy Front Door Route
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-      #    deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
-      #    template: ./src/infra-deploy/templates/fd.route.json
-      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
+      - name: Deploy Front Door Route
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
+          template: ./src/infra-deploy/templates/fd.route.json
+          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
 
 
       - name: Azure logout
