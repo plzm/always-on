@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '28'
+  SUFFIX: '29'
 
   RBAC_ROLE_ID_ACR_PUSH: '8311e382-0749-4cb8-b61a-304f252e45ec'
 
@@ -14,7 +14,7 @@ env:
 
   AZURE_LOCATIONS: 'eastus2,westus2'
 
-  VNET_ENABLE_DDOS: 'false'
+  VNET_ENABLE_DDOS: 'true'
 
   COSMOS_DB_MULTI_REGION_WRITE: 'true'
   COSMOS_DB_DATABASE_NAME: 'ao'
