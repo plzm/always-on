@@ -8,34 +8,14 @@
 
 ## SUMMARY
 
-### SCOPE
+This solution deploys and configures a highly performant, multi-region application on Azure. All deployments and configurations are performed by github Actions workflows for maximal automation and CI/CD.
 
-This onboarding solution focuses on building highly performant and globally distributed (always-on) applications on Azure, leveraging popular and emerging native services such as the Azure Kubernetes Service (AKS) and Cosmos DB for a complete and end-to-end application deployment.
+## CONTENTS
 
-This is ultimately a full-stack engineering scenario, with participants working to define, build and configure a multi-region application landscape as well as developing a synthetic workload to optimise and validate the overall performance, availability, and security of the application.
+1. [Scenario and Non-Functional Requirements](./media/docs/01.scenario-nfrs.md)
+2. [Architectures](./media/docs/02.architectures.md)
+3. [Design and Technology Decisions](./media/docs/03.design-tech-decisions.md)
 
-### SCENARIO
-
-The hypothetical scenario for this onboarding solution considers a simple web service for a video game to track player progression. More specifically it offers a global API surface for clients to both retrieve and 'upsert' player progression metrics.
- 
-The system must be highly performant with minimal response times at high request volumes to ensure core player experiences are not impacted, and must also achieve global consistency to ensure multiple clients connecting from across the globe receive an accurate view of player data.
-
-### TARGETS (NFRs)
-
-The following list provides a guiding set of non-functional requirements which the established application must adhere to:
-
-- Must be able to scale beyond 100,000tps.
-- Must be highly performant with 99% of requests taking no more than 200ms.
-- Must be highly resilient and support an availability target of greater than 99.99%.
-- Must be globally available and capable of scaling to new regions with relative ease.
-
-### ARCHITECTURE
-
-The diagrams below provide an end-to-end composition of the target architecture, first as a single region deployment before expanding to consider multiple regions.
-
-![Single-region architecture.](/media/images/arch1.png 'Single-region architecture')
-
-![Multi-region architecture.](/media/images/arch2.png 'Multi-region architecture')
 
 ### STACK
 
