@@ -540,20 +540,20 @@ jobs:
       #  run: |
       #    az extension add --name aks-preview
 
-      # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
-      - name: Deploy AKS Cluster (CLI)
-        if: success()
-        run: |
-          az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
-            -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
-            --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
-            --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
-            --nodepool-name "${{ env.AKS_SYSTEM_POOL_NAME }}" \
-            --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
-            --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
-            --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-            --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
-            --skip-subnet-role-assignment
+      ## Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
+      #- name: Deploy AKS Cluster (CLI)
+      #  if: success()
+      #  run: |
+      #    az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
+      #      -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
+      #      --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
+      #      --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
+      #      --nodepool-name "${{ env.AKS_SYSTEM_POOL_NAME }}" \
+      #      --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
+      #      --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
+      #      --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
+      #      --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
+      #      --skip-subnet-role-assignment
 
       #- name: Remove Azure CLI AKS Preview extension
       #  if: success()
