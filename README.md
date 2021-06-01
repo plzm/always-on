@@ -215,6 +215,8 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
 - [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
 
+- [AKS Node Pool Summary](https://pixelrobots.co.uk/2020/06/azure-kubernetes-service-aks-system-and-user-node-pools/)
+
 - [Tutorial: Enable AGIC for existing AKS, AppGW](https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-existing)
 - [Install AGIC with existing AppGW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing) (The tutorial on the preceding line is newer. This link includes obsolete steps but left here for reference.)
 - [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
@@ -391,7 +393,7 @@ To update what is retrieved from AKV and synced to pods:
 1. Update [/src/infra-deploy/secretprovider.ao.akv.yaml](src/infra-deploy/aks/secretprovider.ao.akv.yaml) and add the correct secret names in both _secretobjects_ and _objects_ sections. The _objects_ section makes secrets available in the file system mount (/mnt/secrets-store), and the _secretobjects_ section makes the secrets available as Kubernetes secrets, which in turn are then exposed as environment variables. Deploy this updated manifest to your cluster.
    1. NOTE!! The infra.config.region.yml workflow writes two required values into this YAML file. If you are running from the command line with kubectl, you MUST manually add two values, `tenantId` and `keyVaultName` to the file before applying the manifest.
 2. Update [/.github/workflows/infra.config.region.yml](/.github/workflows/infra.config.region.yml). Change the action that writes secrets to the regional AKV as needed (e.g. add new secrets).
-3. Update the workload manifests [back end](/src/workload-deploy/aks/workload.back.yaml) and [front end](/src/workload-deploy/aks/workload.front.yaml) with the secret changes. Deploy these updated manifests to your cluster.
+3. Update the workload manifests [back end](/src/workload-deploy/aks/ao.be.yaml) and [front end](/src/workload-deploy/aks/ao.fe.yaml) with the secret changes. Deploy these updated manifests to your cluster.
    1. NOTE!! The app.deploy.yml workflow writes a required value into this YAML file. If you are running from the command line with kubectl, you MUST manually add the value for `aadpodidbinding` to the file before applying the manifest. At this time, the binding defaults to $UAMI_NAME-binding (e.g. pz-ao-eastus-binding). This appears to be internally set, with the binding ID specified when adding pod identity to the AKS cluster being a reference to this, NOT the actual name to be used for the binding.
 4. Run infra.config.region, then app.deploy.
 5. You should now be able to shell to a workload pod, ls or cat the filesystem mounted secret store values, and echo the environment variables successfully.

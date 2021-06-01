@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '24'
+  SUFFIX: '27'
 
   RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
@@ -56,21 +56,23 @@ env:
   AKS_POD_IDENTITY_KUBENET_ENABLED: 'true'
   AKS_POD_IDENTITY_NAMESPACE: 'default'
 
-  AKS_SYSTEM_POOL_NODE_COUNT: '1'
+  AKS_SYSTEM_POOL_NAME: 'syspool1'
+  AKS_SYSTEM_POOL_NODE_COUNT: '2'
   AKS_SYSTEM_POOL_AUTOSCALE: 'true'
-  AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN: '1'
+  AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN: '2'
   AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX: '10'
-  AKS_SYSTEM_POOL_NODE_SIZE: 'Standard_DS2_v2'
+  AKS_SYSTEM_POOL_NODE_SIZE: 'Standard_D2s_v3'
   AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB: '60'
 
-  AKS_USER_POOL_DEPLOY: 'false'
-  AKS_USER_POOL_NODE_NAME: 'aopool'
-  AKS_USER_POOL_NODE_COUNT: '0'
+  AKS_USER_POOL_DEPLOY: 'true'
+  AKS_USER_POOL_NAME: 'aopool1'
+  AKS_USER_POOL_NODE_COUNT: '1'
   AKS_USER_POOL_AUTOSCALE: 'true'
-  AKS_USER_POOL_AUTOSCALE_COUNT_MIN: '0'
-  AKS_USER_POOL_AUTOSCALE_COUNT_MAX: '10'
-  AKS_USER_POOL_NODE_SIZE: 'Standard_DS2_v2'
+  AKS_USER_POOL_AUTOSCALE_COUNT_MIN: '1'
+  AKS_USER_POOL_AUTOSCALE_COUNT_MAX: '20'
+  AKS_USER_POOL_NODE_SIZE: 'Standard_D4s_v3'
   AKS_USER_POOL_NODE_DISK_SIZE_GB: '60'
+  AKS_USER_POOL_NODE_LABELS: '{\"app\": \"always-on\"}'
 
   APPGW_SKU_NAME: 'Standard_v2'
 
@@ -78,12 +80,11 @@ env:
   #APIM_SKU_NAME: 'Premium'
   APIM_VNET_TYPE: 'External'
   APIM_SCALE_UNITS: 3
-  APIM_API_VERSION_SET_NAME: 'conference_api_vs'
-  APIM_API_VERSION_SET_DESCRIPTION: 'Conference API Description'
-  APIM_API_NAME: 'demo-conference-api'
-  APIM_API_DESCRIPTION: 'Foo'
-  APIM_API_SERVICE_URL: 'https://conferenceapi.azurewebsites.net'
-  APIM_API_SERVICE_PATH: 'conference'
+  APIM_API_VERSION: 'v1'
+  APIM_API_ID: 'aofe'
+  APIM_API_DISPLAY_NAME: 'AlwaysOn Front End API'
+  APIM_API_DESCRIPTION: 'AlwaysOn Front End API'
+  APIM_API_SERVICE_PATH: '/'
 
   FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
   FRONT_DOOR_ROUTE_NAME: 'api'
@@ -93,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region: [eastus]
+        region: [eastus2]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -108,7 +109,6 @@ jobs:
         if: success()
         run: |
           az extension add --name application-insights
-          az extension add --name aks-preview
           az extension add --name front-door
 
       - name: Prepare dynamic env vars
@@ -128,6 +128,7 @@ jobs:
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
           APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          APPGW_FQDN=$APPGW_PUBLIC_IP_NAME.${{ matrix.region }}.cloudapp.azure.com
           AKS_CLUSTER_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}
           AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME
@@ -136,7 +137,6 @@ jobs:
           APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
-
 
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
@@ -152,6 +152,7 @@ jobs:
           echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=$APPGW_PUBLIC_IP_NAME" >> $GITHUB_ENV
           echo "APPGW_NAME=$APPGW_NAME" >> $GITHUB_ENV
+          echo "APPGW_FQDN=$APPGW_FQDN" >> $GITHUB_ENV
           echo "AKS_CLUSTER_NAME=$AKS_CLUSTER_NAME" >> $GITHUB_ENV
           echo "AKS_DNS_PREFIX=$AKS_DNS_PREFIX" >> $GITHUB_ENV
           echo "AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP_AKS_NODES" >> $GITHUB_ENV
@@ -160,7 +161,6 @@ jobs:
           echo "APIM_SERVICE_NAME=$APIM_SERVICE_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
-
 
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
           echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
@@ -525,15 +525,20 @@ jobs:
         run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
-      ##### Deploy AKS - ARM Template - but does not support kubelet identity
-      ####- name: Deploy AKS Cluster (ARM)
-      ####  if: success()
-      ####  uses: azure/arm-deploy@v1
-      ####  with:
-      ####    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      ####    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
-      ####    template: ./src/infra-deploy/templates/aks.cluster.json
-      ####    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey=${{ secrets.SSH_KEY }} subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} podIdentityResourceId=${{ env.UAMI_ID }} podIdentityClientId=${{ env.UAMI_CLIENT_ID }} podIdentityObjectId=${{ env.UAMI_PRINCIPAL_ID }}
+      ## Deploy AKS - ARM Template - but does not support kubelet identity
+      #- name: Deploy AKS Cluster (ARM)
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
+      #    template: ./src/infra-deploy/templates/aks.cluster.json
+      #    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
+
+      - name: Install Azure CLI AKS Preview extension
+        if: success()
+        run: |
+          az extension add --name aks-preview
 
       # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
       - name: Deploy AKS Cluster (CLI)
@@ -543,11 +548,18 @@ jobs:
             -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
             --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
             --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
+            --nodepool-name "${{ env.AKS_SYSTEM_POOL_NAME }}" \
             --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
             --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
             --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
             --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
             --skip-subnet-role-assignment
+
+      - name: Remove Azure CLI AKS Preview extension
+        if: success()
+        run: |
+          az extension remove --name aks-preview
+
 
       - name: Deploy AKS Cluster Diagnostics
         if: success()
@@ -587,13 +599,22 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NODE_NAME }}
+          deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NAME }}
           template: ./src/infra-deploy/templates/aks.node-pool.json
-          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }}
+          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }} nodeLabels="${{ env.AKS_USER_POOL_NODE_LABELS }}"
 
       - name: Deploy AKS Add-ons - Monitoring
         if: success()
         run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
+
+      - name: Deploy AKS Add-ons - AGIC
+        if: success()
+        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
+
+      - name: Install Azure CLI AKS Preview extension for Pod Identity
+        if: success()
+        run: |
+          az extension add --name aks-preview
 
       - name: Enable Pod Identity
         if: success()
@@ -602,10 +623,6 @@ jobs:
       - name: Deploy Pod Identity
         if: success()
         run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --identity-resource-id ${{ env.UAMI_ID }}
-
-      - name: Deploy AKS Add-ons - AGIC
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
 
       - name: Deploy Public IP for APIM Service
@@ -644,19 +661,6 @@ jobs:
           template: ./src/infra-deploy/templates/apim.service.diagnostics.json
           parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy APIM API Version Set
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-version-set
-          template: ./src/infra-deploy/templates/apim.api-version-set.json
-          parameters: apimServiceName="${{ env.APIM_SERVICE_NAME }}" displayName="${{ env.APIM_API_VERSION_SET_NAME }}" description="${{ env.APIM_API_VERSION_SET_DESCRIPTION }}"
-
-      - name: Get APIM API Version Set Resource ID
-        if: success()
-        run: echo "APIM_API_VERSION_SET_ID=$(az apim api versionset list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --service-name "${{ env.APIM_SERVICE_NAME }}" -o tsv --query '[0].id')" >> $GITHUB_ENV
-
       - name: Deploy APIM Logger
         if: success()
         uses: azure/arm-deploy@v1
@@ -666,20 +670,20 @@ jobs:
           template: ./src/infra-deploy/templates/apim.logger.json
           parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
 
-      - name: Deploy APIM API (does NOT import API operations - TODO)
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-api
-          template: ./src/infra-deploy/templates/apim.api.json
-          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} apiName=${{ env.APIM_API_NAME }} displayName=${{ env.APIM_API_NAME }} description="${{ env.APIM_API_DESCRIPTION }}" serviceUrl=${{ env.APIM_API_SERVICE_URL }} path=${{ env.APIM_API_SERVICE_PATH }} apiVersionSetResourceId=${{ env.APIM_API_VERSION_SET_ID }}
-
       - name: Get APIM Info
         if: success()
         run: |
           echo "APIM_SERVICE_ID=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
+
+      - name: Import API from Swagger
+        if: success()
+        run: |
+          az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.APIM_SERVICE_NAME }}" --verbose \
+            --api-id "${{ env.APIM_API_ID }}" --display-name "${{ env.APIM_API_DISPLAY_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
+            --api-revision "${{ env.APIM_API_VERSION }}" --service-url "http://${{ env.APPGW_FQDN }}" --path "${{ env.APIM_API_SERVICE_PATH }}" \
+            --subscription-required false --protocols http https \
+            --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json"
 
 
       - name: Deploy Front Door Origin

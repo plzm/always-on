@@ -15,6 +15,7 @@ spec:
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
+        app: always-on
       containers:
       - name: ao-fe
         image: REGISTRY_NAME.azurecr.io/ao/ao.fe:latest
@@ -36,6 +37,11 @@ spec:
           mountPath: "/mnt/secrets-store"
           readOnly: true
         env:
+        - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: AppInsightsConnectionString
         - name: CosmosDbConnectionString
           valueFrom:
             secretKeyRef:

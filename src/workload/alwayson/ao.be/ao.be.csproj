@@ -8,6 +8,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.17.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.10.13" />
 	</ItemGroup>
 
@@ -20,9 +22,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Update="docker.local.env">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</None>
+	  <None Update="docker.local.env">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

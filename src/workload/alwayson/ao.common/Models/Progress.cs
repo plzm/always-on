@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace ao.common
 {
 	public class Progress : IItem
 	{
-		public string id { get; } = Guid.NewGuid().ToString();
+		[JsonPropertyName("id")]
+		public string Id { get; set; } = Guid.NewGuid().ToString();
 		public string Handle { get; set; }
 		public long Xp { get; set; }
 	}

@@ -15,6 +15,7 @@ spec:
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
+        app: always-on
       containers:
       - name: ao-be
         image: REGISTRY_NAME.azurecr.io/ao/ao.be:latest
@@ -23,6 +24,11 @@ spec:
             drop:
             - NET_RAW
         env:
+        - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: AppInsightsConnectionString
         - name: CosmosDbConnectionString
           valueFrom:
             secretKeyRef:

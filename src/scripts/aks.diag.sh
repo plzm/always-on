@@ -1,10 +1,10 @@
 #!/bin/bash
 
 PREFIX="pz-ao"
-SUFFIX="24"
+SUFFIX="26"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
-location="eastus"
+location="eastus2"
 resourceGroup="always-on-""$location"
 clusterName="pz-ao-""$location"
 
@@ -42,8 +42,8 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 # Bounce
 #kubectl -n default rollout restart deployment
 #kubectl -n default rollout restart daemonset
-
+s
 
 # Shell to a pod
-#kubectl exec --stdin --tty azure-vote-back-975ccc989-rf56r -- /bin/bash
+#kubectl exec --stdin --tty ao-fe-fd4f78c9-5fcwq -- /bin/bash
 

@@ -1,0 +1,14 @@
+[
+	{
+		"id": "pelazem",
+		"Handle": "pelazem",
+		"AvatarUrl": "http://foo",
+		"TotalXp": 10
+	},
+	{
+		"id": "lelazem",
+		"Handle": "lelazem",
+		"AvatarUrl": "http://bar",
+		"TotalXp": 20
+	}
+]

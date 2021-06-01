@@ -2,27 +2,51 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Text.Json;
 using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Producer;
+using Microsoft.ApplicationInsights;
 
 namespace ao.common
 {
 	public class EventHubSenderService : IEventHubSenderService
 	{
-		public string NamespaceConnectionString { get; private set; }
+		public string EventHubConnectionString { get; private set; }
 		public string EventHubName { get; private set; }
+
+		public TelemetryClient TelemetryClient { get; private set; }
 
 		public EventHubProducerClient EventHubProducerClient { get; private set; }
 
-		private EventHubSenderService() { }
-
-		public EventHubSenderService(string namespaceConnectionString, string eventHubName)
+		public EventHubSenderService()
 		{
-			this.NamespaceConnectionString = namespaceConnectionString;
+			this.GetConfig();
+
+			this.Initialize();
+		}
+
+		public EventHubSenderService(TelemetryClient telemetryClient)
+		{
+			this.TelemetryClient = telemetryClient;
+
+			this.GetConfig();
+
+			this.Initialize();
+		}
+
+		public EventHubSenderService(string eventHubConnectionString, string eventHubName, TelemetryClient telemetryClient = null)
+		{
+			this.EventHubConnectionString = eventHubConnectionString;
 			this.EventHubName = eventHubName;
 
-			Initialize();
+			this.TelemetryClient = telemetryClient;
+
+			this.Initialize();
+		}
+
+		private void GetConfig()
+		{
+			this.EventHubConnectionString = Environment.GetEnvironmentVariable("EventHubConnectionString");
+			this.EventHubName = Environment.GetEnvironmentVariable("EventHubName");
 		}
 
 		private void Initialize()
@@ -44,7 +68,7 @@ namespace ao.common
 				RetryOptions = retryOptions
 			};
 
-			this.EventHubProducerClient = new EventHubProducerClient(this.NamespaceConnectionString, this.EventHubName, clientOptions);
+			this.EventHubProducerClient = new EventHubProducerClient(this.EventHubConnectionString, this.EventHubName, clientOptions);
 		}
 
 		public async Task SendAsync<T>(T message, IEnumerable<ValueTuple<string, string>> metadata = null)
@@ -53,7 +77,7 @@ namespace ao.common
 			if (message == null)
 				return;
 
-			await SendAsync(new T[] { message }, metadata);
+			await this.SendAsync(new T[] { message }, metadata);
 		}
 
 		public async Task SendAsync<T>(IEnumerable<T> messages, IEnumerable<ValueTuple<string, string>> metadata = null)
@@ -62,7 +86,7 @@ namespace ao.common
 			if (messages == null)
 				return;
 
-			var eventsToSend = messages.Select(m => GetEventData(m, metadata));
+			var eventsToSend = messages.Select(m => this.GetEventData(m, metadata));
 
 			await this.EventHubProducerClient.SendAsync(eventsToSend);
 		}

@@ -5,13 +5,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Consumer;
 using Azure.Messaging.EventHubs.Processor;
+using Microsoft.ApplicationInsights;
 
 namespace ao.common
 {
@@ -25,6 +25,7 @@ namespace ao.common
 		public string EventHubName { get; private set; }
 		public string EventHubConsumerGroup { get; private set; }
 
+		public TelemetryClient TelemetryClient { get; private set; }
 		private CosmosDbService CosmosDbService { get; set; }
 		public BlobContainerClient BlobContainerClient { get; private set; }
 		public EventProcessorClient EventProcessorClient { get; private set; }
@@ -38,9 +39,18 @@ namespace ao.common
 
 		public EventHubReceiverService()
 		{
-			GetConfig();
+			this.GetConfig();
 
-			Initialize();
+			this.Initialize();
+		}
+
+		public EventHubReceiverService(TelemetryClient telemetryClient)
+		{
+			this.TelemetryClient = telemetryClient;
+
+			this.GetConfig();
+
+			this.Initialize();
 		}
 
 		public EventHubReceiverService
@@ -50,7 +60,8 @@ namespace ao.common
 			string storageContainerName,
 			string eventHubConnectionString,
 			string eventHubName,
-			string eventHubConsumerGroup
+			string eventHubConsumerGroup,
+			TelemetryClient telemetryClient = null
 		)
 		{
 			this.StorageAccountConnectionString = storageAccountConnectionString;
@@ -61,7 +72,9 @@ namespace ao.common
 			this.EventHubName = eventHubName;
 			this.EventHubConsumerGroup = eventHubConsumerGroup;
 
-			Initialize();
+			this.TelemetryClient = telemetryClient;
+
+			this.Initialize();
 		}
 
 		private void GetConfig()
@@ -77,7 +90,7 @@ namespace ao.common
 
 		private void Initialize()
 		{
-			this.CosmosDbService = new CosmosDbService();
+			this.CosmosDbService = new CosmosDbService(this.TelemetryClient);
 
 			this.BlobContainerClient = new BlobContainerClient(this.StorageAccountConnectionString, this.StorageContainerName);
 
@@ -101,6 +114,8 @@ namespace ao.common
 				catch (TaskCanceledException tcex)
 				{
 					// This is expected if the cancellation token is signaled.
+
+					this.TelemetryClient.TrackException(tcex);
 				}
 				finally
 				{
@@ -120,6 +135,8 @@ namespace ao.common
 				//
 				// If this block is invoked, then something external to the
 				// processor was the source of the exception.
+
+				this.TelemetryClient.TrackException(ex);
 			}
 			finally
 			{
@@ -171,7 +188,7 @@ namespace ao.common
 			}
 			catch (Exception ex)
 			{
-				// TODO
+				this.TelemetryClient.TrackException(ex);
 			}
 		}
 
@@ -204,6 +221,7 @@ namespace ao.common
 			}
 			catch (Exception ex)
 			{
+				this.TelemetryClient.TrackException(ex);
 				// TODO better handling/logging
 				// HandleProcessingException(args, ex);
 			}
@@ -222,8 +240,7 @@ namespace ao.common
 			}
 			catch (Exception ex)
 			{
-				// TODO better handling/logging
-				// HandleErrorProcessError(args, ex);
+				this.TelemetryClient.TrackException(ex);
 			}
 
 			return Task.CompletedTask;

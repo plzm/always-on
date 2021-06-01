@@ -38,6 +38,11 @@ spec:
         env:
         - name: REDIS
           value: "azure-vote-back"
+        - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: APPLICATIONINSIGHTS_CONNECTION_STRING
         - name: CosmosDbConnectionString
           valueFrom:
             secretKeyRef:

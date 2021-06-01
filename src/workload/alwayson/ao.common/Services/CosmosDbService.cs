@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.ApplicationInsights;
 using Microsoft.Azure.Cosmos;
-using ao.common;
 
 namespace ao.common
 {
@@ -17,6 +17,7 @@ namespace ao.common
 		public string ProgressContainerName { get; private set; }
 
 		public IHttpClientFactory HttpClientFactory { get; private set; }
+		public TelemetryClient TelemetryClient { get; private set; }
 
 		public CosmosClient CosmosClient { get; private set; }
 
@@ -30,13 +31,24 @@ namespace ao.common
 			Initialize().Wait();
 		}
 
-		public CosmosDbService(string connectionString, string databaseName, string profileContainerName, string progressContainerName, IHttpClientFactory httpClientFactory = null)
+		public CosmosDbService(TelemetryClient telemetryClient)
+		{
+			this.TelemetryClient = telemetryClient;
+
+			GetConfig();
+
+			Initialize().Wait();
+		}
+
+		public CosmosDbService(string connectionString, string databaseName, string profileContainerName, string progressContainerName, IHttpClientFactory httpClientFactory = null, TelemetryClient telemetryClient = null)
 		{
 			this.ConnectionString = connectionString;
 			this.DatabaseName = databaseName;
 			this.ProfileContainerName = profileContainerName;
 			this.ProgressContainerName = progressContainerName;
+
 			this.HttpClientFactory = httpClientFactory;
+			this.TelemetryClient = telemetryClient;
 
 			Initialize().Wait();
 		}
@@ -89,22 +101,69 @@ namespace ao.common
 
 		public async Task SaveProfile(string handle, Stream profile)
 		{
-			ResponseMessage response = await this.ProfileContainer.UpsertItemStreamAsync(profile, new PartitionKey(handle));
+			try
+			{
+				ResponseMessage response = await this.ProfileContainer.UpsertItemStreamAsync(profile, new PartitionKey(handle));
+			}
+			catch (CosmosException cex)
+			{
+				this.TelemetryClient.TrackException(cex);
+			}
+			catch (Exception ex)
+			{
+				this.TelemetryClient.TrackException(ex);
+			}
 		}
 
 		public async Task SaveProfile(Profile profile)
 		{
-			ItemResponse<Profile> response = await this.ProfileContainer.UpsertItemAsync<Profile>(profile, new PartitionKey(profile.Handle));
+			try
+			{
+				// ItemResponse<Profile> response = 
+				await this.ProfileContainer.UpsertItemAsync<Profile>(profile, new PartitionKey(profile.Handle));
+			}
+			catch (CosmosException cex)
+			{
+				this.TelemetryClient.TrackException(cex);
+			}
+			catch (Exception ex)
+			{
+				this.TelemetryClient.TrackException(ex);
+			}
 		}
 
 		public async Task SaveProgress(string handle, Stream progress)
 		{
-			ResponseMessage response = await this.ProgressContainer.CreateItemStreamAsync(progress, new PartitionKey(handle));
+			try
+			{
+				// ResponseMessage response = 
+				await this.ProgressContainer.CreateItemStreamAsync(progress, new PartitionKey(handle));
+			}
+			catch (CosmosException cex)
+			{
+				this.TelemetryClient.TrackException(cex);
+			}
+			catch (Exception ex)
+			{
+				this.TelemetryClient.TrackException(ex);
+			}
 		}
 
 		public async Task SaveProgress(Progress progress)
 		{
-			ItemResponse<Progress> response = await this.ProgressContainer.CreateItemAsync<Progress>(progress, new PartitionKey(progress.Handle));
+			try
+			{
+				// ItemResponse<Progress> response = 
+				await this.ProgressContainer.CreateItemAsync<Progress>(progress, new PartitionKey(progress.Handle));
+			}
+			catch (CosmosException cex)
+			{
+				this.TelemetryClient.TrackException(cex);
+			}
+			catch (Exception ex)
+			{
+				this.TelemetryClient.TrackException(ex);
+			}
 		}
 	}
 }

@@ -40,7 +40,7 @@
         },
         "subscriptionRequired": {
             "type": "bool",
-            "defaultValue": true
+            "defaultValue": false
         },
         "serviceUrl": {
             "type": "string",
