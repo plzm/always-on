@@ -17,21 +17,7 @@ This solution deploys and configures a highly performant, multi-region applicati
 3. [Design and Technology Decisions](./media/docs/03.design-tech-decisions.md)
 
 
-### STACK
 
-- Azure Front Door: Used as a global load balancer to support a active global deployments across all considered regions. Offers optimised client connectivity using the anycast protocol with split TCP to take advantage of Microsoft’s global backbone network. It also provides WAF capabilities at the edge.
-- API Management: Used to as an API gateway to publish and manage API components.
-- Virtual Network: Private network used to house application components which can be deployed into a virtual network.
-- DDoS Standard Plan: Provides additional DDoS protection mechanisms to secure the API surface and virtual network resources from malicious DDoS attacks.
-- Network Security Group: Used to isolate the subnet encompassing application compute components from unintended access.
-- Application Gateway WAF (v2): Leveraged to load balance application traffic across backend clusters within a region, as well as providing further intra-region WAF capabilities.
-- Azure Kubernetes Services: Provides a scalable managed compute platform for the deployment and management of containerised application components
-- CosmosDB: Provides a highly scalable global data platform for persisting player progression metrics. A multi-master deployment pattern will be used to support regional performance and global consistency targets.
-- Event Hub: provides a high throughput asynchronous messaging platform for the processing of longer running API calls.
-- Azure Container Registry: Supports the secure and automated deployment of application containers through a securely managed private repository.
-- Key Vault: Used to house certificates and application secrets.
-- Azure DevOps: Provides integrated automation channels for application and infrastructure CI/CD pipelines.
-- GitHub: Provides private git repositories for both application and infrastructure artefacts.
 
 ### WALK-THROUGH
 
@@ -248,70 +234,12 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 
 ### 3. Design Decisions
 
-#### Infrastructure
-
-- [Azure Regions with Availability Zones](https://docs.microsoft.com/azure/availability-zones/az-region) are used for regional stamps.
-- ARM Templates are used for Infra as Code. Other options include Terraform and Bicep but I decided on ARM due to maturity, broad support, and familiarity.
-  - The ARM templates in this repo are as close to single-purpose as possible, for composability into larger deployments. That is, as much as possible each template deploys exactly one type of Azure resource.
-- Global resources will be deployed to a single global Resource Group (RG). Each regional stamp will be deployed to its own regional RG.
-- API Management multi-region will not be used. Instead, a standalone APIM instance will be deployed to each region. This is due to multi-region APIM's single control plane dependency, which would create a dependency from every other regional stamp to the region where APIM's control plane is deployed.
-
-#### Network
-
-- Each regional stamp will have its own NSGs, VNet, subnets, and other network config.
-- There will be no VNet peering between regions as each region is assumed to be independent of the others. Only global resources will know about all regional stamps.
-- Initially no private link/endpoints will be used in regional stamps. AKS and some other components are in the regional VNet. PL/PE may be added to optimize network traffic or for security hardening.
-- AKS internal networking will use kubenet for simplicity. Internal CIDRs are explicitly specified in deployment. AKS networking may be switched to Azure CNI if needed for performance.
-- Azure Front Door will terminate TLS connections. HTTP will be used for intra-stamp communication for simplicity and to avoid TLS overhead.
-
-#### Security
-
-A User-Assigned Managed Identity (UAMI) is provisioned and assigned to resources which support/need a Managed Identity (MI).
-
-A distinct UAMI is deployed to each region. This is to facilitate AKS RBAC. When an AKS instance is configured for managed identity, the managed identity is used to deploy an AKS nodes RG.
-
-An AKS cluster with Application Gateway Ingress Controller (AGIC) creates a new UAMI in the Nodes RG and assigns permissions to that new UAMI as well as the cluster UAMI. This is impractical when the UAMI assigned to the AKS cluster is in the global RG (in fact AGIC deploy will partly fail, yielding 502 bad gateway errors).
-
-Additionally, for least privilege a regional UAMI will not need any permissions over global resources when deployed into the region RG.
-
-The UAMI requires the following RBAC assignments so IaC and app deploys can succeed.
-
-   | **Name** | **Scope** | **Notes**
-   | - | - |
-   | Contributor | Region RG | Needed for AppGW but at RG level for simplicity.
-   | Contributor | Region AKS Node RG | This is assigned automatically during AKS cluster deploy.
-   | Network Contributor | Region VNet | Superseded by Region RG Contributor but here to be explicit.
-   | Managed Identity Operator | Region RG | Superseded by Region RG Contributor but here to be explicit.
-   | Managed Identity Operator | Region AKS Node RG |
-   | Virtual Machine Contributor | Region AKS Node RG |
-
 #### CD - Global / Regional Stamp
 
 The global deploy can occur without any regional stamps in place and with no regional dependencies.
 
 Regional deploys can occur without dependency on any other region. There are dependencies on global resources, including for monitoring, database, etc.
 
-##### Global/Single Resources
-
-- App Insights
-- Container Insights
-- Container Registry (Replications)
-- Cosmos DB
-- DDoS Plan
-- Front Door
-- Log Analytics
-
-##### Regional Resources
-
-- Managed Identity
-- NSG
-- PIP
-- VNet and Subnets
-- Event Hub
-- Key Vault
-- App Gateway
-- AKS
-- APIM
 
 ### 4. Workloads
 
