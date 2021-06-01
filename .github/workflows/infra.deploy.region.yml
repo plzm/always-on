@@ -76,10 +76,10 @@ env:
 
   APPGW_SKU_NAME: 'Standard_v2'
 
-  APIM_SKU_NAME: 'Developer'
-  #APIM_SKU_NAME: 'Premium'
+  #APIM_SKU_NAME: 'Developer'
+  APIM_SKU_NAME: 'Premium'
   APIM_VNET_TYPE: 'External'
-  APIM_SCALE_UNITS: 3
+  APIM_SCALE_UNITS: 12
   APIM_API_VERSION: 'v1'
   APIM_API_ID: 'aofe'
   APIM_API_DISPLAY_NAME: 'AlwaysOn Front End API'
@@ -87,7 +87,7 @@ env:
   APIM_API_SERVICE_PATH: '/'
 
   FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
-  FRONT_DOOR_ROUTE_NAME: 'api'
+  FRONT_DOOR_ROUTE_NAME: 'aoferoute'
 
 jobs:
   deploy-region:
