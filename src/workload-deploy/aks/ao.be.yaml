@@ -15,6 +15,7 @@ spec:
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
+        app: always-on
       containers:
       - name: ao-be
         image: REGISTRY_NAME.azurecr.io/ao/ao.be:latest

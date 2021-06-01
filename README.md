@@ -215,6 +215,8 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 - [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
 - [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
 
+- [AKS Node Pool Summary](https://pixelrobots.co.uk/2020/06/azure-kubernetes-service-aks-system-and-user-node-pools/)
+
 - [Tutorial: Enable AGIC for existing AKS, AppGW](https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-existing)
 - [Install AGIC with existing AppGW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing) (The tutorial on the preceding line is newer. This link includes obsolete steps but left here for reference.)
 - [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
