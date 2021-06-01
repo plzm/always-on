@@ -702,7 +702,7 @@ jobs:
 
   global-config:
     runs-on: ubuntu-latest
-    needs: deploy-region
+    #needs: deploy-region
     strategy:
       matrix:
         region: [eastus2,westus2]
