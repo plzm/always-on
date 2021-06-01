@@ -207,6 +207,18 @@
 		}
 	},
 	"variables": {
+		"userAssignedIdentity": "[
+			if
+			(
+				equals(toLower(parameters('managedIdentityType')), 'userassigned'),
+				createObject
+				(
+					parameters('identityResourceId'),
+					createObject()
+				),
+				json('null')
+			)
+		]",
 		"availabilityZones": "[
 			if
 			(
@@ -264,9 +276,7 @@
 			"location": "[parameters('location')]",
 			"identity": {
 				"type": "[parameters('managedIdentityType')]",
-				"userAssignedIdentities": {
-					"[parameters('identityResourceId')]": {}
-				}
+				"userAssignedIdentities": "[variables('userAssignedIdentity')]"
 			},
 			"sku": {
 				"name": "[parameters('skuName')]",
@@ -285,6 +295,22 @@
 						"clientId": "[parameters('identityClientId')]",
 						"objectId": "[parameters('identityObjectId')]"
 					}
+				},
+				"podIdentityProfile": {
+					"enabled": "[parameters('podIdentityEnabled')]",
+					"allowNetworkPluginKubenet": "[parameters('podIdentityKubenetEnabled')]",
+					"userAssignedIdentities": [
+						{
+							"name": "[reference(parameters('identityResourceId')).name]",
+							"namespace": "[parameters('podIdentityNamespace')]",
+							"bindingSelector": "[parameters('podIdentityBindingSelector')]",
+							"identity": {
+								"resourceId": "[parameters('identityResourceId')]",
+								"clientId": "[parameters('identityClientId')]",
+								"objectId": "[parameters('identityObjectId')]"
+							}
+						}
+					]
 				},
 				"linuxProfile": {
 					"adminUsername": "[parameters('nodeAdminUsername')]",
@@ -318,5 +344,11 @@
 				]
 			}
 		}
-	]
+	],
+	"outputs": {
+		"controlPlaneFqdn": {
+			"type": "string",
+			"value": "[reference(parameters('clusterName')).fqdn]"
+		}
+	}
 }
