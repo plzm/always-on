@@ -72,7 +72,7 @@ env:
   AKS_USER_POOL_AUTOSCALE_COUNT_MAX: '20'
   AKS_USER_POOL_NODE_SIZE: 'Standard_D4s_v3'
   AKS_USER_POOL_NODE_DISK_SIZE_GB: '60'
-  AKS_USER_POOL_NODE_LABELS: '{"app": "always-on"}'
+  AKS_USER_POOL_NODE_LABELS: '{\"app\": \"always-on\"}'
 
   APPGW_SKU_NAME: 'Standard_v2'
 
