@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '27'
+  SUFFIX: '28'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
