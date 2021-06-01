@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '26'
+  SUFFIX: '27'
 
   REGISTRY_REPO: ao
   BE_IMAGE_NAME: ao.be
