@@ -1,0 +1,75 @@
+{
+	"info": {
+		"_postman_id": "7bd2ab73-1103-4d70-a210-c7caae9413fe",
+		"name": "Always-On",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Profile-Get",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://pz-ao.z01.azurefd.net/api/profile/{{handle}}",
+					"protocol": "https",
+					"host": [
+						"pz-ao",
+						"z01",
+						"azurefd",
+						"net"
+					],
+					"path": [
+						"api",
+						"profile",
+						"{{handle}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Progress-Post",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.variables.set(\"progress_guid\", pm.variables.replaceIn('{{$guid}}'));\r",
+							"pm.variables.set(\"progress_xp\", pm.variables.replaceIn('{{$randomInt}}'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"{{progress_guid}}\",\r\n    \"Handle\": \"pelazem\",\r\n    \"Xp\": {{progress_xp}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://pz-ao.z01.azurefd.net/api/progress",
+					"protocol": "https",
+					"host": [
+						"pz-ao",
+						"z01",
+						"azurefd",
+						"net"
+					],
+					"path": [
+						"api",
+						"progress"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
