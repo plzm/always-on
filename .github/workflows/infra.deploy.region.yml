@@ -56,6 +56,7 @@ env:
   AKS_POD_IDENTITY_KUBENET_ENABLED: 'true'
   AKS_POD_IDENTITY_NAMESPACE: 'default'
 
+  AKS_SYSTEM_POOL_NAME: 'syspool1'
   AKS_SYSTEM_POOL_NODE_COUNT: '2'
   AKS_SYSTEM_POOL_AUTOSCALE: 'true'
   AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN: '2'
@@ -64,14 +65,14 @@ env:
   AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB: '60'
 
   AKS_USER_POOL_DEPLOY: 'true'
-  AKS_USER_POOL_NODE_NAME: 'aopool1'
+  AKS_USER_POOL_NAME: 'aopool1'
   AKS_USER_POOL_NODE_COUNT: '1'
   AKS_USER_POOL_AUTOSCALE: 'true'
   AKS_USER_POOL_AUTOSCALE_COUNT_MIN: '1'
   AKS_USER_POOL_AUTOSCALE_COUNT_MAX: '20'
   AKS_USER_POOL_NODE_SIZE: 'Standard_D4s_v3'
   AKS_USER_POOL_NODE_DISK_SIZE_GB: '60'
-  AKS_USER_POOL_NODE_LABELS: '"app", "always-on", "foo", "bar"'
+  AKS_USER_POOL_NODE_LABELS: '{"app": "always-on"}'
 
   APPGW_SKU_NAME: 'Standard_v2'
 
@@ -539,19 +540,20 @@ jobs:
       #  run: |
       #    az extension add --name aks-preview
 
-      ## Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
-      #- name: Deploy AKS Cluster (CLI)
-      #  if: success()
-      #  run: |
-      #    az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
-      #      -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
-      #      --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
-      #      --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
-      #      --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
-      #      --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
-      #      --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-      #      --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
-      #      --skip-subnet-role-assignment
+      # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
+      - name: Deploy AKS Cluster (CLI)
+        if: success()
+        run: |
+          az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
+            -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
+            --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
+            --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
+            --nodepool-name "${{ env.AKS_SYSTEM_POOL_NAME }}" \
+            --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
+            --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
+            --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
+            --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
+            --skip-subnet-role-assignment
 
       #- name: Remove Azure CLI AKS Preview extension
       #  if: success()
@@ -597,9 +599,9 @@ jobs:
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NODE_NAME }}
+          deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NAME }}
           template: ./src/infra-deploy/templates/aks.node-pool.json
-          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NODE_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }} nodeLabels="${{ env.AKS_USER_POOL_NODE_LABELS }}"
+          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }} nodeLabels="${{ env.AKS_USER_POOL_NODE_LABELS }}"
 
       #- name: Deploy AKS Add-ons - Monitoring
       #  if: success()

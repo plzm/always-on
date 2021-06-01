@@ -117,7 +117,7 @@
 			(
 				empty(parameters('nodeLabels')),
 				json(''),
-				createObject(parameters('nodeLabels'))
+				json(parameters('nodeLabels'))
 			)
 		]",
 		"poolBase": {
