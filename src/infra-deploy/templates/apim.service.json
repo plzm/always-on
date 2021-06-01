@@ -37,7 +37,7 @@
             "type": "int",
             "defaultValue": 1,
             "minValue": 0,
-            "maxValue": 12
+            "maxValue": 10
         },
 		"managedIdentityType": {
 			"type": "string",
