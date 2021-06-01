@@ -15,55 +15,14 @@ This solution deploys and configures a highly performant, multi-region applicati
 1. [Scenario and Non-Functional Requirements](./media/docs/01.scenario-nfrs.md)
 2. [Architectures](./media/docs/02.architectures.md)
 3. [Design and Technology Decisions](./media/docs/03.design-tech-decisions.md)
+4. [Tooling and References](./media/docs/04.tooling-refs.md)
+5. [Workloads](./media/docs/05.workloads.md)
+6. [Approach and Tasks](media/docs/06.approach.md)
 
 
-
-
-### WALK-THROUGH
-
-- Client requests are routed by Front Door and API management to Application Gateway for distribution across AKS cluster(s) within the region to the FE API application component.
-- The FE API should either interact directly with the CosmosDB for simple scenarios such as a get or should create a message on the regional Event Hub for subsequent processing.
-- The BE Worker component should be established to read messages from the regional Event Hub and perform the necessary upsert actions against CosmosDB.
 
 ### APPROACH
 
-#### LEVEL 1 - SINGLE REGION DEPLOYMENT
-
-1. Templatise foundational resources (AKS, Event Hub, CosmosDB)  and deploy a single regional infrastructure stamp.
-   1. Tasks 1.i, 1.iii
-2. Create a containerised sample workload using .Net Core or a suitably justified alternative, storing code artefacts . The workload must suitably consider the walkthrough denoted above.
-   1. Tasks 5.i-v
-3. Optimise Cosmos access to ensure basic performance targets can be satisfied.
-   1. Task 1.ii
-4. Configure the AKS cluster for secure scale and deploy application containers via private repos
-   1. Tasks 1.iii, 6.i-ii
-
-#### LEVEL 2 - OPERATIONALISATION
-
-1. Define CI/CD automation pipelines for both the application components and underlying Azure resources (IaC) using Azure DevOps. (Note, I am using Github Actions - GHA.)
-   1. Tasks 3.i-iii, 4.i-iii, 6.i-ii
-2. Operationalisation of application components through robust logging and the integration of all Azure resources with native tooling, such as Log Analytics and Application insights (and container insights).
-   1. Tasks 7.i-iii
-3. Define and surface a health model for the entire application, applying a 'traffic light' system to represent when the system is healthy
-   1. Tasks 8.i-iii
-4. Harden the security of the system and demonstrate its resilience to typical security risks, particularly DDoS vulnerabilities.
-   1. Tasks 9.i-ii
-
-#### LEVEL 3 - MULTI-REGION EXPANSION
-
-1. Revise deployment pipelines to deploy at least two additional regional stamps in an active-active fashion
-   1. Tasks 1.i-iii
-2. Define an appropriate data consistency model based on scenario requirements, with multiple masters configured
-   1. Task 1.ii
-3. Identify and demonstrate critical failure scenarios throughout the entire application stack
-   1. Tasks 10.i-iii
-4. Runbook automation for the orchestration of failover scenarios
-   1. Task 10.iv
-
-#### LEVEL 4 - SHOW AND TELL
-
-1. Demonstrate the application meets the performance and availability targets through extensive performance testing and sustained load testing during error and attack scenarios, including DDoS attacks (e.g. BreakingPoint Cloud) and failed AKS nodes.
-   1. Tasks 11.i-iii
 
 ## TASKS
 
@@ -163,82 +122,12 @@ $servicePrincipal = New-AzADServicePrincipal -Role Contributor -Scope "/subscrip
 } | ConvertTo-Json
 ```
 
-### 2. Tooling and Reference
-
-#### Tooling
-
-- VS Code with usual extensions for Azure deploy (ARM Tools etc.)
-- Azure CLI
-- kubectl - pre-installed in Cloud Shell, or install locally (WSL2) with `az aks install-cli` (may need to sudo)
-
 #### Useful References
 
-- [Azure CLI Reference](https://docs.microsoft.com/cli/azure/)
-- [ARM Templates Reference](https://docs.microsoft.com/azure/templates/)
-- [ARM Template Functions Reference](https://docs.microsoft.com/azure/azure-resource-manager/templates/template-functions/)
-
-- [Azure VNet Service Tags](https://docs.microsoft.com/azure/virtual-network/service-tags-overview)
-- [Azure Regions with AZs](https://docs.microsoft.com/azure/availability-zones/az-region#azure-regions-with-availability-zones)
-- [Azure RBAC Built-in Roles](https://docs.microsoft.com/azure/role-based-access-control/built-in-roles)
-
-- [AKS Node Pool Summary](https://pixelrobots.co.uk/2020/06/azure-kubernetes-service-aks-system-and-user-node-pools/)
-
-- [Tutorial: Enable AGIC for existing AKS, AppGW](https://docs.microsoft.com/azure/application-gateway/tutorial-ingress-controller-add-on-existing)
-- [Install AGIC with existing AppGW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing) (The tutorial on the preceding line is newer. This link includes obsolete steps but left here for reference.)
-- [AGIC Tutorials](https://github.com/Azure/application-gateway-kubernetes-ingress/tree/master/docs/tutorials)
-- [App Gateway Ingress Annotations](https://azure.github.io/application-gateway-kubernetes-ingress/annotations/)
-
-- [Enable AKS Pod Identity](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
-- [Install AGIC on existing App GW](https://docs.microsoft.com/azure/application-gateway/ingress-controller-install-existing)
-- [Understanding Ingress Controllers and AppGW pt1](https://roykim.ca/2020/02/09/understanding-ingress-controllers-and-azure-app-gateway-for-azure-kubernetes-part-1-intro/)
-- [Understanding Ingress Controllers and AppGW pt2](https://roykim.ca/2020/02/16/understanding-ingress-controllers-and-azure-app-gateway-for-azure-kubernetes-part-2-agic/)
-- [Advanced AKS Configuration](https://borzenin.com/azure-kubernetes-service-aks-workshop-2-labs/)
-
-- [Integrate ACR and AKS](https://docs.microsoft.com/azure/aks/cluster-container-registry-integration)
-- [Build a container image and deploy to AKS](https://docs.microsoft.com/azure/aks/kubernetes-action#build-a-container-image-and-deploy-to-azure-kubernetes-service-cluster)
-
-- [Pod security in AKS, and accessing AKV with Secrets Store CSI Driver](https://docs.microsoft.com/azure/aks/developer-best-practices-pod-security#use-azure-key-vault-with-secrets-store-csi-driver)
-- [Use AAD Pod Identity](https://docs.microsoft.com/azure/aks/use-azure-ad-pod-identity)
-- [AAD Pod Identity for K8S Docs and Troubleshooting](https://azure.github.io/aad-pod-identity/docs/)
-- [AAD Pod Identity github](https://github.com/Azure/aad-pod-identity)
-
-- [AKV Provider for Secret Store CSI Driver](https://github.com/Azure/secrets-store-csi-driver-provider-azure)
-- [AKV Provider for Secret Store CSI Driver Docs, Configurations, Troubleshooting](https://azure.github.io/secrets-store-csi-driver-provider-azure/configurations/identity-access-modes/pod-identity-mode/)
-- [Secrets Store CSI Driver and Provider Docs](https://secrets-store-csi-driver.sigs.k8s.io/getting-started/installation.html)
-- [Secrets Store CSI Driver for K8s Secrets](https://github.com/kubernetes-sigs/secrets-store-csi-driver)
-
-- [Kubernetes Documentation](https://kubernetes.io/docs/home/)
-- [Enable Container Insights](https://docs.microsoft.com/azure/azure-monitor/containers/container-insights-onboard)
-- [Get a Shell in a running container](https://kubernetes.io/docs/tasks/debug-application-cluster/get-shell-running-container/)
-- [Postman Echo API](https://learning.postman.com/docs/developer/echo-api/)
-
-- [GHA Docs](https://docs.github.com/en/actions)
-- [GHA for Azure](https://github.com/marketplace?type=actions&query=Azure)
-- [GHA Events that trigger Workflows](https://docs.github.com/en/actions/reference/events-that-trigger-workflows)
-- [Use AKV Secrets in GHA Workflow](https://docs.microsoft.com/azure/developer/github/github-key-vault)
-- [GHA: AKS Set Context](https://github.com/Azure/aks-set-context)
-- [GHA Doc: Deploy K8s Manifest](https://github.com/marketplace/actions/deploy-to-kubernetes-cluster)
-- [GHA: Deploy K8s Manifest](https://github.com/Azure/k8s-deploy)
-- [GHA: YAML Update](https://github.com/fjogeleit/yaml-update-action)
-
-- [Event Hubs SDK Samples](https://github.com/Azure/azure-sdk-for-net/tree/master/sdk/eventhub/Azure.Messaging.EventHubs/samples)
-- [Event Hubs Processor SDK Samples](https://github.com/Azure/azure-sdk-for-net/tree/master/sdk/eventhub/Azure.Messaging.EventHubs.Processor/samples)
-
-- [Docker build cmd line reference](https://docs.docker.com/engine/reference/commandline/build/)
-- [dotnet docker repo](https://github.com/dotnet/dotnet-docker/)
 
 ##### Workload
 
 - [.NET DI Service Registration Methods](https://docs.microsoft.com/dotnet/core/extensions/dependency-injection#service-registration-methods)
-
-
-### 3. Design Decisions
-
-#### CD - Global / Regional Stamp
-
-The global deploy can occur without any regional stamps in place and with no regional dependencies.
-
-Regional deploys can occur without dependency on any other region. There are dependencies on global resources, including for monitoring, database, etc.
 
 
 ### 4. Workloads
