@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region: [eastus2]
+        region: [eastus2,centralus]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
