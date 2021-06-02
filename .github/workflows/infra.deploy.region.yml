@@ -678,6 +678,60 @@ jobs:
             --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json"
 
 
+      - name: Azure logout
+        run: |
+          az logout
+
+
+  global-config:
+    runs-on: ubuntu-latest
+    needs: deploy-region
+    strategy:
+      matrix:
+        region: [eastus2,westus2]
+      max-parallel: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+          UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+          APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
+          FRONT_DOOR_NAME=${{ env.PREFIX }}
+          FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
+
+          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
+          echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
+          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+          echo "APIM_SERVICE_NAME=$APIM_SERVICE_NAME" >> $GITHUB_ENV
+          echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
+
+          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'clientId')" >> $GITHUB_ENV
+          echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
+          echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Grant UAMI ACRPull on Global Registry
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
+
       - name: Deploy Front Door Origin
         if: success()
         uses: azure/arm-deploy@v1
@@ -695,56 +749,6 @@ jobs:
           deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
           template: ./src/infra-deploy/templates/fd.route.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
-
-      - name: Azure logout
-        run: |
-          az logout
-
-
-  global-config:
-    runs-on: ubuntu-latest
-    needs: deploy-region
-    strategy:
-      matrix:
-        region: [eastus2,westus2]
-      max-parallel: 1
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Where am I?
-        run: |
-          ls -la
-
-      - name: Azure login
-        if: success()
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Prepare dynamic env vars
-        if: success()
-        run: |
-          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
-          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
-
-          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
-          echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
-          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
-
-          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
-          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'clientId')" >> $GITHUB_ENV
-
-      - name: Grant UAMI ACRPull on Global Registry
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
       - name: Azure logout
         run: |
