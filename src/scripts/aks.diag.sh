@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PREFIX="pz-ao"
-SUFFIX="26"
+SUFFIX="30"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
 location="eastus2"

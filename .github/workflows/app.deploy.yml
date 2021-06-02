@@ -11,9 +11,6 @@ env:
   BE_IMAGE_NAME: ao.be
   FE_IMAGE_NAME: ao.fe
 
-  BE_REPLICAS: 3
-  FE_REPLICAS: 3
-
   AKS_PATH_ROOT: './src/workload-deploy/aks/'
 
 jobs:
@@ -70,17 +67,6 @@ jobs:
           echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
 
 
-      - name: Write Replicas to Back End YAML file
-        if: success()
-        uses: fjogeleit/yaml-update-action@master
-        with:
-          valueFile: '${{ env.WORKLOAD_FILE_BE }}'
-          propertyPath: 'spec.replicas'
-          value: '${{ env.BE_REPLICAS }}'
-          updateFile: 'true'
-          commitChange: 'false'
-          createPR: 'false'
-
       - name: Write Pod Identity Binding Selector to Back End YAML file
         if: success()
         uses: fjogeleit/yaml-update-action@master
@@ -103,22 +89,16 @@ jobs:
           commitChange: 'false'
           createPR: 'false'
 
+      #- name: sed Back End YAML file container image URI
+      #  if: success()
+      #  run: |
+      #    sed -i "s/REGISTRY_NAME/${{ env.REGISTRY_NAME }}/" ${{ env.WORKLOAD_FILE_BE }}
+
       - name: cat Back End YAML file
         if: success()
         run: |
           cat ${{ env.WORKLOAD_FILE_BE }}
 
-
-      - name: Write Replicas to Front End YAML file
-        if: success()
-        uses: fjogeleit/yaml-update-action@master
-        with:
-          valueFile: '${{ env.WORKLOAD_FILE_FE }}'
-          propertyPath: 'spec.replicas'
-          value: '${{ env.FE_REPLICAS }}'
-          updateFile: 'true'
-          commitChange: 'false'
-          createPR: 'false'
 
       - name: Write Pod Identity Binding Selector to Front End YAML file
         if: success()
