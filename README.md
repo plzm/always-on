@@ -17,6 +17,6 @@ This solution deploys and configures a highly performant, multi-region applicati
 3. [Design and Technology Decisions](./media/docs/03.design-tech-decisions.md)
 4. [Tooling and References](./media/docs/04.tooling-refs.md)
 5. [Workloads](./media/docs/05.workloads.md)
-6. [Approach and Tasks](./media/docs/06.approach.md)
-7. [Github Configuration](./media.docs/07.github-config.md)
+6. [Approach](./media/docs/06.approach.md)
+7. [Github Configuration](./media/docs/07.github-config.md)
 8. [Azure Key Vault Secrets --> Azure Kubernetes Service pod environment variables!](./media/docs/08.akv-aks.md)
