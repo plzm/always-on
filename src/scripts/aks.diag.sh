@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PREFIX="pz-ao"
-SUFFIX="26"
+SUFFIX="30"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
 location="eastus2"
@@ -45,5 +45,5 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 s
 
 # Shell to a pod
-#kubectl exec --stdin --tty ao-fe-fd4f78c9-5fcwq -- /bin/bash
+#kubectl exec --stdin --tty ao-be-59dd8fcc68-72z96 -- /bin/bash
 
