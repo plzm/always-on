@@ -170,103 +170,103 @@ jobs:
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
-      #- name: Create Azure resource group
-      #  if: success()
-      #  run: |
-      #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
+      - name: Create Azure resource group
+        if: success()
+        run: |
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
 
-      #- name: Deploy User-Assigned MI
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-      #    template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
-      #    parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
+      - name: Deploy User-Assigned MI
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
+          parameters: location=${{ matrix.region }} tenantId=${{secrets.AZURE_TENANT_ID}} identityName=${{env.UAMI_NAME}}
 
 
-      #- name: Deploy NSG for APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_NSG_NAME }}
-      #    template: ./src/infra-deploy/templates/apim.nsg.json
-      #    parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
+      - name: Deploy NSG for APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_NSG_NAME }}
+          template: ./src/infra-deploy/templates/apim.nsg.json
+          parameters: location=${{ matrix.region }} nsgName=${{ env.APIM_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} allowTrafficOnlyFromFrontDoor=${{ env.APIM_SUBNET_FRONTDOOR_INBOUND_ONLY }}
 
-      #- name: Deploy NSG for APIM Subnet Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_NSG_NAME }}-diag
-      #    template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
-      #    parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Deploy NSG for APIM Subnet Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_NSG_NAME }}-diag
+          template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
+          parameters: nsgName=${{ env.APIM_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      #- name: Deploy NSG for App Subnet without AppGW source address
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APP_NSG_NAME }}
-      #    template: ./src/infra-deploy/templates/net.nsg.json
-      #    parameters: location=${{ matrix.region }} nsgName=${{ env.APP_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} 
+      - name: Deploy NSG for App Subnet without AppGW source address
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_NSG_NAME }}
+          template: ./src/infra-deploy/templates/net.nsg.json
+          parameters: location=${{ matrix.region }} nsgName=${{ env.APP_NSG_NAME }} nsgRuleInbound100Src=${{ env.NSG_IN_SRC }} 
 
-      #- name: Deploy NSG for App Subnet Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APP_NSG_NAME }}-diag
-      #    template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
-      #    parameters: nsgName=${{ env.APP_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Deploy NSG for App Subnet Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_NSG_NAME }}-diag
+          template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
+          parameters: nsgName=${{ env.APP_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
 
-      #- name: Deploy VNet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.VNET_NAME }}
-      #    template: ./src/infra-deploy/templates/net.vnet.json
-      #    parameters: |
-      #      location=${{ matrix.region }} vnetName=${{ env.VNET_NAME }} vnetPrefix=${{ env.VNET_PREFIX }} enableDdosProtection=${{ env.VNET_ENABLE_DDOS }} ddosProtectionPlanResourceGroup=${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} ddosProtectionPlanName=${{ env.DDOS_PLAN_NAME }}
+      - name: Deploy VNet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.VNET_NAME }}
+          template: ./src/infra-deploy/templates/net.vnet.json
+          parameters: |
+            location=${{ matrix.region }} vnetName=${{ env.VNET_NAME }} vnetPrefix=${{ env.VNET_PREFIX }} enableDdosProtection=${{ env.VNET_ENABLE_DDOS }} ddosProtectionPlanResourceGroup=${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} ddosProtectionPlanName=${{ env.DDOS_PLAN_NAME }}
 
-      #- name: Deploy VNet Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.VNET_NAME }}-diag
-      #    template: ./src/infra-deploy/templates/net.vnet.diagnostics.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Deploy VNet Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.VNET_NAME }}-diag
+          template: ./src/infra-deploy/templates/net.vnet.diagnostics.json
+          parameters: vnetName=${{ env.VNET_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      #- name: Deploy APIM Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APIM_SUBNET_NAME }}
-      #    template: ./src/infra-deploy/templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APIM_SUBNET_NAME }} subnetPrefix=${{ env.APIM_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APIM_NSG_NAME }}
+      - name: Deploy APIM Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_SUBNET_NAME }}
+          template: ./src/infra-deploy/templates/net.vnet.subnet.json
+          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APIM_SUBNET_NAME }} subnetPrefix=${{ env.APIM_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APIM_NSG_NAME }}
 
-      #- name: Deploy AppGW Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APPGW_SUBNET_NAME }}
-      #    template: ./src/infra-deploy/templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} subnetPrefix=${{ env.APPGW_SUBNET_PREFIX }}
+      - name: Deploy AppGW Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APPGW_SUBNET_NAME }}
+          template: ./src/infra-deploy/templates/net.vnet.subnet.json
+          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APPGW_SUBNET_NAME }} subnetPrefix=${{ env.APPGW_SUBNET_PREFIX }}
 
-      #- name: Deploy App Subnet
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.APP_SUBNET_NAME }}
-      #    template: ./src/infra-deploy/templates/net.vnet.subnet.json
-      #    parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
+      - name: Deploy App Subnet
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_SUBNET_NAME }}
+          template: ./src/infra-deploy/templates/net.vnet.subnet.json
+          parameters: vnetName=${{ env.VNET_NAME }} subnetName=${{ env.APP_SUBNET_NAME }} subnetPrefix=${{ env.APP_SUBNET_PREFIX }} nsgResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} nsgName=${{ env.APP_NSG_NAME }} serviceEndpoints=${{ env.APP_SUBNET_SERVICE_ENDPOINTS }}
 
 
       - name: Get Subnet Resource IDs
@@ -283,136 +283,136 @@ jobs:
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
           echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
 
-      #- name: Grant UAMI Contributor on Region RG
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-contrib
-      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      - name: Grant UAMI Contributor on Region RG
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-contrib
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      #- name: Grant UAMI Managed Identity Operator on Region RG for AKS AAD Pod Identity
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-mio
-      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      - name: Grant UAMI Managed Identity Operator on Region RG for AKS AAD Pod Identity
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-mio
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      #- name: Grant UAMI Network Contributor on VNet for kubenet config
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
-      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
-
-
-      #- name: Deploy Key Vault
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.KEY_VAULT_NAME }}
-      #    template: ./src/infra-deploy/templates/key-vault.json
-      #    parameters: location=${{ matrix.region }} tenantId=${{ secrets.AZURE_TENANT_ID }} keyVaultName=${{ env.KEY_VAULT_NAME }}
-
-      #- name: Deploy Key Vault Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.KEY_VAULT_NAME }}-diag
-      #    template: ./src/infra-deploy/templates/key-vault.diagnostics.json
-      #    parameters: keyVaultName=${{ env.KEY_VAULT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
-
-      #- name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
-      #  if: success()
-      #  run: |
-      #    az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
-      #      -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
-      #      --object-id ${{ env.AZURE_CRED_SP_OBJECT_ID }} \
-      #      --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
-      #      --secret-permissions backup delete get list purge recover restore set \
-      #      --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
-
-      #- name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
-      #  if: success()
-      #  run: |
-      #    az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
-      #      -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
-      #      --object-id ${{ env.UAMI_PRINCIPAL_ID }} \
-      #      --key-permissions get \
-      #      --secret-permissions get \
-      #      --certificate-permissions get
+      - name: Grant UAMI Network Contributor on VNet for kubenet config
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_NETWORK_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Network/virtualNetworks" resourceName=${{ env.VNET_NAME }}
 
 
-      #- name: Deploy Storage Account for Event Hub Processor
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
-      #    template: ./src/infra-deploy/templates/storage.account.json
-      #    parameters: location=${{ matrix.region }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
+      - name: Deploy Key Vault
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.KEY_VAULT_NAME }}
+          template: ./src/infra-deploy/templates/key-vault.json
+          parameters: location=${{ matrix.region }} tenantId=${{ secrets.AZURE_TENANT_ID }} keyVaultName=${{ env.KEY_VAULT_NAME }}
 
-      #- name: Deploy Storage Container for Event Hub Processor
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
-      #    template: ./src/infra-deploy/templates/storage.container.json
-      #    parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
+      - name: Deploy Key Vault Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.KEY_VAULT_NAME }}-diag
+          template: ./src/infra-deploy/templates/key-vault.diagnostics.json
+          parameters: keyVaultName=${{ env.KEY_VAULT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      #- name: Grant UAMI Storage Data Contributor on Storage Account
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-rbac-sdc
-      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
-      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Storage/storageAccounts" resourceName=${{ env.STORAGE_ACCOUNT_NAME }}
+      - name: Grant Key Vault access permissions to current authentication context to get/set/list certs, secrets and keys
+        if: success()
+        run: |
+          az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
+            -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
+            --object-id ${{ env.AZURE_CRED_SP_OBJECT_ID }} \
+            --key-permissions backup create decrypt delete encrypt get import list purge recover restore sign unwrapKey update verify wrapKey \
+            --secret-permissions backup delete get list purge recover restore set \
+            --certificate-permissions backup create delete deleteissuers get getissuers import list listissuers managecontacts manageissuers purge recover restore setissuers update
+
+      - name: Grant Key Vault access permissions to UAMI to get certs, secrets and keys
+        if: success()
+        run: |
+          az keyvault set-policy --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --verbose \
+            -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.KEY_VAULT_NAME }} \
+            --object-id ${{ env.UAMI_PRINCIPAL_ID }} \
+            --key-permissions get \
+            --secret-permissions get \
+            --certificate-permissions get
 
 
-      #- name: Deploy Event Hub Namespace
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
-      #    template: ./src/infra-deploy/templates/event-hub.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} capacity=${{ env.EVENT_HUB_CAPACITY }}
+      - name: Deploy Storage Account for Event Hub Processor
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.account.json
+          parameters: location=${{ matrix.region }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
 
-      #- name: Deploy Event Hub Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
-      #    template: ./src/infra-deploy/templates/event-hub.diagnostics.json
-      #    parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      - name: Deploy Storage Container for Event Hub Processor
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.container.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
 
-      #- name: Deploy Event Hub Namespace Auth Rule
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
-      #    template: ./src/infra-deploy/templates/event-hub.ns-auth-rule.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="${{ env.EVENT_HUB_AUTH_RULE_RIGHTS }}" ruleName="${{ env.EVENT_HUB_AUTH_RULE_NAME }}"
+      - name: Grant UAMI Storage Data Contributor on Storage Account
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-rbac-sdc
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.Storage/storageAccounts" resourceName=${{ env.STORAGE_ACCOUNT_NAME }}
 
-      #- name: Deploy Event Hub
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
-      #    template: ./src/infra-deploy/templates/event-hub.event-hub.json
-      #    parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
+
+      - name: Deploy Event Hub Namespace
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
+          template: ./src/infra-deploy/templates/event-hub.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} capacity=${{ env.EVENT_HUB_CAPACITY }}
+
+      - name: Deploy Event Hub Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
+          template: ./src/infra-deploy/templates/event-hub.diagnostics.json
+          parameters: namespaceName=${{ env.EVENT_HUB_NS_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+      - name: Deploy Event Hub Namespace Auth Rule
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
+          template: ./src/infra-deploy/templates/event-hub.ns-auth-rule.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} rights="${{ env.EVENT_HUB_AUTH_RULE_RIGHTS }}" ruleName="${{ env.EVENT_HUB_AUTH_RULE_NAME }}"
+
+      - name: Deploy Event Hub
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
+          template: ./src/infra-deploy/templates/event-hub.event-hub.json
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
 
       - name: Deploy Event Hub Consumer Group
         if: success()
