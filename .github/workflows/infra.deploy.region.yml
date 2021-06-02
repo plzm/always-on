@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '29'
+  SUFFIX: '30'
 
   RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
@@ -25,8 +25,8 @@ env:
 
   IDENTITY_TYPE: 'UserAssigned'
 
+  VNET_ENABLE_DDOS: 'false'
   VNET_PREFIX: '10.0.0.0/16'
-  VNET_ENABLE_DDOS: 'true'
   APIM_SUBNET_NAME: 'apim'
   APIM_SUBNET_PREFIX: '10.0.1.0/24'
   APIM_SUBNET_FRONTDOOR_INBOUND_ONLY: 'true'
@@ -77,10 +77,10 @@ env:
   APPGW_SKU_NAME: 'WAF_v2'
   #APPGW_SKU_NAME: 'Standard_v2'
 
-  #APIM_SKU_NAME: 'Developer'
-  APIM_SKU_NAME: 'Premium'
+  APIM_SKU_NAME: 'Developer'
+  #APIM_SKU_NAME: 'Premium'
   APIM_VNET_TYPE: 'External'
-  APIM_SCALE_UNITS: 9   # Must be a multiple of AZs
+  APIM_SCALE_UNITS: 9   # Must be a multiple of AZs. Will be overridden in template if exceeds SKU max.
   APIM_API_VERSION: 'v1'
   APIM_API_ID: 'aofe'
   APIM_API_DISPLAY_NAME: 'AlwaysOn Front End API'
