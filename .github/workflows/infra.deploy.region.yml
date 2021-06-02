@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '27'
+  SUFFIX: '29'
 
   RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
@@ -26,7 +26,7 @@ env:
   IDENTITY_TYPE: 'UserAssigned'
 
   VNET_PREFIX: '10.0.0.0/16'
-  VNET_ENABLE_DDOS: 'false'
+  VNET_ENABLE_DDOS: 'true'
   APIM_SUBNET_NAME: 'apim'
   APIM_SUBNET_PREFIX: '10.0.1.0/24'
   APIM_SUBNET_FRONTDOOR_INBOUND_ONLY: 'true'
@@ -74,12 +74,13 @@ env:
   AKS_USER_POOL_NODE_DISK_SIZE_GB: '60'
   AKS_USER_POOL_NODE_LABELS: '{\"app\": \"always-on\"}'
 
-  APPGW_SKU_NAME: 'Standard_v2'
+  APPGW_SKU_NAME: 'WAF_v2'
+  #APPGW_SKU_NAME: 'Standard_v2'
 
-  APIM_SKU_NAME: 'Developer'
-  #APIM_SKU_NAME: 'Premium'
+  #APIM_SKU_NAME: 'Developer'
+  APIM_SKU_NAME: 'Premium'
   APIM_VNET_TYPE: 'External'
-  APIM_SCALE_UNITS: 3
+  APIM_SCALE_UNITS: 9   # Must be a multiple of AZs
   APIM_API_VERSION: 'v1'
   APIM_API_ID: 'aofe'
   APIM_API_DISPLAY_NAME: 'AlwaysOn Front End API'
@@ -87,14 +88,14 @@ env:
   APIM_API_SERVICE_PATH: '/'
 
   FRONT_DOOR_ORIGIN_GROUP_NAME: 'apims'
-  FRONT_DOOR_ROUTE_NAME: 'api'
+  FRONT_DOOR_ROUTE_NAME: 'aoferoute'
 
 jobs:
   deploy-region:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        region: [eastus2]
+        region: [eastus2,westus2]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -281,15 +282,6 @@ jobs:
           echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'principalId')" >> $GITHUB_ENV
           echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.UAMI_NAME }} -o tsv --query 'clientId')" >> $GITHUB_ENV
-
-      - name: Grant UAMI ACRPull on Global Registry
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
       - name: Grant UAMI Contributor on Region RG
         if: success()
@@ -525,15 +517,15 @@ jobs:
         run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
-      ## Deploy AKS - ARM Template - but does not support kubelet identity
-      #- name: Deploy AKS Cluster (ARM)
-      #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
-      #    template: ./src/infra-deploy/templates/aks.cluster.json
-      #    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
+      ### Deploy AKS - ARM Template - but does not support kubelet identity
+      ##- name: Deploy AKS Cluster (ARM)
+      ##  if: success()
+      ##  uses: azure/arm-deploy@v1
+      ##  with:
+      ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      ##    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
+      ##    template: ./src/infra-deploy/templates/aks.cluster.json
+      ##    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
 
       - name: Install Azure CLI AKS Preview extension
         if: success()
@@ -704,6 +696,55 @@ jobs:
           template: ./src/infra-deploy/templates/fd.route.json
           parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
 
+      - name: Azure logout
+        run: |
+          az logout
+
+
+  global-config:
+    runs-on: ubuntu-latest
+    needs: deploy-region
+    strategy:
+      matrix:
+        region: [eastus2,westus2]
+      max-parallel: 1
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Where am I?
+        run: |
+          ls -la
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+          UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+
+          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
+          echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
+          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+
+          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
+          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'clientId')" >> $GITHUB_ENV
+
+      - name: Grant UAMI ACRPull on Global Registry
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
       - name: Azure logout
         run: |
