@@ -49,6 +49,9 @@ jobs:
 
       - name: Setup Newman
         uses: matt-ball/newman-action@master
+        with:
+          collection: ./tools/Always-On.postman_collection.json
+          environment: ./tools/Always-On.postman_environment.json
 
       - name: Debug Newman
         if: success()
