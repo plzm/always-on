@@ -55,15 +55,10 @@ jobs:
         with:
           collection: ./tools/postman/placeholder.json
 
-      - name: Debug Newman
-        if: success()
-        run: |
-          echo {{ env.NEWMAN_POST_PROGRESS_COLLECTION }}
-
       - name: Run Newman Run
         if: success()
         run: |
-          newman run './tools/postman/Always-On-Post-Progress.postman_collection.json' -k --env-var "ApiEndpoint={{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_POST_PROGRESS_ITERATIONS }} 
+          newman run '${{ env.NEWMAN_POST_PROGRESS_COLLECTION }}' -k --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_POST_PROGRESS_ITERATIONS }} 
 
 
       - name: Azure logout
