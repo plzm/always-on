@@ -1,0 +1,87 @@
+{
+	"info": {
+		"_postman_id": "4ae7d263-abf8-4aa4-8af0-05210b33732e",
+		"name": "Always-On-Post-Profile",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Post-Profile",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var handleIndex = +pm.collectionVariables.get(\"handleIndex\") + 1;\r",
+							"\r",
+							"pm.collectionVariables.set(\"handleIndex\", handleIndex);\r",
+							"pm.collectionVariables.set(\"handle\", pm.collectionVariables.get(\"handlePrefix\") + handleIndex);\r",
+							"\r",
+							"pm.variables.set(\"avatar_url\", pm.variables.replaceIn('{{$randomUrl}}'));\r",
+							"pm.variables.set(\"total_xp\", pm.variables.replaceIn('{{$randomInt}}'));"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"strictSSL": false,
+				"disableCookies": false
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"{{handle}}\",\r\n    \"Handle\": \"{{handle}}\",\r\n    \"AvatarUrl\": \"{{avatar_url}}\",\r\n    \"TotalXp\": {{total_xp}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ApiEndpoint}}profile",
+					"host": [
+						"{{ApiEndpoint}}profile"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "handleIndex",
+			"value": "0"
+		},
+		{
+			"key": "handlePrefix",
+			"value": "user"
+		},
+		{
+			"key": "handle",
+			"value": ""
+		}
+	]
+}

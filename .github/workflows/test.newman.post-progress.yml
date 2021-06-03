@@ -1,16 +1,15 @@
-name: Test-Newman
+name: Test-Newman-Post-Progress
 
 on: 
   workflow_dispatch:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '30'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
-  NEWMAN_POST_PROGRESS_COLLECTION: ./tools/postman/Always-On-Post-Progress.postman_collection.json
-  NEWMAN_POST_PROGRESS_ITERATIONS: 1000
+  NEWMAN_COLLECTION: ./tools/postman/Always-On-Post-Progress.postman_collection.json
+  NEWMAN_ITERATIONS: 1000
 
 jobs:
   run-newman:
@@ -24,6 +23,7 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
 
       - name: Install Azure CLI Extensions
         if: success()
@@ -43,13 +43,6 @@ jobs:
           echo "FRONT_DOOR_ENDPOINT_FQDN=$FRONT_DOOR_ENDPOINT_FQDN" >> $GITHUB_ENV
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
 
-      #- name: Debug
-      #  if: success()
-      #  run: |
-      #    echo ${{ env.FRONT_DOOR_ENDPOINT_FQDN }}
-      #    echo ${{ env.API_ENDPOINT }}
-
-
       - name: Setup Newman
         uses: matt-ball/newman-action@master
         with:
@@ -58,7 +51,7 @@ jobs:
       - name: Run Newman Run
         if: success()
         run: |
-          newman run '${{ env.NEWMAN_POST_PROGRESS_COLLECTION }}' -k --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_POST_PROGRESS_ITERATIONS }} 
+          newman run '${{ env.NEWMAN_COLLECTION }}' -k --reporter-cli-silent --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} 
 
 
       - name: Azure logout

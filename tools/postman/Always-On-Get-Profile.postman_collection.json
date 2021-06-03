@@ -1,12 +1,12 @@
 {
 	"info": {
-		"_postman_id": "a10c8167-bb27-48fc-9ff8-8de85278ad04",
-		"name": "Always-On-Post-Progress",
+		"_postman_id": "7bd2ab73-1103-4d70-a210-c7caae9413fe",
+		"name": "Always-On-Get-Profile",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Post-Progress",
+			"name": "Get-Profile",
 			"event": [
 				{
 					"listen": "prerequest",
@@ -15,39 +15,24 @@
 							"var handleIndexMin = +pm.collectionVariables.get(\"handleIndexMin\");\r",
 							"var handleIndexMax = +pm.collectionVariables.get(\"handleIndexMax\");\r",
 							"\r",
-							"var handleIndex = Math.round((Math.random() * handleIndexMax) + handleIndexMin);\r",
+							"var handleIndex = Math.round( (Math.random() * handleIndexMax) + handleIndexMin);\r",
 							"\r",
-							"var handle = pm.collectionVariables.get(\"handlePrefix\") + handleIndex;\r",
-							"\r",
-							"pm.variables.set(\"handle\", handle);\r",
-							"pm.variables.set(\"id\", pm.variables.replaceIn('{{$guid}}'));\r",
-							"pm.variables.set(\"xp\", pm.variables.replaceIn('{{$randomInt}}'));\r",
-							""
+							"pm.collectionVariables.set(\"handle\", pm.collectionVariables.get(\"handlePrefix\") + handleIndex);"
 						],
 						"type": "text/javascript"
 					}
 				}
 			],
-			"protocolProfileBehavior": {
-				"strictSSL": false,
-				"disableCookies": false
-			},
 			"request": {
-				"method": "POST",
+				"method": "GET",
 				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"id\": \"{{id}}\",\r\n    \"Handle\": \"{{handle}}\",\r\n    \"Xp\": {{xp}}\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
 				"url": {
-					"raw": "{{ApiEndpoint}}progress",
+					"raw": "{{ApiEndpoint}}profile/{{handle}}",
 					"host": [
-						"{{ApiEndpoint}}progress"
+						"{{ApiEndpoint}}profile"
+					],
+					"path": [
+						"{{handle}}"
 					]
 				}
 			},
@@ -86,6 +71,10 @@
 		{
 			"key": "handlePrefix",
 			"value": "user"
+		},
+		{
+			"key": "handle",
+			"value": ""
 		}
 	]
 }
