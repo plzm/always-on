@@ -40,7 +40,6 @@ jobs:
           echo "FRONT_DOOR_ENDPOINT_FQDN=$FRONT_DOOR_ENDPOINT_FQDN" >> $GITHUB_ENV
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
 
-
       - name: Debug
         if: success()
         run: |
@@ -53,8 +52,7 @@ jobs:
         with:
           collection: ./tools/Always-On.postman_collection.json
           environment: ./tools/Always-On.postman_environment.json
-          options: |
-            envVar: "ApiEndpoint:${{ env.API_ENDPOINT }}"
+          env-var: "ApiEndpoint:${{ env.API_ENDPOINT }}"
 
 
       - name: Azure logout
