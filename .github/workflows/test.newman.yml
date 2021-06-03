@@ -55,7 +55,7 @@ jobs:
       - name: Debug Newman
         if: success()
         run: |
-          newman run --env-var "ApiEndpoint={{ env.API_ENDPOINT }}"
+          newman run --collection "./tools/Always-On.postman_collection.json" --env-var "ApiEndpoint={{ env.API_ENDPOINT }}"
 
 
       - name: Azure logout
