@@ -9,7 +9,7 @@ env:
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
-  NEWMAN_POST_PROGRESS_COLLECTION: './tools/postman/Always-On-Post-Progress.postman_collection.json'
+  NEWMAN_POST_PROGRESS_COLLECTION: ./tools/postman/Always-On-Post-Progress.postman_collection.json
   NEWMAN_POST_PROGRESS_ITERATIONS: 1000
 
 jobs:
