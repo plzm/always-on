@@ -50,12 +50,12 @@ jobs:
       - name: Setup Newman
         uses: matt-ball/newman-action@master
         with:
-          collection: ./tools/Always-On.postman_collection.json
+          collection: ./tools/postman/Always-On.postman_collection.json
 
       - name: Debug Newman
         if: success()
         run: |
-          newman run --collection "./tools/Always-On.postman_collection.json" --env-var "ApiEndpoint={{ env.API_ENDPOINT }}"
+          newman run "./tools/postman/Always-On.postman_collection.json" --env-var "ApiEndpoint={{ env.API_ENDPOINT }}"
 
 
       - name: Azure logout
