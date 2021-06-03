@@ -58,7 +58,12 @@ jobs:
       - name: Debug Newman
         if: success()
         run: |
-          newman run "{{ env.NEWMAN_POST_PROGRESS_COLLECTION }}" -k --env-var "ApiEndpoint={{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_POST_PROGRESS_ITERATIONS }} 
+          ls -la
+
+      #- name: Debug Newman
+      #  if: success()
+      #  run: |
+      #    newman run "{{ env.NEWMAN_POST_PROGRESS_COLLECTION }}" -k --env-var "ApiEndpoint={{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_POST_PROGRESS_ITERATIONS }} 
 
 
       - name: Azure logout
