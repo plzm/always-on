@@ -1,0 +1,91 @@
+{
+	"info": {
+		"_postman_id": "a10c8167-bb27-48fc-9ff8-8de85278ad04",
+		"name": "Always-On-Post-Progress",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Post-Progress",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var handleIndexMin = +pm.collectionVariables.get(\"handleIndexMin\");\r",
+							"var handleIndexMax = +pm.collectionVariables.get(\"handleIndexMax\");\r",
+							"\r",
+							"var handleIndex = Math.round((Math.random() * handleIndexMax) + handleIndexMin);\r",
+							"\r",
+							"var handle = pm.collectionVariables.get(\"handlePrefix\") + handleIndex;\r",
+							"\r",
+							"pm.variables.set(\"handle\", handle);\r",
+							"pm.variables.set(\"id\", pm.variables.replaceIn('{{$guid}}'));\r",
+							"pm.variables.set(\"xp\", pm.variables.replaceIn('{{$randomInt}}'));\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"strictSSL": false,
+				"disableCookies": false
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"{{id}}\",\r\n    \"Handle\": \"{{handle}}\",\r\n    \"Xp\": {{xp}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ApiEndpoint}}progress",
+					"host": [
+						"{{ApiEndpoint}}progress"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "handleIndexMin",
+			"value": "1"
+		},
+		{
+			"key": "handleIndexMax",
+			"value": "1000"
+		},
+		{
+			"key": "handlePrefix",
+			"value": "user"
+		}
+	]
+}

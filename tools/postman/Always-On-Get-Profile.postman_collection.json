@@ -1,0 +1,80 @@
+{
+	"info": {
+		"_postman_id": "7bd2ab73-1103-4d70-a210-c7caae9413fe",
+		"name": "Always-On-Get-Profile",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get-Profile",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"var handleIndexMin = +pm.collectionVariables.get(\"handleIndexMin\");\r",
+							"var handleIndexMax = +pm.collectionVariables.get(\"handleIndexMax\");\r",
+							"\r",
+							"var handleIndex = Math.round( (Math.random() * handleIndexMax) + handleIndexMin);\r",
+							"\r",
+							"pm.collectionVariables.set(\"handle\", pm.collectionVariables.get(\"handlePrefix\") + handleIndex);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ApiEndpoint}}profile/{{handle}}",
+					"host": [
+						"{{ApiEndpoint}}profile"
+					],
+					"path": [
+						"{{handle}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "handleIndexMin",
+			"value": "1"
+		},
+		{
+			"key": "handleIndexMax",
+			"value": "1000"
+		},
+		{
+			"key": "handlePrefix",
+			"value": "user"
+		},
+		{
+			"key": "handle",
+			"value": ""
+		}
+	]
+}
