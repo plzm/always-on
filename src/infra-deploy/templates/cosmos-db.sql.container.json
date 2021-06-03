@@ -63,7 +63,14 @@
                 "resource": {
                     "id": "[parameters('containerName')]",
                     "indexingPolicy": {
-                        "indexingMode": "none"
+                        "indexingMode": "consistent",
+                        "automatic": true,
+                        "includedPaths": [],
+                        "excludedPaths": [
+                            {
+                                "path": "/*"
+                            }
+                        ]
                     },
                     "partitionKey": {
                         "paths": [ "[parameters('partitionKeyPath')]" ],
