@@ -9,6 +9,9 @@ env:
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
+  NEWMAN_POST_PROGRESS_COLLECTION: './tools/postman/Always-On-Post-Progress.postman_collection.json'
+  NEWMAN_POST_PROGRESS_ITERATIONS: 1000
+
 jobs:
   run-newman:
     runs-on: ubuntu-latest
@@ -50,12 +53,12 @@ jobs:
       - name: Setup Newman
         uses: matt-ball/newman-action@master
         with:
-          collection: ./tools/postman/Always-On.postman_collection.json
+          collection: ./tools/postman/placeholder.json
 
       - name: Debug Newman
         if: success()
         run: |
-          newman run "./tools/postman/Always-On.postman_collection.json" --env-var "ApiEndpoint={{ env.API_ENDPOINT }}"
+          newman run "{{ env.NEWMAN_POST_PROGRESS_COLLECTION }}" -k --delay-request 0 --env-var "ApiEndpoint={{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_POST_PROGRESS_ITERATIONS }} 
 
 
       - name: Azure logout

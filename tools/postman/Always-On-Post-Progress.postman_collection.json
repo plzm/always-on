@@ -1,0 +1,50 @@
+{
+	"info": {
+		"_postman_id": "a10c8167-bb27-48fc-9ff8-8de85278ad04",
+		"name": "Always-On-Post-Progress",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Post-Progress",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.variables.set(\"progress_guid\", pm.variables.replaceIn('{{$guid}}'));\r",
+							"pm.variables.set(\"progress_handle\", pm.variables.replaceIn('{{$randomUserName}}'));\r",
+							"pm.variables.set(\"progress_xp\", pm.variables.replaceIn('{{$randomInt}}'));\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"protocolProfileBehavior": {
+				"strictSSL": false,
+				"disableCookies": false
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\": \"{{progress_guid}}\",\r\n    \"Handle\": \"{{progress_handle}}\",\r\n    \"Xp\": {{progress_xp}}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{ApiEndpoint}}progress",
+					"host": [
+						"{{ApiEndpoint}}progress"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
