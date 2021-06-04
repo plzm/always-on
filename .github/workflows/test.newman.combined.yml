@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        collection: ["${{env.NEWMAN_COLLECTION_GET_PROFILE}}","${{env.NEWMAN_COLLECTION_POST_PROFILE}}","${{env.NEWMAN_COLLECTION_POST_PROGRESS}}"]
+        collection: ["./tools/postman/Always-On-Get-Profile.postman_collection.json", "./tools/postman/Always-On-Post-Profile.postman_collection.json", "./tools/postman/Always-On-Post-Progress.postman_collection.json"]
       max-parallel: 10
     steps:
       - name: Checkout repository
