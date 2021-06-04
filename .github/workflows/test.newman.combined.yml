@@ -1,0 +1,66 @@
+name: Test-Newman-Combined
+
+on: 
+  workflow_dispatch:
+
+env:
+  PREFIX: 'pz-ao'
+
+  AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
+
+  NEWMAN_COLLECTION_GET_PROFILE: ./tools/postman/Always-On-Get-Profile.postman_collection.json
+  NEWMAN_COLLECTION_POST_PROFILE: ./tools/postman/Always-On-Post-Profile.postman_collection.json
+  NEWMAN_COLLECTION_POST_PROGRESS: ./tools/postman/Always-On-Post-Progress.postman_collection.json
+
+  NEWMAN_ITERATIONS: 10
+
+jobs:
+  combined:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        collection: ["${{env.NEWMAN_COLLECTION_GET_PROFILE}}","${{env.NEWMAN_COLLECTION_POST_PROFILE}}","${{env.NEWMAN_COLLECTION_POST_PROGRESS}}"]
+      max-parallel: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+
+      - name: Install Azure CLI Extensions
+        if: success()
+        run: |
+          az extension add --name front-door
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          FRONT_DOOR_NAME=${{ env.PREFIX }}
+          FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
+
+          FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
+
+          API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api/
+
+          echo "FRONT_DOOR_ENDPOINT_FQDN=$FRONT_DOOR_ENDPOINT_FQDN" >> $GITHUB_ENV
+          echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
+
+      - name: Setup Newman
+        uses: matt-ball/newman-action@master
+        with:
+          collection: ./tools/postman/placeholder.json
+
+      - name: Run Newman Run
+        if: success()
+        run: |
+          newman run '${{ matrix.collection }}' -k --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} 
+
+
+      - name: Azure logout
+        run: |
+          az logout
