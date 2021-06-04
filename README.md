@@ -20,3 +20,4 @@ This solution deploys and configures a highly performant, multi-region applicati
 6. [Approach](./media/docs/06.approach.md)
 7. [Github Configuration](./media/docs/07.github-config.md)
 8. [Azure Key Vault Secrets --> Azure Kubernetes Service pod environment variables!](./media/docs/08.akv-aks.md)
+9. [Testing](./media/docs/09.testing.md)
