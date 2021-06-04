@@ -8,10 +8,6 @@ env:
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
-  NEWMAN_COLLECTION_GET_PROFILE: ./tools/postman/Always-On-Get-Profile.postman_collection.json
-  NEWMAN_COLLECTION_POST_PROFILE: ./tools/postman/Always-On-Post-Profile.postman_collection.json
-  NEWMAN_COLLECTION_POST_PROGRESS: ./tools/postman/Always-On-Post-Progress.postman_collection.json
-
   NEWMAN_ITERATIONS: 10
 
 jobs:
