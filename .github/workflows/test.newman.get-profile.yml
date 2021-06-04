@@ -51,7 +51,7 @@ jobs:
       - name: Run Newman Run
         if: success()
         run: |
-          newman run '${{ env.NEWMAN_COLLECTION }}' -k --reporter-cli-silent --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} 
+          newman run '${{ env.NEWMAN_COLLECTION }}' -k --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} 
 
 
       - name: Azure logout

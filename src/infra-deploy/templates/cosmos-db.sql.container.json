@@ -48,6 +48,18 @@
                 "displayName": "Autoscale Max Throughput",
                 "description": "Set to >=4000 to specify max autoscale throughput for the database. Leave at 0 for no autoscale."
             }
+        },
+        "indexingMode": {
+            "type": "string",
+            "defaultValue": "none",
+            "allowedValues": [
+                "none",
+                "consistent"
+            ]
+        },
+        "indexingAutomatic": {
+            "type": "bool",
+            "defaultValue": false
         }
     },
     "variables": {
@@ -63,8 +75,8 @@
                 "resource": {
                     "id": "[parameters('containerName')]",
                     "indexingPolicy": {
-                        "indexingMode": "consistent",
-                        "automatic": true,
+                        "indexingMode": "[parameters('indexingMode')]",
+                        "automatic": "[parameters('indexingAutomatic')]",
                         "includedPaths": [],
                         "excludedPaths": [
                             {
