@@ -54,9 +54,8 @@ jobs:
           API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api/
 
           COLLECTION_PATH="$COLLECTION_PREFIX""${{ matrix.collection }}""$COLLECTION_SUFFIX"
-          TS=$( date +%s )
 
-          FILE_NAME=${{ matrix.collection }}-${{ matrix.worker }}-$TS.json
+          FILE_NAME=${{ matrix.collection }}-$GITHUB_RUN_NUMBER-${{ matrix.worker }}.json
 
           echo "STORAGE_ACCT_NAME_GLOBAL=$STORAGE_ACCT_NAME_GLOBAL" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_FQDN=$FRONT_DOOR_ENDPOINT_FQDN" >> $GITHUB_ENV
