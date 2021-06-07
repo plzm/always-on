@@ -368,6 +368,15 @@ jobs:
           template: ./src/infra-deploy/templates/storage.container.json
           parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
 
+      - name: Deploy Storage Account Blob Diagnostics
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
+          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
       - name: Grant UAMI Storage Data Contributor on Storage Account
         if: success()
         uses: azure/arm-deploy@main

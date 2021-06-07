@@ -41,7 +41,7 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          STORAGE_ACCT_NAME=${PREFIX//-/}global
+          STORAGE_ACCT_NAME_GLOBAL=${PREFIX//-/}global
 
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
 
@@ -55,7 +55,7 @@ jobs:
           COLLECTION_PATH="$COLLECTION_PREFIX""${{ matrix.collection }}""$COLLECTION_SUFFIX"
           TS=$( date +%s )
 
-          echo "STORAGE_ACCT_NAME=$STORAGE_ACCT_NAME" >> $GITHUB_ENV
+          echo "STORAGE_ACCT_NAME_GLOBAL=$STORAGE_ACCT_NAME_GLOBAL" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_FQDN=$FRONT_DOOR_ENDPOINT_FQDN" >> $GITHUB_ENV
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
           echo "COLLECTION_PATH=$COLLECTION_PATH" >> $GITHUB_ENV
@@ -74,7 +74,7 @@ jobs:
       - name: Upload to Azure Storage
         if: success()
         run: |
-            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ matrix.collection }}-${{ env.TS }}.json -n "postman/${{ matrix.collection }}-${{ env.TS }}.json" --auth-mode key --verbose
+            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_GLOBAL }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ matrix.collection }}-${{ env.TS }}.json -n "postman/${{ matrix.collection }}-${{ env.TS }}.json" --auth-mode key --verbose
           
 
       - name: Azure logout
