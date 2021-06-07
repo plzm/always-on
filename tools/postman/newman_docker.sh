@@ -10,6 +10,6 @@ iterations=100
 docker pull postman/newman
 
 # This runs sequentially but of course can be split into multiple scripts and run simultaneously.
-docker run -t postman/newman run "$collectionUrlGetProfile" -k --env-var "ApiEndpoint=$apiEndpoint" -n $iterations
-docker run -t postman/newman run "$collectionUrlPostProfile" -k --env-var "ApiEndpoint=$apiEndpoint" -n $iterations
-docker run -t postman/newman run "$collectionUrlPostProgress" -k --env-var "ApiEndpoint=$apiEndpoint" -n $iterations
+docker run -t postman/newman run "$collectionUrlGetProfile" --env-var "ApiEndpoint=$apiEndpoint" -n $iterations -k --reporters json --reporter-json-export ./get-profile.json
+docker run -t postman/newman run "$collectionUrlPostProfile" --env-var "ApiEndpoint=$apiEndpoint" -n $iterations -k --reporters json --reporter-json-export ./post-profile.json
+docker run -t postman/newman run "$collectionUrlPostProgress" --env-var "ApiEndpoint=$apiEndpoint" -n $iterations -k --reporters json --reporter-json-export ./post-progress.json
