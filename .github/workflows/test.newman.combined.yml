@@ -8,14 +8,19 @@ env:
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
-  NEWMAN_ITERATIONS: 10
+  STORAGE_CONTAINER_NAME: 'tests'
+
+  COLLECTION_PREFIX: './tools/postman/'
+  COLLECTION_SUFFIX: '.postman_collection.json'
+
+  NEWMAN_ITERATIONS: 100
 
 jobs:
   combined:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        collection: ["./tools/postman/Always-On-Get-Profile.postman_collection.json", "./tools/postman/Always-On-Post-Profile.postman_collection.json", "./tools/postman/Always-On-Post-Progress.postman_collection.json"]
+        collection: ["Always-On-Get-Profile", "Always-On-Post-Profile", "Always-On-Post-Progress"]
       max-parallel: 10
     steps:
       - name: Checkout repository
@@ -36,6 +41,10 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          STORAGE_ACCT_NAME=${PREFIX//-/}global
+
+          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
@@ -43,19 +52,32 @@ jobs:
 
           API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api/
 
+          COLLECTION_PATH="$COLLECTION_PREFIX""${{ matrix.collection }}""$COLLECTION_SUFFIX"
+          TS=$( date +%s )
+
+          echo "STORAGE_ACCT_NAME=$STORAGE_ACCT_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_FQDN=$FRONT_DOOR_ENDPOINT_FQDN" >> $GITHUB_ENV
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
+          echo "COLLECTION_PATH=$COLLECTION_PATH" >> $GITHUB_ENV
+          echo "TS=$TS" >> $GITHUB_ENV
 
       - name: Setup Newman
         uses: matt-ball/newman-action@master
         with:
-          collection: ./tools/postman/placeholder.json
+          collection: ./tools/postman/this_doesnt_matter_its_a_placeholder_but_the_gha_requires_it.json
 
       - name: Run Newman Run
         if: success()
         run: |
-          newman run '${{ matrix.collection }}' -k --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} 
+          newman run '${{ env.COLLECTION_PATH }}' --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} -k --reporters json --reporter-json-export ./${{ matrix.collection }}-${{ env.TS }}.json
 
+      - name: Upload to Azure Storage
+        if: success()
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ matrix.collection }}-${{ env.TS }}.json -n "postman/${{ matrix.collection }}-${{ env.TS }}.json" --auth-mode login 
+          
 
       - name: Azure logout
         run: |
