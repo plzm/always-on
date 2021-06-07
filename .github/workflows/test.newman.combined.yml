@@ -56,11 +56,14 @@ jobs:
           COLLECTION_PATH="$COLLECTION_PREFIX""${{ matrix.collection }}""$COLLECTION_SUFFIX"
           TS=$( date +%s )
 
+          FILE_NAME=${{ matrix.collection }}-${{ matrix.worker }}-$TS.json
+
           echo "STORAGE_ACCT_NAME_GLOBAL=$STORAGE_ACCT_NAME_GLOBAL" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_FQDN=$FRONT_DOOR_ENDPOINT_FQDN" >> $GITHUB_ENV
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
           echo "COLLECTION_PATH=$COLLECTION_PATH" >> $GITHUB_ENV
           echo "TS=$TS" >> $GITHUB_ENV
+          echo "FILE_NAME=$FILE_NAME" >> $GITHUB_ENV
 
       - name: Setup Newman
         uses: matt-ball/newman-action@master
@@ -70,13 +73,13 @@ jobs:
       - name: Run Newman Run
         if: success()
         run: |
-          newman run '${{ env.COLLECTION_PATH }}' --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} -k --reporters json --reporter-json-export ./${{ matrix.collection }}-${{ matrix.worker }}-${{ env.TS }}.json
+          newman run '${{ env.COLLECTION_PATH }}' --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} -k --reporters json --reporter-json-export ./${{ env.FILE_NAME }}
 
       - name: Upload to Azure Storage
         if: success()
         run: |
-            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_GLOBAL }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ matrix.collection }}-${{ env.TS }}.json -n "postman/${{ matrix.collection }}-${{ env.TS }}.json" --auth-mode key --verbose
-          
+            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_GLOBAL }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ env.FILE_NAME }} -n "postman/${{ env.FILE_NAME }}" --auth-mode key --verbose
+
 
       - name: Azure logout
         run: |
