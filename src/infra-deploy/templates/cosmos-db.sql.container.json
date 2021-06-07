@@ -63,6 +63,22 @@
         }
     },
     "variables": {
+        "includedPaths": "[
+            if
+            (
+                equals(parameters('indexingMode'), 'none'),
+                json('[]'),
+                json('[]')
+            )
+        ]",
+        "excludedPaths": "[
+            if
+            (
+                equals(parameters('indexingMode'), 'none'),
+                json('[]'),
+                json('[{\"path\": \"/*\"}]')
+            )
+        ]",
         "apiVersionCosmosDb": "2021-04-15"
     },
     "resources": [
@@ -77,12 +93,8 @@
                     "indexingPolicy": {
                         "indexingMode": "[parameters('indexingMode')]",
                         "automatic": "[parameters('indexingAutomatic')]",
-                        "includedPaths": [],
-                        "excludedPaths": [
-                            {
-                                "path": "/*"
-                            }
-                        ]
+                        "includedPaths": "[variables('includedPaths')]",
+                        "excludedPaths": "[variables('excludedPaths')]"
                     },
                     "partitionKey": {
                         "paths": [ "[parameters('partitionKeyPath')]" ],
