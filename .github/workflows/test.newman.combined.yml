@@ -73,10 +73,8 @@ jobs:
 
       - name: Upload to Azure Storage
         if: success()
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ matrix.collection }}-${{ env.TS }}.json -n "postman/${{ matrix.collection }}-${{ env.TS }}.json" --auth-mode login 
+        run: |
+            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ matrix.collection }}-${{ env.TS }}.json -n "postman/${{ matrix.collection }}-${{ env.TS }}.json" --auth-mode login --verbose
           
 
       - name: Azure logout
