@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        worker: [1,2]
         collection: ["Always-On-Get-Profile", "Always-On-Post-Profile", "Always-On-Post-Progress"]
       max-parallel: 10
     steps:
@@ -69,7 +70,7 @@ jobs:
       - name: Run Newman Run
         if: success()
         run: |
-          newman run '${{ env.COLLECTION_PATH }}' --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} -k --reporters json --reporter-json-export ./${{ matrix.collection }}-${{ env.TS }}.json
+          newman run '${{ env.COLLECTION_PATH }}' --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} -k --reporters json --reporter-json-export ./${{ matrix.collection }}-${{ matrix.worker }}-${{ env.TS }}.json
 
       - name: Upload to Azure Storage
         if: success()
