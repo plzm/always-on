@@ -22,85 +22,8 @@ env:
   LOCUST_RUNTIME: '5m'
 
 jobs:
-  storage:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Azure login
-        if: success()
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Prepare dynamic env vars
-        if: success()
-        run: |
-          LA_WORKSPACE_NAME=${{ env.PREFIX }}
-          STORAGE_ACCT_NAME_TESTS=${PREFIX//-/}tests
-
-          LA_WORKSPACE_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME
-
-          echo "STORAGE_ACCT_NAME_TESTS=$STORAGE_ACCT_NAME_TESTS" >> $GITHUB_ENV
-          echo "LA_WORKSPACE_ID=$LA_WORKSPACE_ID" >> $GITHUB_ENV
-
-      - name: Create Azure resource group
-        if: success()
-        run: |
-          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_TESTS }} --name ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-
-      - name: Deploy Storage Account
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}
-          template: ./src/infra-deploy/templates/storage.account.json
-          parameters: location=${{ env.AZURE_LOCATION_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} defaultAction=Deny
-
-      - name: Deploy Storage Container
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}-${{ env.STORAGE_CONTAINER_NAME_TESTS }}
-          template: ./src/infra-deploy/templates/storage.container.json
-          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} containerName=${{ env.STORAGE_CONTAINER_NAME_TESTS }}
-
-      - name: Deploy File Share
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}-${{ env.STORAGE_CONTAINER_NAME_TESTS }}
-          template: ./src/infra-deploy/templates/storage.file-share.json
-          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
-
-      - name: Deploy Storage Account Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}-diag
-          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
-          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
-
-      - name: Upload Locust File to File Share
-        if: success()
-        run: |
-            az storage file upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_TESTS }} -s ${{ env.STORAGE_FILE_SHARE_NAME_TESTS }} --source ${{ env.LOCUST_FILE_PATH }} --path ${{ env.LOCUST_FILE_NAME }} --verbose
-
-      - name: Azure logout
-        run: |
-          az logout
-
-  #locust:
-  #  needs: storage
+  #storage:
   #  runs-on: ubuntu-latest
-  #  strategy:
-  #    matrix:
-  #      region: [eastus2,westus2]
   #  steps:
   #    - name: Checkout repository
   #      uses: actions/checkout@v2
@@ -111,28 +34,105 @@ jobs:
   #      with:
   #        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-  #    - name: Install Azure CLI Extensions
-  #      if: success()
-  #      run: |
-  #        az extension add --name front-door
-
   #    - name: Prepare dynamic env vars
   #      if: success()
   #      run: |
-  #        FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
-  #        API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api
+  #        LA_WORKSPACE_NAME=${{ env.PREFIX }}
+  #        STORAGE_ACCT_NAME_TESTS=${PREFIX//-/}tests
 
-  #        echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
+  #        LA_WORKSPACE_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME
 
-  #    - name: Deploy Locust Infrastructure and Start Tests
+  #        echo "STORAGE_ACCT_NAME_TESTS=$STORAGE_ACCT_NAME_TESTS" >> $GITHUB_ENV
+  #        echo "LA_WORKSPACE_ID=$LA_WORKSPACE_ID" >> $GITHUB_ENV
+
+  #    - name: Create Azure resource group
+  #      if: success()
+  #      run: |
+  #        az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_TESTS }} --name ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+
+  #    - name: Deploy Storage Account
   #      if: success()
   #      uses: azure/arm-deploy@main
   #      with:
   #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-  #        deploymentName: locust
-  #        template: ./src/infra-deploy/templates/locust.json
-  #        parameters: location=${{ matrix.region }} hostToTest=${{ env.API_ENDPOINT }} numberOfInstances=${{ env.LOCUST_INSTANCES }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+  #        deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}
+  #        template: ./src/infra-deploy/templates/storage.account.json
+  #        parameters: location=${{ env.AZURE_LOCATION_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} defaultAction=Deny
+
+  #    - name: Deploy Storage Container
+  #      if: success()
+  #      uses: azure/arm-deploy@main
+  #      with:
+  #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+  #        deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}-${{ env.STORAGE_CONTAINER_NAME_TESTS }}
+  #        template: ./src/infra-deploy/templates/storage.container.json
+  #        parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} containerName=${{ env.STORAGE_CONTAINER_NAME_TESTS }}
+
+  #    - name: Deploy File Share
+  #      if: success()
+  #      uses: azure/arm-deploy@main
+  #      with:
+  #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+  #        deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}-${{ env.STORAGE_CONTAINER_NAME_TESTS }}
+  #        template: ./src/infra-deploy/templates/storage.file-share.json
+  #        parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+
+  #    - name: Deploy Storage Account Diagnostics
+  #      if: success()
+  #      uses: azure/arm-deploy@main
+  #      with:
+  #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+  #        deploymentName: ${{ env.STORAGE_ACCT_NAME_TESTS }}-diag
+  #        template: ./src/infra-deploy/templates/storage.account.diagnostics.json
+  #        parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+  #    - name: Upload Locust File to File Share
+  #      if: success()
+  #      run: |
+  #          az storage file upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_TESTS }} -s ${{ env.STORAGE_FILE_SHARE_NAME_TESTS }} --source ${{ env.LOCUST_FILE_PATH }} --path ${{ env.LOCUST_FILE_NAME }} --verbose
 
   #    - name: Azure logout
   #      run: |
   #        az logout
+
+  locust:
+    #needs: storage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        region: [eastus2,westus2]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure CLI Extensions
+        if: success()
+        run: |
+          az extension add --name front-door
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
+          API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api
+
+          echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
+
+      - name: Deploy Locust Infrastructure and Start Tests
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+          deploymentName: locust
+          template: ./src/infra-deploy/templates/locust.json
+          parameters: location=${{ matrix.region }} hostToTest=${{ env.API_ENDPOINT }} numberOfInstances=${{ env.LOCUST_INSTANCES }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+
+      - name: Azure logout
+        run: |
+          az logout
