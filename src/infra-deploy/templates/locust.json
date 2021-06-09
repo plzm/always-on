@@ -1,0 +1,265 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"location": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "See https://azure.microsoft.com/regions/."
+			}
+		},
+		"hostToTest": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"description": "Host to test URI"
+			}
+		},
+        "numberOfInstances": {
+            "type": "int",
+			"defaultValue": 5,
+            "metadata": {
+                "description": "Number of instances of Container Group to deploy"
+            }
+        },
+        "numberOfUsers": {
+            "type": "int",
+			"defaultValue": 2500,
+            "metadata": {
+                "description": "Number of simulated users"
+            }
+        },
+        "numberOfUsersToSpawnPerSecond": {
+            "type": "int",
+			"defaultValue": 50,
+            "metadata": {
+                "description": "Number of simulated users to spawn per second"
+            }
+        },
+		"runtime": {
+			"type": "string",
+			"defaultValue": "30m",
+            "metadata": {
+                "description": "Runtime"
+            }
+		},
+        "stopTimeoutSeconds": {
+            "type": "int",
+			"defaultValue": 10,
+            "metadata": {
+                "description": "Timeout to allow tasks to finish when runtime is complete"
+            }
+        },
+		"storageAccountResourceGroup": {
+			"type": "string",
+			"defaultValue": "",
+            "metadata": {
+                "description": "Resource group where storage account is deployed"
+            }
+		},
+		"storageAccountName": {
+			"type": "string",
+			"defaultValue": "",
+            "metadata": {
+                "description": "Name of existing storage account"
+            }
+		},
+        "fileShareName": {
+            "type": "string",
+            "metadata": {
+                "description": "Name of existing file share to be mounted in containers"
+            }
+        }
+	},
+	"variables": {
+        "image": "locustio/locust:1.5.3",
+        "cpuCores": "1",
+        "masterMemoryInGb": "2",
+        "clientMemoryInGb": "2",
+        "masterContainerGroupName": "[concat('locust-', parameters('location'), '-master')]",
+        "clientContainerGroupNamePrefix": "[concat('locust-', parameters('location'), '-worker-')]",
+        "containerName": "[concat('locust-', parameters('location'))]",
+		"volumeMountName": "locust",
+		"volumeMountPath": "/home/locust/locust",
+		"locustFileName": "locustfile.py",
+		"locustFilePath": "[concat(variables('volumeMountPath'), '/', variables('locustFileName'))]",
+		"resultsFileNamePrefix": "locust_results",
+		"resultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('resultsFileNamePrefix'))]",
+        "storageAccountId": "[resourceId(parameters('storageAccountResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+		"apiVersionContainerGroups": "2019-12-01",
+        "apiVersionStorage": "2021-04-01"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.ContainerInstance/containerGroups",
+			"name": "[variables('masterContainerGroupName')]",
+			"apiVersion": "[variables('apiVersionContainerGroups')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"containers": [
+					{
+						"name": "[variables('containerName')]",
+						"properties": {
+							"image": "[variables('image')]",
+							"environmentVariables": [
+							],
+							"resources": {
+								"requests": {
+									"cpu": "[variables('cpuCores')]",
+									"memoryInGb": "[variables('masterMemoryInGb')]"
+								}
+							},
+							"ports": [
+								{
+									"port": 8089
+								},
+								{
+									"port": 5557
+								}
+							],
+							"command": [
+								"locust",
+								"--locustfile",
+								"[variables('locustFilePath')]",
+								"--master",
+								"--expect-workers",
+								"[parameters('numberOfInstances')]",
+								"--host",
+								"[parameters('hostToTest')]",
+								"--headless",
+								"-u",
+								"[parameters('numberOfUsers')]",
+								"-r",
+								"[parameters('numberOfUsersToSpawnPerSecond')]",
+								"-t",
+								"[parameters('runtime')]",
+								"-s",
+								"[parameters('stopTimeoutSeconds')]",
+								"--csv",
+								"[variables('resultsFilePath')]",
+								"--csv-full-history"
+							],
+							"volumeMounts": [
+								{
+									"mountPath": "[variables('volumeMountPath')]",
+									"name": "[variables('volumeMountName')]"
+								}
+							]
+						}
+					}
+				],
+				"ipAddress": {
+					"type": "Public",
+					"ports": [
+						{
+							"port": 8089
+						},
+						{
+							"port": 5557
+						}
+					]
+				},
+				"osType": "Linux",
+				"restartPolicy": "OnFailure",
+				"volumes": [
+					{
+						"name": "[variables('volumeMountName')]",
+						"azureFile": {
+							"shareName": "[parameters('fileShareName')]",
+							"storageAccountName": "[parameters('storageAccountName')]",
+							"storageAccountKey": "[listKeys(variables('storageAccountId'), variables('apiVersionStorage')).keys[0].value]"
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.ContainerInstance/containerGroups",
+			"name": "[format('{0}{1:D3}', variables('clientContainerGroupNamePrefix'), copyIndex())]",
+			"apiVersion": "[variables('apiVersionContainerGroups')]",
+			"dependsOn": [
+				"[resourceId('Microsoft.ContainerInstance/containerGroups', variables('masterContainerGroupName'))]"
+			],
+			"location": "[parameters('location')]",
+			"properties": {
+				"containers": [
+					{
+						"name": "[variables('containerName')]",
+						"properties": {
+							"image": "[variables('image')]",
+							"environmentVariables": [
+							],
+							"resources": {
+								"requests": {
+									"cpu": "[variables('cpuCores')]",
+									"memoryInGb": "[variables('clientMemoryInGb')]"
+								}
+							},
+							"ports": [
+								{
+									"port": 8089
+								},
+								{
+									"port": 5557
+								}
+							],
+							"command": [
+								"locust",
+								"--locustfile",
+								"[variables('locustFilePath')]",
+								"--worker",
+								"--master-host",
+								"[reference(resourceId('Microsoft.ContainerInstance/containerGroups', variables('masterContainerGroupName'))).ipAddress.ip]",
+								"--host",
+								"[parameters('hostToTest')]",
+								"--headless",
+								"-u",
+								"[parameters('numberOfUsers')]",
+								"-r",
+								"[parameters('numberOfUsersToSpawnPerSecond')]",
+								"-t",
+								"[parameters('runtime')]",
+								"-s",
+								"[parameters('stopTimeoutSeconds')]",
+								"--csv",
+								"[variables('resultsFilePath')]",
+								"--csv-full-history"
+							],
+							"volumeMounts": [
+								{
+									"mountPath": "[variables('volumeMountPath')]",
+									"name": "[variables('volumeMountName')]"
+								}
+							]
+						}
+					}
+				],
+				"osType": "Linux",
+				"restartPolicy": "OnFailure",
+				"volumes": [
+					{
+						"name": "[variables('volumeMountName')]",
+						"azureFile": {
+							"shareName": "[parameters('fileShareName')]",
+							"storageAccountName": "[parameters('storageAccountName')]",
+							"storageAccountKey": "[listKeys(variables('storageAccountId'), variables('apiVersionStorage')).keys[0].value]"
+						}
+					}
+				]
+			},
+			"copy": {
+				"name": "ContainerGroupCopy",
+				"count": "[parameters('numberOfInstances')]"
+			}
+		}
+	],
+	"outputs": {
+		"locustMonitor": {
+			"type": "string",
+			"value": "[concat('http://', reference(resourceId('Microsoft.ContainerInstance/containerGroups/', variables('masterContainerGroupName'))).ipAddress.ip, ':8089')]"
+
+		}
+	}
+}

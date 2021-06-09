@@ -6,16 +6,24 @@
 			"type": "string",
 			"defaultValue": ""
 		},
-        "settingName": {
+		"settingName": {
 			"type": "string",
 			"defaultValue": "diag"
 		},
 		"logAnalyticsWorkspaceResourceId": {
 			"type": "string",
 			"defaultValue": ""
+		},
+		"endpoints": {
+			"value": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), variables('apiVersionStorage'), 'Full').properties.primaryEndpoints]"
 		}
 	},
 	"variables": {
+		"hasblob": "[contains(parameters('endpoints'),'blob')]",
+		"hastable": "[contains(parameters('endpoints'),'table')]",
+		"hasfile": "[contains(parameters('endpoints'),'file')]",
+		"hasqueue": "[contains(parameters('endpoints'),'queue')]",
+		"apiVersionStorage": "2021-04-01",
 		"apiVersionDiagnostics": "2017-05-01-preview"
 	},
 	"resources": [
@@ -24,7 +32,7 @@
 			"type": "Microsoft.Storage/storageAccounts/providers/diagnosticsettings",
 			"apiVersion": "[variables('apiVersionDiagnostics')]",
 			"properties": {
-				"workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+				"logAnalyticsWorkspaceResourceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
 				"storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
 				"metrics": [
 					{
@@ -40,11 +48,12 @@
 			}
 		},
 		{
+			"condition": "[variables('hasblob')]",
 			"name": "[concat(parameters('storageAccountName'), '/default/Microsoft.Insights/', parameters('settingName'))]",
 			"type": "Microsoft.Storage/storageAccounts/blobServices/providers/diagnosticsettings",
 			"apiVersion": "[variables('apiVersionDiagnostics')]",
 			"properties": {
-				"workspaceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+				"logAnalyticsWorkspaceResourceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
 				"storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
 				"logs": [
 					{
@@ -81,6 +90,97 @@
 							"enabled": false,
 							"days": 0
 						}
+					}
+				]
+			}
+		},
+		{
+			"condition": "[variables('hastable')]",
+			"type": "Microsoft.Storage/storageAccounts/tableServices/providers/diagnosticsettings",
+			"apiVersion": "2017-05-01-preview",
+			"name": "[concat(parameters('storageAccountName'),'/default/Microsoft.Insights/', parameters('settingName'))]",
+
+			"properties": {
+				"logAnalyticsWorkspaceResourceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+				"storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+				"logs": [
+					{
+						"category": "StorageRead",
+						"enabled": true
+					},
+					{
+						"category": "StorageWrite",
+						"enabled": true
+					},
+					{
+						"category": "StorageDelete",
+						"enabled": true
+					}
+				],
+				"metrics": [
+					{
+						"category": "Transaction",
+						"enabled": true
+					}
+				]
+			}
+		},
+		{
+			"condition": "[variables('hasfile')]",
+			"type": "Microsoft.Storage/storageAccounts/fileServices/providers/diagnosticsettings",
+			"apiVersion": "2017-05-01-preview",
+			"name": "[concat(parameters('storageAccountName'),'/default/Microsoft.Insights/', parameters('settingName'))]",
+			"properties": {
+				"logAnalyticsWorkspaceResourceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+				"storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+				"logs": [
+					{
+						"category": "StorageRead",
+						"enabled": true
+					},
+					{
+						"category": "StorageWrite",
+						"enabled": true
+					},
+					{
+						"category": "StorageDelete",
+						"enabled": true
+					}
+				],
+				"metrics": [
+					{
+						"category": "Transaction",
+						"enabled": true
+					}
+				]
+			}
+		},
+		{
+			"condition": "[variables('hasqueue')]",
+			"type": "Microsoft.Storage/storageAccounts/queueServices/providers/diagnosticsettings",
+			"apiVersion": "2017-05-01-preview",
+			"name": "[concat(parameters('storageAccountName'),'/default/Microsoft.Insights/', parameters('settingName'))]",
+			"properties": {
+				"logAnalyticsWorkspaceResourceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+				"storageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+				"logs": [
+					{
+						"category": "StorageRead",
+						"enabled": true
+					},
+					{
+						"category": "StorageWrite",
+						"enabled": true
+					},
+					{
+						"category": "StorageDelete",
+						"enabled": true
+					}
+				],
+				"metrics": [
+					{
+						"category": "Transaction",
+						"enabled": true
 					}
 				]
 			}

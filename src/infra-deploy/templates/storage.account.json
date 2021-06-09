@@ -132,7 +132,7 @@
             )
         ]",
         "subnetAccessAction": "Allow",
-        "apiVersionStorage": "2021-02-01"
+        "apiVersionStorage": "2021-04-01"
     },
     "resources": [
         {
