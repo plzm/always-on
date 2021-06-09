@@ -10,7 +10,7 @@ clusterName="pz-ao-""$location"
 
 appSubnetId="/subscriptions/""$subscriptionId""/resourceGroups/always-on-eastus2/providers/Microsoft.Network/virtualNetworks/pz-ao-eastus2/subnets/app"
 
-az deployment group create --subscription "$subscriptionId" -n "cdb" --verbose \
+az deployment group create --subscription "$subscriptionId" -n "akspool" --verbose \
 	-g "$resourceGroup" --template-file "../infra-deploy/templates/aks.node-pool.json" \
 	--parameters \
 		location=$location clusterName=$clusterName availabilityZones="1,2,3" nodePoolMode=User nodePoolName="aopool" \
