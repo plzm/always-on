@@ -82,8 +82,6 @@
 		"volumeMountPath": "/home/locust/locust",
 		"locustFileName": "locustfile.py",
 		"locustFilePath": "[concat(variables('volumeMountPath'), '/', variables('locustFileName'))]",
-		"csvResultsFileNamePrefix": "locust_results",
-		"csvResultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('csvResultsFileNamePrefix'))]",
 		"htmlResultsFileName": "[concat('locust_report_', parameters('timestamp'), '.html')]",
 		"htmlResultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('htmlResultsFileName'))]",
         "storageAccountId": "[resourceId(parameters('storageAccountResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",

@@ -119,6 +119,8 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          STORAGE_ACCT_NAME_TESTS=${PREFIX//-/}tests
+
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
