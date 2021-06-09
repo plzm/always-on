@@ -2,6 +2,10 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow()]"
+		},
 		"location": {
 			"type": "string",
 			"defaultValue": "",
@@ -45,13 +49,6 @@
                 "description": "Runtime"
             }
 		},
-        "stopTimeoutSeconds": {
-            "type": "int",
-			"defaultValue": 10,
-            "metadata": {
-                "description": "Timeout to allow tasks to finish when runtime is complete"
-            }
-        },
 		"storageAccountResourceGroup": {
 			"type": "string",
 			"defaultValue": "",
@@ -85,8 +82,10 @@
 		"volumeMountPath": "/home/locust/locust",
 		"locustFileName": "locustfile.py",
 		"locustFilePath": "[concat(variables('volumeMountPath'), '/', variables('locustFileName'))]",
-		"resultsFileNamePrefix": "locust_results",
-		"resultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('resultsFileNamePrefix'))]",
+		"csvResultsFileNamePrefix": "locust_results",
+		"csvResultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('csvResultsFileNamePrefix'))]",
+		"htmlResultsFileName": "[concat('locust_report_', parameters('timestamp'), '.html')]",
+		"htmlResultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('htmlResultsFileName'))]",
         "storageAccountId": "[resourceId(parameters('storageAccountResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
 		"apiVersionContainerGroups": "2019-12-01",
         "apiVersionStorage": "2021-04-01"
@@ -124,22 +123,19 @@
 								"--locustfile",
 								"[variables('locustFilePath')]",
 								"--master",
-								"--expect-workers",
-								"[parameters('numberOfInstances')]",
 								"--host",
 								"[parameters('hostToTest')]",
+								"--html",
+								"[variables('htmlResultsFilePath')]",
 								"--headless",
-								"-u",
-								"[parameters('numberOfUsers')]",
-								"-r",
-								"[parameters('numberOfUsersToSpawnPerSecond')]",
-								"-t",
+								"--expect-workers",
+								"[parameters('numberOfInstances')]",
+								"--run-time",
 								"[parameters('runtime')]",
-								"-s",
-								"[parameters('stopTimeoutSeconds')]",
-								"--csv",
-								"[variables('resultsFilePath')]",
-								"--csv-full-history"
+								"--users",
+								"[parameters('numberOfUsers')]",
+								"--spawn-rate",
+								"[parameters('numberOfUsersToSpawnPerSecond')]"
 							],
 							"volumeMounts": [
 								{
@@ -213,19 +209,7 @@
 								"--master-host",
 								"[reference(resourceId('Microsoft.ContainerInstance/containerGroups', variables('masterContainerGroupName'))).ipAddress.ip]",
 								"--host",
-								"[parameters('hostToTest')]",
-								"--headless",
-								"-u",
-								"[parameters('numberOfUsers')]",
-								"-r",
-								"[parameters('numberOfUsersToSpawnPerSecond')]",
-								"-t",
-								"[parameters('runtime')]",
-								"-s",
-								"[parameters('stopTimeoutSeconds')]",
-								"--csv",
-								"[variables('resultsFilePath')]",
-								"--csv-full-history"
+								"[parameters('hostToTest')]"
 							],
 							"volumeMounts": [
 								{

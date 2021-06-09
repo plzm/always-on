@@ -2,17 +2,15 @@ import random, uuid
 from locust import HttpUser, task, between
 
 class MyUser(HttpUser):
-	wait_time = between(0, 0.25)
-
 	@task(1)
 	def get_profile(self):
 		handle = str(random.randint(1, 1000))
-		self.client.get("/" + handle)
+		self.client.get(f"/profile/{handle}", name="/profile/[handle]")
 
 	@task(1)
 	def post_profile(self):
 		handle = str(random.randint(1, 1000))
-		avatar_url = "http://foo/" + handle + ".jpg"
+		avatar_url = f"http://foo/{handle}.jpg"
 		total_xp = random.randint(1, 10000)
 		self.client.post("/profile", json={"id": f"{handle}", "Handle": f"{handle}", "AvatarUrl": f"{avatar_url}", "TotalXp": f"{total_xp}"})
 
