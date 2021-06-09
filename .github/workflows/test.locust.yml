@@ -89,7 +89,7 @@ jobs:
       - name: Upload Locust File to File Share
         if: success()
         run: |
-            az storage file upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_TESTS }} -s ${{ env.STORAGE_FILE_SHARE_NAME_TESTS }} --source ${{ env.LOCUST_FILE_PATH }} -p ${{ env.LOCUST_FILE_NAME }} --auth-mode key --verbose
+            az storage file upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_TESTS }} -s ${{ env.STORAGE_FILE_SHARE_NAME_TESTS }} --source ${{ env.LOCUST_FILE_PATH }} --path ${{ env.LOCUST_FILE_NAME }} --verbose
 
       - name: Azure logout
         run: |
