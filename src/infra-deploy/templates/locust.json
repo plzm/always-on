@@ -2,6 +2,10 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
+		"timestamp": {
+			"type": "string",
+			"defaultValue": "[utcNow()]"
+		},
 		"location": {
 			"type": "string",
 			"defaultValue": "",
@@ -80,7 +84,7 @@
 		"locustFilePath": "[concat(variables('volumeMountPath'), '/', variables('locustFileName'))]",
 		"csvResultsFileNamePrefix": "locust_results",
 		"csvResultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('csvResultsFileNamePrefix'))]",
-		"htmlResultsFileName": "locust_report.html",
+		"htmlResultsFileName": "[concat('locust_report_', parameters('timestamp'), '.html')]",
 		"htmlResultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('htmlResultsFileName'))]",
         "storageAccountId": "[resourceId(parameters('storageAccountResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
 		"apiVersionContainerGroups": "2019-12-01",

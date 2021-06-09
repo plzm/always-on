@@ -13,17 +13,13 @@ env:
   STORAGE_CONTAINER_NAME_TESTS: 'tests'
   STORAGE_FILE_SHARE_NAME_TESTS: 'locust'
 
-  LOCUST_INSTANCES: 2
+  LOCUST_INSTANCES: 10
+  LOCUST_USERS: 600
+  LOCUST_USERS_SPAWN_RATE: 60
 
-  LOCUST_FILE_NAME: locustfile.py
-  LOCUST_FILE_PATH: ./tools/locust/$LOCUST_FILE_NAME
-
-
-
-  COLLECTION_PREFIX: './tools/postman/'
-  COLLECTION_SUFFIX: '.postman_collection.json'
-
-  NEWMAN_ITERATIONS: 100
+  LOCUST_FILE_NAME: 'locustfile.py'
+  LOCUST_FILE_PATH: './tools/locust/$LOCUST_FILE_NAME'
+  LOCUST_RUNTIME: '5m'
 
 jobs:
   storage:
@@ -99,45 +95,44 @@ jobs:
         run: |
           az logout
 
-  locust:
-    needs: storage
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        region: [eastus2,westus2]
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  #locust:
+  #  needs: storage
+  #  runs-on: ubuntu-latest
+  #  strategy:
+  #    matrix:
+  #      region: [eastus2,westus2]
+  #  steps:
+  #    - name: Checkout repository
+  #      uses: actions/checkout@v2
 
-      - name: Azure login
-        if: success()
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #    - name: Azure login
+  #      if: success()
+  #      uses: azure/login@v1
+  #      with:
+  #        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install Azure CLI Extensions
-        if: success()
-        run: |
-          az extension add --name front-door
+  #    - name: Install Azure CLI Extensions
+  #      if: success()
+  #      run: |
+  #        az extension add --name front-door
 
-      - name: Prepare dynamic env vars
-        if: success()
-        run: |
-          FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
-          API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api
+  #    - name: Prepare dynamic env vars
+  #      if: success()
+  #      run: |
+  #        FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
+  #        API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api
 
-          echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
+  #        echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
 
-      - name: Deploy Locust Infrastructure
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-          deploymentName: locust
-          template: ./src/infra-deploy/templates/locust.json
-          parameters: location=${{ matrix.region }} hostToTest=${{ env.API_ENDPOINT }} numberOfInstances=${{ env.LOCUST_INSTANCES }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }} defaultAction=Deny
+  #    - name: Deploy Locust Infrastructure and Start Tests
+  #      if: success()
+  #      uses: azure/arm-deploy@main
+  #      with:
+  #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+  #        deploymentName: locust
+  #        template: ./src/infra-deploy/templates/locust.json
+  #        parameters: location=${{ matrix.region }} hostToTest=${{ env.API_ENDPOINT }} numberOfInstances=${{ env.LOCUST_INSTANCES }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_TESTS }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
 
-
-      - name: Azure logout
-        run: |
-          az logout
+  #    - name: Azure logout
+  #      run: |
+  #        az logout
