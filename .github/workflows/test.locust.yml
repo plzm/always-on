@@ -119,6 +119,9 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          FRONT_DOOR_NAME=${{ env.PREFIX }}
+          FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
+
           FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
           API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api
 
