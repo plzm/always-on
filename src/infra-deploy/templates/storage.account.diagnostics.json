@@ -15,7 +15,8 @@
 			"defaultValue": ""
 		},
 		"endpoints": {
-			"value": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), variables('apiVersionStorage'), 'Full').properties.primaryEndpoints]"
+			"type": "object",
+			"defaultValue": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2021-04-01', 'Full').properties.primaryEndpoints]"
 		}
 	},
 	"variables": {
