@@ -488,10 +488,11 @@ jobs:
           template: ./src/infra-deploy/templates/net.public-ip.diagnostics.json
           parameters: publicIpName=${{ env.APPGW_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Get App GW Public IP
+      - name: Get App GW Public IP and FQDN
         if: success()
         run: |
           echo "APPGW_PUBLIC_IP_ADDRESS=$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'ipAddress')" >> $GITHUB_ENV
+          echo "APPGW_FQDN=$(az network public-ip show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_PUBLIC_IP_NAME }} -o tsv --query 'dnsSettings.fqdn')" >> $GITHUB_ENV
 
       - name: Re-Deploy NSG for App Subnet with App GW Public IP
         if: success()
@@ -524,6 +525,15 @@ jobs:
       - name: Get App GW Resource ID
         if: success()
         run: echo "APPGW_ID=$(az network application-gateway show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APPGW_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy App Insights Availability Test for App GW
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.APPGW_NAME }}-avl-test
+          template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
+          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="appgw-${{ env.APPGW_NAME }}" testUrl="http://${{ env.APPGW_FQDN }}"
 
 
       ### Deploy AKS - ARM Template - but does not support kubelet identity
@@ -685,6 +695,16 @@ jobs:
             --api-revision "${{ env.APIM_API_VERSION }}" --service-url "http://${{ env.APPGW_FQDN }}" --path "${{ env.APIM_API_SERVICE_PATH }}" \
             --subscription-required false --protocols http https \
             --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json"
+
+
+      - name: Deploy App Insights Availability Test for APIM
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          deploymentName: ${{ env.APIM_SERVICE_NAME }}-avl-test
+          template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
+          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="apim-${{ env.APIM_SERVICE_NAME }}" testUrl="https://${{ env.APIM_SERVICE_HOSTNAME }}"
 
 
       - name: Azure logout
