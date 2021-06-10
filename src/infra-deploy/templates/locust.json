@@ -30,21 +30,21 @@
         },
         "numberOfUsers": {
             "type": "int",
-			"defaultValue": 2500,
+			"defaultValue": 50,
             "metadata": {
                 "description": "Number of simulated users"
             }
         },
         "numberOfUsersToSpawnPerSecond": {
             "type": "int",
-			"defaultValue": 50,
+			"defaultValue": 10,
             "metadata": {
                 "description": "Number of simulated users to spawn per second"
             }
         },
 		"runtime": {
 			"type": "string",
-			"defaultValue": "30m",
+			"defaultValue": "5m",
             "metadata": {
                 "description": "Runtime"
             }

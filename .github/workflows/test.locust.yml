@@ -17,7 +17,7 @@ env:
 
   LOCUST_FILE_NAME: 'locustfile.py'
   LOCUST_FILE_PATH: './tools/locust/$LOCUST_FILE_NAME'
-  LOCUST_RUNTIME: '5m'
+  LOCUST_RUNTIME: '10m'
 
 jobs:
   locust:
