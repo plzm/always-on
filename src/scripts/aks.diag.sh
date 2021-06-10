@@ -4,7 +4,7 @@ PREFIX="pz-ao"
 SUFFIX="31"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
-location="eastus2"
+location="westus2"
 resourceGroup="always-on-""$location"
 clusterName="pz-ao-""$location"
 
