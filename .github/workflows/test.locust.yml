@@ -12,7 +12,7 @@ env:
 
   STORAGE_FILE_SHARE_NAME_TESTS: 'locust'
 
-  LOCUST_INSTANCES: 25
+  LOCUST_WORKERS: 25
   LOCUST_USERS: 250
   LOCUST_USERS_SPAWN_RATE: 50
 
@@ -21,7 +21,7 @@ env:
   LOCUST_RUNTIME: '5m'
 
 jobs:
-  storage:
+  locust:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -78,7 +78,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
           deploymentName: locust
           template: ./src/infra-deploy/templates/locust.json
-          parameters: location=${{ env.AZURE_LOCATION_TESTS }} hostToTest=${{ env.API_ENDPOINT }} numberOfInstances=${{ env.LOCUST_INSTANCES }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_GLOBAL }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+          parameters: location=${{ env.AZURE_LOCATION_TESTS }} hostToTest=${{ env.API_ENDPOINT }} numberOfWorkers=${{ env.LOCUST_WORKERS }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TESTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME_GLOBAL }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
 
       - name: Azure logout
         run: |

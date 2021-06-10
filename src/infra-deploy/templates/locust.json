@@ -80,7 +80,6 @@
         "masterMemoryInGb": "2",
         "clientMemoryInGb": "2",
         "masterContainerGroupName": "locust-master",
-        "clientContainerGroupNamePrefix": "[concat('locust-', parameters('location'), '-worker-')]",
         "containerName": "[concat('locust-', parameters('location'))]",
 		"volumeMountName": "locust",
 		"volumeMountPath": "/home/locust/locust",
