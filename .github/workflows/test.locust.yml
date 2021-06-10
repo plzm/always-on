@@ -8,12 +8,11 @@ env:
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
   AZURE_LOCATION_TESTS: 'eastus2'
-  AZURE_RESOURCE_GROUP_TESTS: 'always-on-tests'
 
   STORAGE_FILE_SHARE_NAME_TESTS: 'locust'
 
   LOCUST_WORKERS: 25
-  LOCUST_USERS: 250
+  LOCUST_USERS: 500
   LOCUST_USERS_SPAWN_RATE: 50
 
   LOCUST_FILE_NAME: 'locustfile.py'
@@ -41,6 +40,8 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          AZURE_RESOURCE_GROUP_TESTS="always-on-tests-"$GITHUB_RUN_NUMBER
+
           STORAGE_ACCT_NAME_GLOBAL=${PREFIX//-/}global
 
           FRONT_DOOR_NAME=${{ env.PREFIX }}
@@ -49,6 +50,7 @@ jobs:
           FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
           API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api
 
+          echo "AZURE_RESOURCE_GROUP_TESTS=$AZURE_RESOURCE_GROUP_TESTS" >> $GITHUB_ENV
           echo "STORAGE_ACCT_NAME_GLOBAL=$STORAGE_ACCT_NAME_GLOBAL" >> $GITHUB_ENV
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
 

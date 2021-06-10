@@ -76,9 +76,10 @@
 	},
 	"variables": {
         "image": "locustio/locust:1.5.3",
-        "cpuCores": "1",
+        "masterCpuCores": "2",
+        "workerCpuCores": "1",
         "masterMemoryInGb": "2",
-        "clientMemoryInGb": "2",
+        "workerMemoryInGb": "1",
         "masterContainerGroupName": "locust-master",
         "containerName": "[concat('locust-', parameters('location'))]",
 		"volumeMountName": "locust",
@@ -107,7 +108,7 @@
 							],
 							"resources": {
 								"requests": {
-									"cpu": "[variables('cpuCores')]",
+									"cpu": "[variables('masterCpuCores')]",
 									"memoryInGb": "[variables('masterMemoryInGb')]"
 								}
 							},
@@ -190,8 +191,8 @@
 							],
 							"resources": {
 								"requests": {
-									"cpu": "[variables('cpuCores')]",
-									"memoryInGb": "[variables('clientMemoryInGb')]"
+									"cpu": "[variables('workerCpuCores')]",
+									"memoryInGb": "[variables('workerMemoryInGb')]"
 								}
 							},
 							"ports": [
