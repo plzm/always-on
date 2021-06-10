@@ -21,11 +21,11 @@
 				"description": "Host to test URI"
 			}
 		},
-        "numberOfInstances": {
+        "numberOfWorkers": {
             "type": "int",
 			"defaultValue": 5,
             "metadata": {
-                "description": "Number of instances of Container Group to deploy"
+                "description": "Number of Locust workers (Container Group instances) to deploy"
             }
         },
         "numberOfUsers": {
@@ -68,14 +68,18 @@
             "metadata": {
                 "description": "Name of existing file share to be mounted in containers"
             }
-        }
+        },
+		"workerLocations": {
+			"type": "array",
+			"defaultValue": ["eastus2", "centralus", "southcentralus", "westus2", "canadacentral", "northeurope", "westeurope", "francecentral", "germanywestcentral", "uksouth", "australiaeast", "southeastasia", "japaneast", "brazilsouth", "southafricanorth"]
+		}
 	},
 	"variables": {
         "image": "locustio/locust:1.5.3",
         "cpuCores": "1",
         "masterMemoryInGb": "2",
         "clientMemoryInGb": "2",
-        "masterContainerGroupName": "[concat('locust-', parameters('location'), '-master')]",
+        "masterContainerGroupName": "locust-master",
         "clientContainerGroupNamePrefix": "[concat('locust-', parameters('location'), '-worker-')]",
         "containerName": "[concat('locust-', parameters('location'))]",
 		"volumeMountName": "locust",
@@ -127,7 +131,7 @@
 								"[variables('htmlResultsFilePath')]",
 								"--headless",
 								"--expect-workers",
-								"[parameters('numberOfInstances')]",
+								"[parameters('numberOfWorkers')]",
 								"--run-time",
 								"[parameters('runtime')]",
 								"--users",
@@ -171,12 +175,12 @@
 		},
 		{
 			"type": "Microsoft.ContainerInstance/containerGroups",
-			"name": "[format('{0}{1:D3}', variables('clientContainerGroupNamePrefix'), copyIndex())]",
+			"name": "[format('{0}{1:D3}', 'locust-worker-', copyIndex())]",
 			"apiVersion": "[variables('apiVersionContainerGroups')]",
 			"dependsOn": [
 				"[resourceId('Microsoft.ContainerInstance/containerGroups', variables('masterContainerGroupName'))]"
 			],
-			"location": "[parameters('location')]",
+			"location": "[parameters('workerLocations')[mod(copyIndex(), length(parameters('workerLocations')))]]",
 			"properties": {
 				"containers": [
 					{
@@ -232,8 +236,8 @@
 				]
 			},
 			"copy": {
-				"name": "ContainerGroupCopy",
-				"count": "[parameters('numberOfInstances')]"
+				"name": "WorkerCopy",
+				"count": "[parameters('numberOfWorkers')]"
 			}
 		}
 	],
