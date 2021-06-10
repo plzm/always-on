@@ -10,7 +10,7 @@ apiUri="https://pz-ao.z01.azurefd.net/api"
 numberOfInstances=10
 numberOfUsers=600
 numberOfUsersToSpawnPerSecond=60
-runtime=5m
+runtime=10m
 storageAccountName=pzaotests
 fileShareName=locust
 
