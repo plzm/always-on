@@ -133,7 +133,7 @@ jobs:
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_EVENT_HUB_NAME }} --value "${{ env.EVENT_HUB_EVENT_HUB_NAME }}"
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_CONSUMER_GROUP_NAME }} --value "${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}"
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE }} --value "${{ env.SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE }} --value "${{ env.EVENT_HUB_RECEIVER_BATCH_SIZE }}"
 
 
       - name: Set AKS Context
