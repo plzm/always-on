@@ -24,7 +24,7 @@ namespace ao.fe.Controllers
 		[HttpGet("{handle}")]
 		public async Task<Profile> Get(string handle)
 		{
-			return await _cosmosDbService.GetPlayerProfileAsync(handle);
+			return await _cosmosDbService.GetProfileAsync(handle);
 		}
 
 		[HttpPost]

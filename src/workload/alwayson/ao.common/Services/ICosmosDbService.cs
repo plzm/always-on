@@ -8,6 +8,6 @@ namespace ao.common
 {
 	public interface ICosmosDbService
 	{
-		Task<Profile> GetPlayerProfileAsync(string handle);
+		Task<Profile> GetProfileAsync(string handle);
 	}
 }

@@ -92,6 +92,11 @@ spec:
             secretKeyRef:
               name: ao-secrets
               key: EventHubConsumerGroup
+        - name: EventHubReceiverBatchSize
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubReceiverBatchSize
       volumes:
       - name: secrets-store-inline
         csi:

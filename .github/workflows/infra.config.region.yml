@@ -18,6 +18,7 @@ env:
   EVENT_HUB_EVENT_HUB_NAME: 'eh1'
   EVENT_HUB_CONSUMER_GROUP_NAME: 'ao'
   EVENT_HUB_AUTH_RULE_NAME: 'SendListen'
+  EVENT_HUB_RECEIVER_BATCH_SIZE: 250
 
   SECRET_NAME_APPLICATIONINSIGHTS_CONNECTION_STRING: 'AppInsightsConnectionString'
   SECRET_NAME_COSMOS_DB_CONN_STRING: 'CosmosDbConnectionString'
@@ -30,6 +31,7 @@ env:
   SECRET_NAME_EVENT_HUB_NS_CONN_STRING: 'EventHubConnectionString'
   SECRET_NAME_EVENT_HUB_EVENT_HUB_NAME: 'EventHubName'
   SECRET_NAME_EVENT_HUB_CONSUMER_GROUP_NAME: 'EventHubConsumerGroup'
+  SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE: 'EventHubReceiverBatchSize'
 
   AKS_PATH_ROOT: './src/infra-deploy/aks/'
 
@@ -131,6 +133,7 @@ jobs:
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_NS_CONN_STRING }} --value "${{ env.EVENT_HUB_NS_CONN_STRING }}"
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_EVENT_HUB_NAME }} --value "${{ env.EVENT_HUB_EVENT_HUB_NAME }}"
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_CONSUMER_GROUP_NAME }} --value "${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE }} --value "${{ env.SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE }}"
 
 
       - name: Set AKS Context
