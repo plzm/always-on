@@ -96,7 +96,7 @@ jobs:
   #        az logout
 
   locust:
-    needs: storage
+    #needs: storage
     runs-on: ubuntu-latest
     strategy:
       matrix:
