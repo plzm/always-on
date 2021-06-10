@@ -71,7 +71,7 @@
         },
 		"workerLocations": {
 			"type": "array",
-			"defaultValue": ["eastus2", "centralus", "southcentralus", "westus2", "canadacentral", "northeurope", "westeurope", "francecentral", "germanywestcentral", "uksouth", "australiaeast", "southeastasia", "japaneast", "brazilsouth", "southafricanorth"]
+			"defaultValue": ["eastus2", "centralus", "southcentralus", "westus2", "canadacentral", "northeurope", "westeurope", "francecentral", "germanywestcentral", "uksouth", "australiaeast", "southeastasia", "japaneast", "brazilsouth"]
 		}
 	},
 	"variables": {
