@@ -45,5 +45,5 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 s
 
 # Shell to a pod
-#kubectl exec --stdin --tty ao-be-6d579d4c5-6hg58 -- /bin/bash
+#kubectl exec --stdin --tty ao-be-649dbb95c-hckhm -- /bin/bash
 

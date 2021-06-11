@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 using Microsoft.Azure.Cosmos;
 
 namespace ao.common
@@ -83,24 +84,42 @@ namespace ao.common
 			// Container proxies
 			this.ProfileContainer = this.CosmosClient.GetContainer(this.DatabaseName, this.ProfileContainerName);
 			this.ProgressContainer = this.CosmosClient.GetContainer(this.DatabaseName, this.ProgressContainerName);
+
+			this.TelemetryClient?.TrackTrace("CosmosDbService.Initialize:Complete", SeverityLevel.Information);
 		}
 
-		public async Task<Profile> GetPlayerProfileAsync(string handle)
+		public async Task<Profile> GetProfileAsync(string handle)
 		{
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.GetPlayerProfileAsync:Start:{handle}", SeverityLevel.Information);
+
+			Profile result;
+
 			try
 			{
 				ItemResponse<Profile> response = await this.ProfileContainer.ReadItemAsync<Profile>(handle, new PartitionKey(handle));
 
-				return response.Resource;
+				result = response.Resource;
 			}
-			catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+			catch (CosmosException cex) when (cex.StatusCode == System.Net.HttpStatusCode.NotFound)
 			{
-				return null;
+				result = null;
 			}
+			catch (CosmosException ex)
+			{
+				this.TelemetryClient?.TrackException(ex);
+
+				result = null;
+			}
+
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.GetPlayerProfileAsync:Complete:{handle}", SeverityLevel.Information);
+
+			return result;
 		}
 
-		public async Task SaveProfile(string handle, Stream profile)
+		public async Task SaveProfileAsync(string handle, Stream profile)
 		{
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProfile(string):Start:{handle}", SeverityLevel.Information);
+
 			try
 			{
 				ResponseMessage response = await this.ProfileContainer.UpsertItemStreamAsync(profile, new PartitionKey(handle));
@@ -113,10 +132,14 @@ namespace ao.common
 			{
 				this.TelemetryClient.TrackException(ex);
 			}
+
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProfile(string):Complete:{handle}", SeverityLevel.Information);
 		}
 
-		public async Task SaveProfile(Profile profile)
+		public async Task SaveProfileAsync(Profile profile)
 		{
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProfile(Profile):Start:{profile.Handle}", SeverityLevel.Information);
+
 			try
 			{
 				// ItemResponse<Profile> response = 
@@ -130,10 +153,14 @@ namespace ao.common
 			{
 				this.TelemetryClient.TrackException(ex);
 			}
+
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProfile(Profile):Complete:{profile.Handle}", SeverityLevel.Information);
 		}
 
-		public async Task SaveProgress(string handle, Stream progress)
+		public async Task SaveProgressAsync(string handle, Stream progress)
 		{
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProgress(string):Start:{handle}", SeverityLevel.Information);
+
 			try
 			{
 				// ResponseMessage response = 
@@ -147,10 +174,14 @@ namespace ao.common
 			{
 				this.TelemetryClient.TrackException(ex);
 			}
+
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProgress(string):Complete:{handle}", SeverityLevel.Information);
 		}
 
-		public async Task SaveProgress(Progress progress)
+		public async Task SaveProgressAsync(Progress progress)
 		{
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProgress(Progress):Start:{progress.Handle}", SeverityLevel.Information);
+
 			try
 			{
 				// ItemResponse<Progress> response = 
@@ -164,6 +195,8 @@ namespace ao.common
 			{
 				this.TelemetryClient.TrackException(ex);
 			}
+
+			this.TelemetryClient?.TrackTrace($"CosmosDbService.SaveProgress(Progress):Complete:{progress.Handle}", SeverityLevel.Information);
 		}
 	}
 }

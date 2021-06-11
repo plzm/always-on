@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: ao-be
 spec:
-  replicas: 3
+  replicas: 10
   selector:
     matchLabels:
       app: ao-be
@@ -79,10 +79,15 @@ spec:
             secretKeyRef:
               name: ao-secrets
               key: EventHubConsumerGroup
+        - name: EventHubReceiverBatchSize
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubReceiverBatchSize
         resources:
           requests:
-            cpu: 250m
-            memory: 256Mi
+            cpu: 1000m
+            memory: 1024Mi
           limits:
             cpu: 2000m
             memory: 2048Mi

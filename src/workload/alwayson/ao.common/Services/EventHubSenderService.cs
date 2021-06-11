@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Azure.Messaging.EventHubs;
 using Azure.Messaging.EventHubs.Producer;
 using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 
 namespace ao.common
 {
@@ -69,6 +70,8 @@ namespace ao.common
 			};
 
 			this.EventHubProducerClient = new EventHubProducerClient(this.EventHubConnectionString, this.EventHubName, clientOptions);
+
+			this.TelemetryClient?.TrackTrace("EventHubSenderService.Initialize:Complete", SeverityLevel.Information);
 		}
 
 		public async Task SendAsync<T>(T message, IEnumerable<ValueTuple<string, string>> metadata = null)
@@ -77,7 +80,11 @@ namespace ao.common
 			if (message == null)
 				return;
 
+			this.TelemetryClient?.TrackTrace("EventHubSenderService.SendAsync<T>(T):Start", SeverityLevel.Information);
+
 			await this.SendAsync(new T[] { message }, metadata);
+
+			this.TelemetryClient?.TrackTrace("EventHubSenderService.SendAsync<T>(T):Complete", SeverityLevel.Information);
 		}
 
 		public async Task SendAsync<T>(IEnumerable<T> messages, IEnumerable<ValueTuple<string, string>> metadata = null)
@@ -86,14 +93,20 @@ namespace ao.common
 			if (messages == null)
 				return;
 
+			this.TelemetryClient?.TrackTrace("EventHubSenderService.SendAsync<T>(I<T>):Start", SeverityLevel.Information);
+
 			var eventsToSend = messages.Select(m => this.GetEventData(m, metadata));
 
 			await this.EventHubProducerClient.SendAsync(eventsToSend);
+
+			this.TelemetryClient?.TrackTrace("EventHubSenderService.SendAsync<T>(I<T>):Complete", SeverityLevel.Information);
 		}
 
 		private EventData GetEventData<T>(T message, IEnumerable<ValueTuple<string, string>> metadata = null)
 			where T : IItem
 		{
+			this.TelemetryClient?.TrackTrace("EventHubSenderService.GetEventData:Start", SeverityLevel.Information);
+
 			var result = new EventData(new BinaryData(message));
 
 			result.Properties.Add(Constants.HANDLE, message.Handle);
@@ -104,6 +117,8 @@ namespace ao.common
 				foreach (var tuple in metadata)
 					result.Properties.Add(tuple.Item1, tuple.Item2);
 			}
+
+			this.TelemetryClient?.TrackTrace("EventHubSenderService.GetEventData:Complete", SeverityLevel.Information);
 
 			return result;
 		}
