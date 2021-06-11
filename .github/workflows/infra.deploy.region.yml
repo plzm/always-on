@@ -38,7 +38,8 @@ env:
 
   STORAGE_CONTAINER_NAME: 'ehproc'
 
-  EVENT_HUB_CAPACITY: '1'
+  EVENT_HUB_CAPACITY: 5
+  EVENT_HUB_PARTITION_COUNT: 10
   EVENT_HUB_EVENT_HUB_NAME: 'eh1'
   EVENT_HUB_CONSUMER_GROUP_NAME: 'ao'
   EVENT_HUB_AUTH_RULE_NAME: 'SendListen'
@@ -421,7 +422,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
           template: ./src/infra-deploy/templates/event-hub.event-hub.json
-          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }}
+          parameters: location=${{ matrix.region }} namespaceName=${{ env.EVENT_HUB_NS_NAME }} eventHubName=${{ env.EVENT_HUB_EVENT_HUB_NAME }} partitionCount=${{ env.EVENT_HUB_PARTITION_COUNT }}
 
       - name: Deploy Event Hub Consumer Group
         if: success()
