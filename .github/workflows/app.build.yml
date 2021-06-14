@@ -50,14 +50,14 @@ jobs:
           echo "FE_FQDN=$FE_FQDN" >> $GITHUB_ENV
 
 
-      - name: Debug
-        if: success()
-        run: |
-          echo ${{ env.REGISTRY_NAME }}
-          echo ${{ env.BE_FOLDER_PATH }}
-          echo ${{ env.FE_FOLDER_PATH }}
-          echo ${{ env.BE_FQDN }}
-          echo ${{ env.FE_FQDN }}
+      #- name: Debug
+      #  if: success()
+      #  run: |
+      #    echo ${{ env.REGISTRY_NAME }}
+      #    echo ${{ env.BE_FOLDER_PATH }}
+      #    echo ${{ env.FE_FOLDER_PATH }}
+      #    echo ${{ env.BE_FQDN }}
+      #    echo ${{ env.FE_FQDN }}
 
 
       - name: Setup dotnet

@@ -46,7 +46,7 @@ env:
   EVENT_HUB_AUTH_RULE_RIGHTS: 'Send,Listen'
 
   AKS_ZONES_FOR_CLI: '1 2 3'
-  AKS_VERSION: '1.20.5'
+  AKS_VERSION: '1.20.7'
   AKS_NET_PLUGIN: 'kubenet'
   AKS_SERVICE_CIDR: '10.1.0.0/16'
   AKS_DNS_SERVICE_IP: '10.1.0.10'
@@ -80,6 +80,7 @@ env:
 
   APIM_SKU_NAME: 'Developer'
   #APIM_SKU_NAME: 'Premium'
+  APIM_PUBLIC_IP_INFIX: '-apim-d-'  # d or p (Developer or Premium) for clarity in scaling operations, where we need separate PIP to change APIM SKU
   APIM_VNET_TYPE: 'External'
   APIM_SCALE_UNITS: 9   # Must be a multiple of AZs. Will be overridden in template if exceeds SKU max.
   APIM_API_VERSION: 'v1'
@@ -135,7 +136,7 @@ jobs:
           AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}
           AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME
           AKS_POD_IDENTITY_BINDING_SELECTOR=$UAMI_NAME-binding
-          APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}-apim-${{ matrix.region }}
+          APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}${{ env.APIM_PUBLIC_IP_INFIX }}${{ matrix.region }}
           APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
