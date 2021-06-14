@@ -129,6 +129,7 @@
 			"storageProfile": "ManagedDisks",
 			"osDiskSizeGB": "[parameters('osDiskSizeGB')]",
 			"enableAutoScaling": "[parameters('enableNodeAutoscale')]",
+			"type": "VirtualMachineScaleSets",
 			"count": "[
 				if
 				(
