@@ -74,7 +74,7 @@
                             "sourcePortRange": "*",
                             "destinationPortRange": "80",
                             "sourceAddressPrefix": "ApplicationInsightsAvailability",
-                            "destinationAddressPrefix": "Any",
+                            "destinationAddressPrefix": "*",
                             "access": "Allow",
                             "priority": 102,
                             "direction": "Inbound"
@@ -87,7 +87,7 @@
                             "sourcePortRange": "*",
                             "destinationPortRange": "443",
                             "sourceAddressPrefix": "ApplicationInsightsAvailability",
-                            "destinationAddressPrefix": "Any",
+                            "destinationAddressPrefix": "*",
                             "access": "Allow",
                             "priority": 103,
                             "direction": "Inbound"
