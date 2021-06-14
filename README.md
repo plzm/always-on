@@ -1,10 +1,10 @@
 # ALWAYS ON
 
-![Infra-DeployGlobal](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml/badge.svg)
+[![Infra-DeployGlobal](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml)
 [![Infra-DeployRegion](https://github.com/plzm/always-on/actions/workflows/infra.deploy.region.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/infra.deploy.region.yml)
-![Infra-ConfigRegion](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml/badge.svg)
-![App-Build](https://github.com/plzm/always-on/actions/workflows/app.build.yml/badge.svg)
-![App-Deploy](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml/badge.svg)
+[![Infra-ConfigRegion](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml)
+[![App-Build](https://github.com/plzm/always-on/actions/workflows/app.build.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/app.build.yml)
+[![App-Deploy](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml)
 
 ## SUMMARY
 
