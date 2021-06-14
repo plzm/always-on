@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '31'
+  SUFFIX: '32'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
 
@@ -20,6 +20,7 @@ env:
   EVENT_HUB_AUTH_RULE_NAME: 'SendListen'
   EVENT_HUB_RECEIVER_BATCH_SIZE: 250
 
+  SECRET_NAME_AZURE_REGION: 'AzureRegion'
   SECRET_NAME_APPLICATIONINSIGHTS_CONNECTION_STRING: 'AppInsightsConnectionString'
   SECRET_NAME_COSMOS_DB_CONN_STRING: 'CosmosDbConnectionString'
   SECRET_NAME_COSMOS_DB_DATABASE_NAME: 'CosmosDbDatabaseName'
@@ -117,6 +118,8 @@ jobs:
       - name: Write secrets to region Key Vault
         if: success()
         run: |
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_AZURE_REGION }} --value "${{ matrix.region }}"
+
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_APPLICATIONINSIGHTS_CONNECTION_STRING }} --value "${{ env.APPLICATIONINSIGHTS_CONNECTION_STRING }}"
 
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_COSMOS_DB_CONN_STRING }} --value "${{ env.COSMOS_DB_CONN_STRING }}"

@@ -37,6 +37,11 @@ spec:
           mountPath: "/mnt/secrets-store"
           readOnly: true
         env:
+        - name: AzureRegion
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: AzureRegion
         - name: APPLICATIONINSIGHTS_CONNECTION_STRING
           valueFrom:
             secretKeyRef:

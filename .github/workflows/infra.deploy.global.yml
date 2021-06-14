@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '31'
+  SUFFIX: '32'
 
   RBAC_ROLE_ID_ACR_PUSH: '8311e382-0749-4cb8-b61a-304f252e45ec'
 
@@ -13,8 +13,6 @@ env:
   AZURE_LOCATION_GLOBAL: 'eastus2'
 
   AZURE_LOCATIONS: 'eastus2,westus2'
-
-  STORAGE_ACCT_SKU_NAME: 'Standard_RAGZRS'
 
   VNET_ENABLE_DDOS: 'false'
 
@@ -59,7 +57,6 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          STORAGE_ACCT_NAME_GLOBAL=${PREFIX//-/}global
           UAMI_NAME=${{ env.PREFIX }}
           DDOS_PLAN_NAME=${{ env.PREFIX }}
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
@@ -70,7 +67,6 @@ jobs:
           FRONT_DOOR_WAF_POLICY_NAME=${FRONT_DOOR_NAME//-/}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
-          echo "STORAGE_ACCT_NAME_GLOBAL=$STORAGE_ACCT_NAME_GLOBAL" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "DDOS_PLAN_NAME=$DDOS_PLAN_NAME" >> $GITHUB_ENV
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
@@ -119,25 +115,6 @@ jobs:
         if: success()
         run: |
           echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-
-
-      - name: Deploy Storage Account
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME_GLOBAL }}
-          template: ./src/infra-deploy/templates/storage.account.json
-          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME_GLOBAL }} skuName=${{ env.STORAGE_ACCT_SKU_NAME }} defaultAction=Deny
-
-      - name: Deploy Storage Account Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME_GLOBAL }}-diag
-          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
-          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_GLOBAL }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
 
       - name: Deploy DDoS Plan
