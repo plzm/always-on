@@ -11,5 +11,5 @@ jobs:
       - name: Debug
         if: success()
         run: |
-          foo=${{ secrets.AZURE_REGION }}
+          foo=${{ secrets.BROKEN_ON_PURPOSE }}
           echo $foo
