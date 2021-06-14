@@ -180,7 +180,7 @@ jobs:
 
       #- name: Deploy User-Assigned MI
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
       #    template: ./src/infra-deploy/templates/identity.user-assigned-mi.json
@@ -189,7 +189,7 @@ jobs:
 
       #- name: Deploy NSG for APIM Subnet
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_NSG_NAME }}
@@ -198,7 +198,7 @@ jobs:
 
       #- name: Deploy NSG for APIM Subnet Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_NSG_NAME }}-diag
@@ -207,7 +207,7 @@ jobs:
 
       #- name: Deploy NSG for App Subnet without AppGW source address
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APP_NSG_NAME }}
@@ -216,7 +216,7 @@ jobs:
 
       #- name: Deploy NSG for App Subnet Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APP_NSG_NAME }}-diag
@@ -226,7 +226,7 @@ jobs:
 
       #- name: Deploy VNet
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.VNET_NAME }}
@@ -236,7 +236,7 @@ jobs:
 
       #- name: Deploy VNet Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.VNET_NAME }}-diag
@@ -245,7 +245,7 @@ jobs:
 
       #- name: Deploy APIM Subnet
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_SUBNET_NAME }}
@@ -254,7 +254,7 @@ jobs:
 
       #- name: Deploy AppGW Subnet
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APPGW_SUBNET_NAME }}
@@ -263,7 +263,7 @@ jobs:
 
       #- name: Deploy App Subnet
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APP_SUBNET_NAME }}
@@ -287,7 +287,7 @@ jobs:
 
       #- name: Grant UAMI Contributor on Region RG
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-contrib
@@ -296,7 +296,7 @@ jobs:
 
       #- name: Grant UAMI Managed Identity Operator on Region RG for AKS AAD Pod Identity
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP }}-rbac-mio
@@ -305,7 +305,7 @@ jobs:
 
       #- name: Grant UAMI Network Contributor on VNet for kubenet config
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.VNET_NAME }}-rbac-net-contrib
@@ -315,7 +315,7 @@ jobs:
 
       #- name: Deploy Key Vault
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.KEY_VAULT_NAME }}
@@ -324,7 +324,7 @@ jobs:
 
       #- name: Deploy Key Vault Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.KEY_VAULT_NAME }}-diag
@@ -354,7 +354,7 @@ jobs:
 
       #- name: Deploy Storage Account for Event Hub Processor
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
@@ -363,7 +363,7 @@ jobs:
 
       #- name: Deploy Storage Container for Event Hub Processor
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
@@ -372,7 +372,7 @@ jobs:
 
       #- name: Deploy Storage Account Blob Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
@@ -381,7 +381,7 @@ jobs:
 
       #- name: Grant UAMI Storage Data Contributor on Storage Account
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-rbac-sdc
@@ -391,7 +391,7 @@ jobs:
 
       #- name: Deploy Event Hub Namespace
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}
@@ -400,7 +400,7 @@ jobs:
 
       #- name: Deploy Event Hub Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-diag
@@ -409,7 +409,7 @@ jobs:
 
       #- name: Deploy Event Hub Namespace Auth Rule
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rule-send
@@ -418,7 +418,7 @@ jobs:
 
       #- name: Deploy Event Hub
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_EVENT_HUB_NAME }}
@@ -427,7 +427,7 @@ jobs:
 
       #- name: Deploy Event Hub Consumer Group
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-${{ env.EVENT_HUB_CONSUMER_GROUP_NAME }}
@@ -436,7 +436,7 @@ jobs:
 
       #- name: Deploy Event Hub Network Rule Set
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-net-ruleset
@@ -445,7 +445,7 @@ jobs:
 
       #- name: Deploy Event Hub VNet Rule
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-vnet-rule
@@ -454,7 +454,7 @@ jobs:
 
       #- name: Grant UAMI Event Hubs Data Sender on Region Event Hub
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rbac-sender
@@ -463,7 +463,7 @@ jobs:
 
       #- name: Grant UAMI Event Hubs Data Receiver on Region Event Hub
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.EVENT_HUB_NS_NAME }}-rbac-sender
@@ -474,7 +474,7 @@ jobs:
 
       #- name: Deploy Public IP for App GW
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}
@@ -483,7 +483,7 @@ jobs:
 
       #- name: Deploy Public IP for App GW Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APPGW_PUBLIC_IP_NAME }}-diag
@@ -498,7 +498,7 @@ jobs:
 
       #- name: Re-Deploy NSG for App Subnet with App GW Public IP
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APP_NSG_NAME }}
@@ -508,7 +508,7 @@ jobs:
 
       #- name: Deploy App GW
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APPGW_NAME }}
@@ -517,7 +517,7 @@ jobs:
 
       #- name: Deploy App GW Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APPGW_NAME }}-diag
@@ -530,7 +530,7 @@ jobs:
 
       #- name: Deploy App Insights Availability Test for App GW
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
       #    deploymentName: ${{ env.APPGW_NAME }}-avl-test
@@ -541,7 +541,7 @@ jobs:
       ### Deploy AKS - ARM Template - but does not support kubelet identity
       ##- name: Deploy AKS Cluster (ARM)
       ##  if: success()
-      ##  uses: azure/arm-deploy@v1
+      ##  uses: azure/arm-deploy@main
       ##  with:
       ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       ##    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
@@ -578,7 +578,7 @@ jobs:
 
       - name: Deploy AKS Cluster Diagnostics
         if: success()
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AKS_CLUSTER_NAME }}-diag
@@ -592,7 +592,7 @@ jobs:
       # Contributor on AKS Nodes RG is automatically granted by cluster create. Adding a couple more explicitly here due to AAD pod identity reqs.
       - name: Grant UAMI Managed Identity Operator on AKS Nodes RG
         if: success()
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
@@ -601,7 +601,7 @@ jobs:
 
       - name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
         if: success()
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
@@ -611,7 +611,7 @@ jobs:
 
       - name: Deploy AKS User Node Pool
         if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NAME }}
@@ -642,7 +642,7 @@ jobs:
 
       #- name: Deploy Public IP for APIM Service
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}
@@ -651,7 +651,7 @@ jobs:
 
       #- name: Deploy Public IP for APIM Service Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}-diag
@@ -660,7 +660,7 @@ jobs:
 
       #- name: Deploy APIM Service
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_SERVICE_NAME }}
@@ -669,7 +669,7 @@ jobs:
 
       #- name: Deploy APIM Service Diagnostics
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-diag
@@ -678,7 +678,7 @@ jobs:
 
       #- name: Deploy APIM Logger
       #  if: success()
-      #  uses: azure/arm-deploy@v1
+      #  uses: azure/arm-deploy@main
       #  with:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
       #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
@@ -703,7 +703,7 @@ jobs:
 
       - name: Deploy App Insights Availability Test for APIM
         if: success()
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-avl-test
@@ -758,7 +758,7 @@ jobs:
 
       - name: Grant UAMI ACRPull on Global Registry
         if: success()
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
@@ -767,7 +767,7 @@ jobs:
 
       - name: Deploy Front Door Origin
         if: success()
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
@@ -776,7 +776,7 @@ jobs:
 
       - name: Deploy Front Door Route
         if: success()
-        uses: azure/arm-deploy@v1
+        uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
