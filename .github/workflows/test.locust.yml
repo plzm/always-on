@@ -7,8 +7,9 @@ env:
   PREFIX: 'pz-ao'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
-  AZURE_LOCATION_TESTS: 'eastus2'
+  AZURE_LOCATION_GLOBAL: 'eastus2'
 
+  STORAGE_ACCT_SKU_NAME: 'Standard_RAGZRS'
   STORAGE_FILE_SHARE_NAME_TESTS: 'locust'
 
   LOCUST_WORKERS: 25
@@ -40,9 +41,12 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          AZURE_RESOURCE_GROUP_TEST_RESULTS="always-on-tests"
           AZURE_RESOURCE_GROUP_TESTS="always-on-tests-"$GITHUB_RUN_NUMBER
 
-          STORAGE_ACCT_NAME_GLOBAL=${PREFIX//-/}global
+          LA_WORKSPACE_NAME=${{ env.PREFIX }}
+
+          STORAGE_ACCT_NAME=${PREFIX//-/}tests
 
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
@@ -50,28 +54,50 @@ jobs:
           FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --endpoint-name $FRONT_DOOR_ENDPOINT_NAME -o tsv --query 'hostName')
           API_ENDPOINT=https://$FRONT_DOOR_ENDPOINT_FQDN/api
 
+          echo "AZURE_RESOURCE_GROUP_TEST_RESULTS=$AZURE_RESOURCE_GROUP_TEST_RESULTS" >> $GITHUB_ENV
           echo "AZURE_RESOURCE_GROUP_TESTS=$AZURE_RESOURCE_GROUP_TESTS" >> $GITHUB_ENV
-          echo "STORAGE_ACCT_NAME_GLOBAL=$STORAGE_ACCT_NAME_GLOBAL" >> $GITHUB_ENV
+          echo "STORAGE_ACCT_NAME=$STORAGE_ACCT_NAME" >> $GITHUB_ENV
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
 
-      - name: Create Azure resource group
+          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Create Azure resource groups
         if: success()
         run: |
-          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_TESTS }} --name ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
 
-      - name: Deploy File Share for Locust results to global Storage Account
+      - name: Deploy Storage Account
         if: success()
         uses: azure/arm-deploy@main
         with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME_GLOBAL }}-${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          deploymentName: ${{ env.STORAGE_ACCT_NAME }}
+          template: ./src/infra-deploy/templates/storage.account.json
+          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} skuName=${{ env.STORAGE_ACCT_SKU_NAME }} defaultAction=Deny
+
+      - name: Deploy File Share for Locust results to test results Storage Account
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          deploymentName: ${{ env.STORAGE_ACCT_NAME }}-${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
           template: ./src/infra-deploy/templates/storage.file-share.json
-          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME_GLOBAL }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+
+      - name: Deploy Storage Account Diagnostics
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          deploymentName: ${{ env.STORAGE_ACCT_NAME }}-diag
+          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Upload Locust File to File Share
         if: success()
         run: |
-            az storage file upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME_GLOBAL }} -s ${{ env.STORAGE_FILE_SHARE_NAME_TESTS }} --source ${{ env.LOCUST_FILE_PATH }} --path ${{ env.LOCUST_FILE_NAME }} --verbose
+            az storage file upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME }} -s ${{ env.STORAGE_FILE_SHARE_NAME_TESTS }} --source ${{ env.LOCUST_FILE_PATH }} --path ${{ env.LOCUST_FILE_NAME }} --verbose
 
       - name: Deploy Locust Infrastructure and Start Tests
         if: success()
@@ -80,7 +106,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
           deploymentName: locust
           template: ./src/infra-deploy/templates/locust.json
-          parameters: location=${{ env.AZURE_LOCATION_TESTS }} hostToTest=${{ env.API_ENDPOINT }} numberOfWorkers=${{ env.LOCUST_WORKERS }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME_GLOBAL }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+          parameters: location=${{ env.AZURE_LOCATION_TESTS }} hostToTest=${{ env.API_ENDPOINT }} numberOfWorkers=${{ env.LOCUST_WORKERS }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
 
       - name: Azure logout
         run: |

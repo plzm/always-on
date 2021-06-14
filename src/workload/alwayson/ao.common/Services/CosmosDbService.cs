@@ -12,6 +12,7 @@ namespace ao.common
 {
 	public class CosmosDbService : ICosmosDbService
 	{
+		public string AzureRegion { get; private set; }
 		public string ConnectionString { get; private set; }
 		public string DatabaseName { get; private set; }
 		public string ProfileContainerName { get; private set; }
@@ -56,6 +57,7 @@ namespace ao.common
 
 		private void GetConfig()
 		{
+			this.AzureRegion = Environment.GetEnvironmentVariable("AzureRegion");
 			this.ConnectionString = Environment.GetEnvironmentVariable("CosmosDbConnectionString");
 			this.DatabaseName = Environment.GetEnvironmentVariable("CosmosDbDatabaseName");
 			this.ProfileContainerName = Environment.GetEnvironmentVariable("CosmosDbProfileContainerName");
@@ -67,6 +69,7 @@ namespace ao.common
 			// Cosmos DB client configuration options
 			CosmosClientOptions clientOptions = new CosmosClientOptions()
 			{
+				ApplicationRegion = this.AzureRegion,
 				ConnectionMode = ConnectionMode.Direct,
 				ConsistencyLevel = ConsistencyLevel.Eventual,
 				EnableContentResponseOnWrite = false,
