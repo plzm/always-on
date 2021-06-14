@@ -68,15 +68,28 @@
                         )
                     ]",
                     {
-                        "name": "ApplicationInsightsAvailability",
+                        "name": "ApplicationInsightsAvailability-HTTP",
                         "properties": {
                             "protocol": "Tcp",
                             "sourcePortRange": "*",
-                            "destinationPortRange": "80,443",
+                            "destinationPortRange": "80",
                             "sourceAddressPrefix": "ApplicationInsightsAvailability",
-                            "destinationAddressPrefix": "Any",
+                            "destinationAddressPrefix": "*",
                             "access": "Allow",
                             "priority": 102,
+                            "direction": "Inbound"
+                        }
+                    },
+                    {
+                        "name": "ApplicationInsightsAvailability-HTTPS",
+                        "properties": {
+                            "protocol": "Tcp",
+                            "sourcePortRange": "*",
+                            "destinationPortRange": "443",
+                            "sourceAddressPrefix": "ApplicationInsightsAvailability",
+                            "destinationAddressPrefix": "*",
+                            "access": "Allow",
+                            "priority": 103,
                             "direction": "Inbound"
                         }
                     },

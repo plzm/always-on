@@ -18,6 +18,7 @@ env:
   RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
   AZURE_RESOURCE_GROUP_GLOBAL: 'always-on-global'
+  AZURE_LOCATION_GLOBAL: 'eastus2'
 
   NSG_IN_SRC: '75.68.47.183/32'
 
@@ -38,15 +39,15 @@ env:
 
   STORAGE_CONTAINER_NAME: 'ehproc'
 
-  EVENT_HUB_CAPACITY: 5
-  EVENT_HUB_PARTITION_COUNT: 10
+  EVENT_HUB_CAPACITY: 4
+  EVENT_HUB_PARTITION_COUNT: 32
   EVENT_HUB_EVENT_HUB_NAME: 'eh1'
   EVENT_HUB_CONSUMER_GROUP_NAME: 'ao'
   EVENT_HUB_AUTH_RULE_NAME: 'SendListen'
   EVENT_HUB_AUTH_RULE_RIGHTS: 'Send,Listen'
 
   AKS_ZONES_FOR_CLI: '1 2 3'
-  AKS_VERSION: '1.20.5'
+  AKS_VERSION: '1.20.7'
   AKS_NET_PLUGIN: 'kubenet'
   AKS_SERVICE_CIDR: '10.1.0.0/16'
   AKS_DNS_SERVICE_IP: '10.1.0.10'
@@ -80,6 +81,7 @@ env:
 
   APIM_SKU_NAME: 'Developer'
   #APIM_SKU_NAME: 'Premium'
+  APIM_PUBLIC_IP_INFIX: '-apim-d-'  # d or p (Developer or Premium) for clarity in scaling operations, where we need separate PIP to change APIM SKU
   APIM_VNET_TYPE: 'External'
   APIM_SCALE_UNITS: 9   # Must be a multiple of AZs. Will be overridden in template if exceeds SKU max.
   APIM_API_VERSION: 'v1'
@@ -135,7 +137,7 @@ jobs:
           AKS_DNS_PREFIX=${AKS_CLUSTER_NAME//-/}
           AZURE_RESOURCE_GROUP_AKS_NODES=$AZURE_RESOURCE_GROUP-$AKS_CLUSTER_NAME
           AKS_POD_IDENTITY_BINDING_SELECTOR=$UAMI_NAME-binding
-          APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}-apim-${{ matrix.region }}
+          APIM_PUBLIC_IP_NAME=${{ env.PREFIX }}${{ env.APIM_PUBLIC_IP_INFIX }}${{ matrix.region }}
           APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
@@ -562,8 +564,10 @@ jobs:
             --nodepool-name "${{ env.AKS_SYSTEM_POOL_NAME }}" \
             --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
             --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
-            --network-plugin ${{ env.AKS_NET_PLUGIN }} --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-            --enable-cluster-autoscaler --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
+            --network-plugin ${{ env.AKS_NET_PLUGIN }} \
+            --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
+            --enable-cluster-autoscaler --vm-set-type VirtualMachineScaleSets \
+            --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
             --skip-subnet-role-assignment
 
       - name: Remove Azure CLI AKS Preview extension
