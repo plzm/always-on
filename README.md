@@ -1,11 +1,5 @@
 # ALWAYS ON
 
-![Infra-DeployGlobal](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml/badge.svg)
-![Infra-DeployRegion](https://github.com/plzm/always-on/actions/workflows/infra.deploy.region.yml/badge.svg)
-![Infra-ConfigRegion](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml/badge.svg)
-![App-Build](https://github.com/plzm/always-on/actions/workflows/app.build.yml/badge.svg)
-![App-Deploy](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml/badge.svg)
-
 ## SUMMARY
 
 This solution deploys and configures a highly performant, multi-region application on Azure. All deployments and configurations are performed by github Actions workflows for maximal automation and CI/CD.
