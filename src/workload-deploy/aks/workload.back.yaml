@@ -11,10 +11,11 @@ spec:
     metadata:
       labels:
         app: azure-vote-back
-        aadpodidbinding: PROVIDE
+        aadpodidbinding: pz-ao-eastus2-binding
     spec:
       nodeSelector:
         "beta.kubernetes.io/os": linux
+        aoapp: always-on
       containers:
       - name: azure-vote-back
         image: mcr.microsoft.com/oss/bitnami/redis:6.0.8
@@ -25,11 +26,16 @@ spec:
         env:
         - name: ALLOW_EMPTY_PASSWORD
           value: "yes"
+        - name: AzureRegion
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: AzureRegion
         - name: APPLICATIONINSIGHTS_CONNECTION_STRING
           valueFrom:
             secretKeyRef:
               name: ao-secrets
-              key: APPLICATIONINSIGHTS_CONNECTION_STRING
+              key: AppInsightsConnectionString
         - name: CosmosDbConnectionString
           valueFrom:
             secretKeyRef:
@@ -80,6 +86,11 @@ spec:
             secretKeyRef:
               name: ao-secrets
               key: EventHubConsumerGroup
+        - name: EventHubReceiverBatchSize
+          valueFrom:
+            secretKeyRef:
+              name: ao-secrets
+              key: EventHubReceiverBatchSize
         resources:
           requests:
             cpu: 100m
