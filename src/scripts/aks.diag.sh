@@ -42,8 +42,8 @@ az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "
 # Bounce
 #kubectl -n default rollout restart deployment
 #kubectl -n default rollout restart daemonset
-s
+
 
 # Shell to a pod
-#kubectl exec --stdin --tty ao-be-d7cbf9675-lt8lp -- /bin/bash
+#kubectl exec --stdin --tty ao-be-56bfff7985-89pvt -- /bin/bash
 
