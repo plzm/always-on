@@ -24,6 +24,14 @@
         "trustedServiceAccessEnabled": {
             "type": "bool",
             "defaultValue": true
+        },
+        "inboundAllowedIp": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "displayName": "Source for dev/test inbound",
+                "description": "Optional. If provided, will be configured to allow inbound. Likely not appropriate to provide in production."
+            }
         }
 	},
     "variables": {
@@ -45,7 +53,20 @@
                         "ignoreMissingVnetServiceEndpoint": false
                     }
                 ],
-                "ipRules": [],
+                "ipRules": [
+                    "[
+                        if
+                        (
+                            empty(trim(parameters('inboundAllowedIp'))),
+                            json('null'),
+                            createObject
+                            (
+                                'ipMask', parameters('inboundAllowedIp'),
+                                'action', 'Allow'
+                            )
+                        )
+                    ]"
+                ],
                 "trustedServiceAccessEnabled": "[parameters('trustedServiceAccessEnabled')]"
             }
         }

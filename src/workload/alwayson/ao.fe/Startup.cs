@@ -28,6 +28,7 @@ namespace ao.fe
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
 		{
+			var azureRegion = Configuration["AzureRegion"];
 			var cosmosDbConnectionString = Configuration["CosmosDbConnectionString"];
 			var cosmosDbDatabaseName = Configuration["CosmosDbDatabaseName"];
 			var cosmosDbProfileContainerName = Configuration["CosmosDbProfileContainerName"];
@@ -43,7 +44,7 @@ namespace ao.fe
 			services.AddHttpClient();
 
 			// Register singleton Cosmos DB service
-			services.AddSingleton<ICosmosDbService, CosmosDbService>(s => new CosmosDbService(cosmosDbConnectionString, cosmosDbDatabaseName, cosmosDbProfileContainerName, cosmosDbProgressContainerName, s.GetRequiredService<IHttpClientFactory>(), s.GetRequiredService<TelemetryClient>()));
+			services.AddSingleton<ICosmosDbService, CosmosDbService>(s => new CosmosDbService(azureRegion, cosmosDbConnectionString, cosmosDbDatabaseName, cosmosDbProfileContainerName, cosmosDbProgressContainerName, s.GetRequiredService<IHttpClientFactory>(), s.GetRequiredService<TelemetryClient>()));
 
 			// Register singleton Event Hub service
 			services.AddSingleton<IEventHubSenderService, EventHubSenderService>(s => new EventHubSenderService(eventHubNamespaceConnectionString, eventHubName, s.GetRequiredService<TelemetryClient>()));

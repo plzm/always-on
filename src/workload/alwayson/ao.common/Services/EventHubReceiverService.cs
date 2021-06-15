@@ -125,6 +125,10 @@ namespace ao.common
 
 					this.TelemetryClient.TrackException(tcex);
 				}
+				catch (Exception ex)
+				{
+					this.TelemetryClient.TrackException(ex);
+				}
 				finally
 				{
 					// This may take up to the length of time defined

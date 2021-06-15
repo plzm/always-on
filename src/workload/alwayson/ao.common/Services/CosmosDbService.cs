@@ -42,8 +42,9 @@ namespace ao.common
 			Initialize().Wait();
 		}
 
-		public CosmosDbService(string connectionString, string databaseName, string profileContainerName, string progressContainerName, IHttpClientFactory httpClientFactory = null, TelemetryClient telemetryClient = null)
+		public CosmosDbService(string azureRegion, string connectionString, string databaseName, string profileContainerName, string progressContainerName, IHttpClientFactory httpClientFactory = null, TelemetryClient telemetryClient = null)
 		{
+			this.AzureRegion = azureRegion;
 			this.ConnectionString = connectionString;
 			this.DatabaseName = databaseName;
 			this.ProfileContainerName = profileContainerName;

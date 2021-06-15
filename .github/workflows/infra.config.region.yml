@@ -86,6 +86,8 @@ jobs:
           echo "STORAGE_ACCOUNT_CONN_STRING=$(az storage account show-connection-string --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $STORAGE_ACCOUNT_NAME -o tsv --query 'connectionString')" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_CONN_STRING=$(az eventhubs namespace authorization-rule keys list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP --namespace-name $EVENT_HUB_NS_NAME -n ${{ env.EVENT_HUB_AUTH_RULE_NAME }} -o tsv --query 'primaryConnectionString')" >> $GITHUB_ENV
 
+          echo "AZURE_REGION_DISPLAY_NAME=$(az account list-locations -o tsv --query \"[?name=='${{ matrix.region }}'].displayName\")" >> $GITHUB_ENV
+
 
       - name: Write Tenant ID to SecretProviderClass YAML file
         if: success()
@@ -118,7 +120,7 @@ jobs:
       - name: Write secrets to region Key Vault
         if: success()
         run: |
-          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_AZURE_REGION }} --value "${{ matrix.region }}"
+          az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_AZURE_REGION }} --value "${{ env.AZURE_REGION_DISPLAY_NAME }}"
 
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_APPLICATIONINSIGHTS_CONNECTION_STRING }} --value "${{ env.APPLICATIONINSIGHTS_CONNECTION_STRING }}"
 
