@@ -18,7 +18,8 @@
             "defaultValue": "Standard",
             "allowedValues": [
                 "Basic",
-                "Standard"
+                "Standard",
+                "Premium"
             ]
         },
         "capacity": {

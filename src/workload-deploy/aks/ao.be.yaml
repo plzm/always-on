@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: ao-be
 spec:
-  replicas: 10
+  replicas: 2
   selector:
     matchLabels:
       app: ao-be
@@ -23,72 +23,6 @@ spec:
           capabilities:
             drop:
             - NET_RAW
-        env:
-        - name: AzureRegion
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: AzureRegion
-        - name: APPLICATIONINSIGHTS_CONNECTION_STRING
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: AppInsightsConnectionString
-        - name: CosmosDbConnectionString
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: CosmosDbConnectionString
-        - name: CosmosDbDatabaseName
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: CosmosDbDatabaseName
-        - name: CosmosDbProfileContainerName
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: CosmosDbProfileContainerName
-        - name: CosmosDbProgressContainerName
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: CosmosDbProgressContainerName
-        - name: StorageAccountConnString
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: StorageAccountConnString
-        - name: StorageAccountName
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: StorageAccountName
-        - name: StorageContainerName
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: StorageContainerName
-        - name: EventHubConnectionString
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: EventHubConnectionString
-        - name: EventHubName
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: EventHubName
-        - name: EventHubConsumerGroup
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: EventHubConsumerGroup
-        - name: EventHubReceiverBatchSize
-          valueFrom:
-            secretKeyRef:
-              name: ao-secrets
-              key: EventHubReceiverBatchSize
         resources:
           requests:
             cpu: 1000m
