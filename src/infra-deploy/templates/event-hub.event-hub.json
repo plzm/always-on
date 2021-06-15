@@ -20,13 +20,13 @@
         "messageRetentionInDays": {
             "type": "int",
             "minValue": 1,
-            "maxValue": 30,
+            "maxValue": 7,
             "defaultValue": 1
         },
         "partitionCount": {
             "type": "int",
             "minValue": 1,
-            "maxValue": 20,
+            "maxValue": 32,
             "defaultValue": 1
         }
 	},
