@@ -24,6 +24,9 @@ jobs:
   prep:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
       - name: Azure login
         if: success()
         uses: azure/login@v1
