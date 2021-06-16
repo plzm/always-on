@@ -14,6 +14,8 @@ env:
 
   AZURE_LOCATIONS: 'eastus2,westus2'
 
+  STORAGE_CONTAINER_NAME: 'ehproc'
+
   VNET_ENABLE_DDOS: 'false'
 
   COSMOS_DB_MULTI_REGION_WRITE: 'true'
@@ -48,15 +50,16 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install Azure CLI extensions
-        if: success()
-        run: |
-          az extension add --name application-insights
-          az extension add --name front-door
+      #- name: Install Azure CLI extensions
+      #  if: success()
+      #  run: |
+      #    az extension add --name application-insights
+      #    az extension add --name front-door
 
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}
           UAMI_NAME=${{ env.PREFIX }}
           DDOS_PLAN_NAME=${{ env.PREFIX }}
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
@@ -67,6 +70,7 @@ jobs:
           FRONT_DOOR_WAF_POLICY_NAME=${FRONT_DOOR_NAME//-/}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "DDOS_PLAN_NAME=$DDOS_PLAN_NAME" >> $GITHUB_ENV
           echo "LA_WORKSPACE_NAME=$LA_WORKSPACE_NAME" >> $GITHUB_ENV
@@ -89,189 +93,217 @@ jobs:
 
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
 
-      - name: Create Azure resource group
-        if: success()
-        run: |
-          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+      #- name: Create Azure resource group
+      #  if: success()
+      #  run: |
+      #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
 
 
-      - name: Deploy Log Analytics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
+      #- name: Deploy Log Analytics
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} workspaceName=${{env.LA_WORKSPACE_NAME}}
 
-      - name: Deploy Log Analytics Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.diagnostics.json
-          parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+      #- name: Deploy Log Analytics Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.diagnostics.json
+      #    parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
-      - name: Get Log Analytics Workspace ID
-        if: success()
-        run: |
-          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
-
-
-      - name: Deploy DDoS Plan
-        if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/net.ddos-plan.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+      #- name: Get Log Analytics Workspace ID
+      #  if: success()
+      #  run: |
+      #    echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
-      - name: Deploy Container Registry
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/container-registry.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.AZURE_LOCATIONS}} zoneRedundancy=Enabled
-
-      - name: Deploy Container Registry Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/container-registry.diagnostics.json
-          parameters: registryName=${{env.REGISTRY_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
-
-      - name: Grant Deploy SP AcrPush on Global Registry
+      - name: Deploy Storage Account 
         if: success()
         uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-push
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PUSH }} principalId=${{ env.AZURE_CRED_SP_OBJECT_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.account.json
+          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
 
-
-      - name: Deploy App Insights
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/monitor.app-insights.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
-
-      - name: Deploy App Insights Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/monitor.app-insights.diagnostics.json
-          parameters: appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
-
-
-      - name: Deploy Cosmos DB Account
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/cosmos-db.account.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
-
-      - name: Deploy Cosmos DB Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/cosmos-db.diagnostics.json
-          parameters: accountName=${{env.COSMOS_DB_ACCT_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
-
-      - name: Deploy Cosmos DB Database
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/cosmos-db.sql.database.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_DATABASE_AUTOSCALE_MAX_THROUGHPUT}}
-
-      - name: Deploy Cosmos DB Container - Profiles
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_1_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_1_PARTITION_KEY}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_1_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_1_AUTOSCALE_MAX_THROUGHPUT}}
-
-      - name: Deploy Cosmos DB Container - Progress
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_2_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_2_PARTITION_KEY}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_2_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT}}
-
-
-      - name: Deploy Front Door WAF Policy
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/fd.waf-policy.json
-          parameters: wafPolicyName="${{env.FRONT_DOOR_WAF_POLICY_NAME}}"
-
-      - name: Deploy Front Door Profile
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/fd.profile.json
-          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}"
-
-      - name: Deploy Front Door Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/fd.diagnostics.json
-          parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
-
-      - name: Deploy Front Door Endpoint
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/fd.endpoint.json
-          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" originResponseTimeoutSeconds="${{env.FRONT_DOOR_ORIGIN_TIMEOUT}}"
-
-      - name: Deploy Front Door Security Policy
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/fd.security-policy.json
-          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" securityPolicyName="${{ env.FRONT_DOOR_SECPOL_NAME }}" wafPolicyId="${{ env.FRONT_DOOR_WAF_POLICY_ID }}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}"
-
-      - name: Deploy Front Door Origin Group
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
-          template: ./src/infra-deploy/templates/fd.origin-group.json
-          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" originGroupName="${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}}"
-
-      - name: Get Front Door Endpoint URI
-        if: success()
-        run: |
-          FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name ${{env.FRONT_DOOR_NAME}} --endpoint-name ${{env.FRONT_DOOR_ENDPOINT_NAME}} -o tsv --query 'hostName')
-          echo "FRONT_DOOR_URI=https://$FRONT_DOOR_ENDPOINT_FQDN/" >> $GITHUB_ENV
-
-      - name: Deploy App Insights Availability Test for Front Door Endpoint URI
+      - name: Deploy Storage Container for regional Event Hub Processors
         if: success()
         uses: azure/arm-deploy@main
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.FRONT_DOOR_NAME }}-avl-test
-          template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
-          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="afd-${{ env.FRONT_DOOR_NAME }}" testUrl=${{ env.FRONT_DOOR_URI }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.container.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
+
+      - name: Deploy Storage Account Diagnostics
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
+          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+
+      #- name: Deploy DDoS Plan
+      #  if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/net.ddos-plan.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} ddosProtectionPlanName=${{env.DDOS_PLAN_NAME}}
+
+
+      #- name: Deploy Container Registry
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/container-registry.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} registryName=${{env.REGISTRY_NAME}} skuName=Premium replicationLocations=${{env.AZURE_LOCATIONS}} zoneRedundancy=Enabled
+
+      #- name: Deploy Container Registry Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/container-registry.diagnostics.json
+      #    parameters: registryName=${{env.REGISTRY_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      #- name: Grant Deploy SP AcrPush on Global Registry
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-push
+      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PUSH }} principalId=${{ env.AZURE_CRED_SP_OBJECT_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
+
+
+      #- name: Deploy App Insights
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/monitor.app-insights.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      #- name: Deploy App Insights Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/monitor.app-insights.diagnostics.json
+      #    parameters: appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+
+      #- name: Deploy Cosmos DB Account
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/cosmos-db.account.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
+
+      #- name: Deploy Cosmos DB Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/cosmos-db.diagnostics.json
+      #    parameters: accountName=${{env.COSMOS_DB_ACCT_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      #- name: Deploy Cosmos DB Database
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/cosmos-db.sql.database.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} provisionedThroughput=${{env.COSMOS_DB_DATABASE_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_DATABASE_AUTOSCALE_MAX_THROUGHPUT}}
+
+      #- name: Deploy Cosmos DB Container - Profiles
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_1_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_1_PARTITION_KEY}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_1_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_1_AUTOSCALE_MAX_THROUGHPUT}}
+
+      #- name: Deploy Cosmos DB Container - Progress
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
+      #    parameters: location=${{env.AZURE_LOCATION_GLOBAL}} cosmosDbAccountName=${{env.COSMOS_DB_ACCT_NAME}} databaseName=${{env.COSMOS_DB_DATABASE_NAME}} containerName=${{env.COSMOS_DB_CONTAINER_2_NAME}} partitionKeyPath="${{env.COSMOS_DB_CONTAINER_2_PARTITION_KEY}}" provisionedThroughput=${{env.COSMOS_DB_CONTAINER_2_PROVISIONED_THROUGHPUT}} autoscaleMaxThroughput=${{env.COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT}}
+
+
+      #- name: Deploy Front Door WAF Policy
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/fd.waf-policy.json
+      #    parameters: wafPolicyName="${{env.FRONT_DOOR_WAF_POLICY_NAME}}"
+
+      #- name: Deploy Front Door Profile
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/fd.profile.json
+      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}"
+
+      #- name: Deploy Front Door Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/fd.diagnostics.json
+      #    parameters: frontDoorName=${{env.FRONT_DOOR_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      #- name: Deploy Front Door Endpoint
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/fd.endpoint.json
+      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" originResponseTimeoutSeconds="${{env.FRONT_DOOR_ORIGIN_TIMEOUT}}"
+
+      #- name: Deploy Front Door Security Policy
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/fd.security-policy.json
+      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" securityPolicyName="${{ env.FRONT_DOOR_SECPOL_NAME }}" wafPolicyId="${{ env.FRONT_DOOR_WAF_POLICY_ID }}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}"
+
+      #- name: Deploy Front Door Origin Group
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
+      #    template: ./src/infra-deploy/templates/fd.origin-group.json
+      #    parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" originGroupName="${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}}"
+
+      #- name: Get Front Door Endpoint URI
+      #  if: success()
+      #  run: |
+      #    FRONT_DOOR_ENDPOINT_FQDN=$(az afd endpoint show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name ${{env.FRONT_DOOR_NAME}} --endpoint-name ${{env.FRONT_DOOR_ENDPOINT_NAME}} -o tsv --query 'hostName')
+      #    echo "FRONT_DOOR_URI=https://$FRONT_DOOR_ENDPOINT_FQDN/" >> $GITHUB_ENV
+
+      #- name: Deploy App Insights Availability Test for Front Door Endpoint URI
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+      #    deploymentName: ${{ env.FRONT_DOOR_NAME }}-avl-test
+      #    template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
+      #    parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="afd-${{ env.FRONT_DOOR_NAME }}" testUrl=${{ env.FRONT_DOOR_URI }}
 
 
       - name: Azure logout
