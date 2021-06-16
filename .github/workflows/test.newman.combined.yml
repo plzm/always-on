@@ -16,7 +16,7 @@ env:
   COLLECTION_PREFIX: './tools/postman/'
   COLLECTION_SUFFIX: '.postman_collection.json'
 
-  NEWMAN_ITERATIONS: 2
+  NEWMAN_ITERATIONS: 100
 
   RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
@@ -64,7 +64,7 @@ jobs:
       #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
       #    deploymentName: ${{ env.STORAGE_ACCT_NAME }}
       #    template: ./src/infra-deploy/templates/storage.account.json
-      #    parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} skuName=${{ env.STORAGE_ACCT_SKU_NAME }} defaultAction=Deny
+      #    parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} skuName=${{ env.STORAGE_ACCT_SKU_NAME }} defaultAction=Allow
 
       #- name: Grant Exec Context SBDC on Storage Account
       #  if: success()
@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        worker: [1]
+        worker: [1,2]
         collection: ["Always-On-Get-Profile", "Always-On-Post-Profile", "Always-On-Post-Progress"]
       max-parallel: 10
     steps:
