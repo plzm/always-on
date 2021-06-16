@@ -98,7 +98,7 @@ jobs:
           az logout
 
 
-  newman-tests:
+  newman:
     needs: prep
     runs-on: ubuntu-latest
     strategy:
