@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        worker: [1,2]
+        worker: [1]
         collection: ["Always-On-Get-Profile", "Always-On-Post-Profile", "Always-On-Post-Progress"]
       max-parallel: 10
     steps:
