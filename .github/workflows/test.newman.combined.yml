@@ -96,7 +96,7 @@ jobs:
 
 
   newman-tests:
-    needs: storage
+    needs: prep
     runs-on: ubuntu-latest
     strategy:
       matrix:
