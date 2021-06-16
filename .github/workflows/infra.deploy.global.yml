@@ -143,7 +143,7 @@ jobs:
         if: success()
         uses: azure/arm-deploy@main
         with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
           template: ./src/infra-deploy/templates/storage.account.diagnostics.json
           parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
