@@ -20,6 +20,8 @@ env:
   LOCUST_FILE_PATH: './tools/locust/$LOCUST_FILE_NAME'
   LOCUST_RUNTIME: '10m'
 
+  RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+
 jobs:
   prep:
     runs-on: ubuntu-latest
@@ -147,7 +149,7 @@ jobs:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
           deploymentName: locust
           template: ./src/infra-deploy/templates/locust.json
-          parameters: location=${{ env.AZURE_LOCATION_TESTS }} hostToTest=${{ env.API_ENDPOINT }} numberOfWorkers=${{ env.LOCUST_WORKERS }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
+          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} hostToTest=${{ env.API_ENDPOINT }} numberOfWorkers=${{ env.LOCUST_WORKERS }} numberOfUsers=${{ env.LOCUST_USERS }} numberOfUsersToSpawnPerSecond=${{ env.LOCUST_USERS_SPAWN_RATE }} runtime=${{ env.LOCUST_RUNTIME }} storageAccountResourceGroup=${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} fileShareName=${{ env.STORAGE_FILE_SHARE_NAME_TESTS }}
 
       - name: Azure logout
         run: |
