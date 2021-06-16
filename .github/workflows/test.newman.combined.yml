@@ -21,7 +21,82 @@ env:
   RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR: 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
 
 jobs:
-  combined:
+  prep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          AZURE_RESOURCE_GROUP_TEST_RESULTS="always-on-tests"
+          AZURE_RESOURCE_GROUP_TESTS="always-on-tests-"$GITHUB_RUN_NUMBER
+
+          LA_WORKSPACE_NAME=${{ env.PREFIX }}
+
+          STORAGE_ACCT_NAME=${PREFIX//-/}tests
+
+          echo "AZURE_RESOURCE_GROUP_TEST_RESULTS=$AZURE_RESOURCE_GROUP_TEST_RESULTS" >> $GITHUB_ENV
+          echo "AZURE_RESOURCE_GROUP_TESTS=$AZURE_RESOURCE_GROUP_TESTS" >> $GITHUB_ENV
+          echo "STORAGE_ACCT_NAME=$STORAGE_ACCT_NAME" >> $GITHUB_ENV
+
+          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+
+          echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
+
+      - name: Create Azure resource groups
+        if: success()
+        run: |
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
+
+      - name: Deploy Storage Account
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          deploymentName: ${{ env.STORAGE_ACCT_NAME }}
+          template: ./src/infra-deploy/templates/storage.account.json
+          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} skuName=${{ env.STORAGE_ACCT_SKU_NAME }} defaultAction=Deny
+
+      - name: Grant Exec Context SBDC on Storage Account
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          deploymentName: ${{ env.STORAGE_ACCT_NAME }}-rbac-sbdc
+          template: ./src/infra-deploy/templates/authorization.role-assignment.json
+          parameters: roleDefinitionId=${{ env.RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR }} principalId=${{ env.AZURE_CRED_SP_OBJECT_ID }}
+
+      - name: Deploy Container for results to test results Storage Account
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          deploymentName: ${{ env.STORAGE_ACCT_NAME }}-${{ env.STORAGE_CONTAINER_NAME }}
+          template: ./src/infra-deploy/templates/storage.container.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
+
+      - name: Deploy Storage Account Diagnostics
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
+          deploymentName: ${{ env.STORAGE_ACCT_NAME }}-diag
+          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+      - name: Azure logout
+        run: |
+          az logout
+
+
+  newman-tests:
+    needs: storage
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -38,7 +113,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-
       - name: Install Azure CLI Extensions
         if: success()
         run: |
@@ -47,14 +121,7 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          AZURE_RESOURCE_GROUP_TEST_RESULTS="always-on-tests"
-          AZURE_RESOURCE_GROUP_TESTS="always-on-tests-"$GITHUB_RUN_NUMBER
-
-          LA_WORKSPACE_NAME=${{ env.PREFIX }}
-
           STORAGE_ACCT_NAME=${PREFIX//-/}tests
-
-          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
 
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
@@ -67,75 +134,26 @@ jobs:
 
           FILE_NAME=${{ matrix.collection }}-$GITHUB_RUN_NUMBER-${{ matrix.worker }}.json
 
-          echo "AZURE_RESOURCE_GROUP_TEST_RESULTS=$AZURE_RESOURCE_GROUP_TEST_RESULTS" >> $GITHUB_ENV
-          echo "AZURE_RESOURCE_GROUP_TESTS=$AZURE_RESOURCE_GROUP_TESTS" >> $GITHUB_ENV
           echo "STORAGE_ACCT_NAME=$STORAGE_ACCT_NAME" >> $GITHUB_ENV
 
           echo "API_ENDPOINT=$API_ENDPOINT" >> $GITHUB_ENV
           echo "COLLECTION_PATH=$COLLECTION_PATH" >> $GITHUB_ENV
           echo "FILE_NAME=$FILE_NAME" >> $GITHUB_ENV
 
-          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
-
-          echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
-
-      #- name: Create Azure resource groups
-      #  if: success()
-      #  run: |
-      #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
-      #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
-
-      #- name: Deploy Storage Account
-      #  if: success()
-      #  uses: azure/arm-deploy@main
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
-      #    deploymentName: ${{ env.STORAGE_ACCT_NAME }}
-      #    template: ./src/infra-deploy/templates/storage.account.json
-      #    parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} skuName=${{ env.STORAGE_ACCT_SKU_NAME }} defaultAction=Deny
-
-      - name: Grant Exec Context SBDC on Storage Account
-        if: success()
-        uses: azure/arm-deploy@main
+      - name: Setup Newman
+        uses: matt-ball/newman-action@master
         with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
-          deploymentName: ${{ env.STORAGE_ACCT_NAME }}-rbac-sbdc
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_STORAGE_BLOB_DATA_CONTRIBUTOR }} principalId=${{ env.AZURE_CRED_SP_OBJECT_ID }}
+          collection: ./tools/postman/this_doesnt_matter_its_a_placeholder_but_the_gha_requires_it.json
 
+      - name: Run Newman Run
+        if: success()
+        run: |
+          newman run '${{ env.COLLECTION_PATH }}' --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} -k --reporters json --reporter-json-export ./${{ env.FILE_NAME }}
 
-      #- name: Deploy Container for results to test results Storage Account
-      #  if: success()
-      #  uses: azure/arm-deploy@main
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
-      #    deploymentName: ${{ env.STORAGE_ACCT_NAME }}-${{ env.STORAGE_CONTAINER_NAME }}
-      #    template: ./src/infra-deploy/templates/storage.container.json
-      #    parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
-
-      #- name: Deploy Storage Account Diagnostics
-      #  if: success()
-      #  uses: azure/arm-deploy@main
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
-      #    deploymentName: ${{ env.STORAGE_ACCT_NAME }}-diag
-      #    template: ./src/infra-deploy/templates/storage.account.diagnostics.json
-      #    parameters: storageAccountName=${{ env.STORAGE_ACCT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
-
-      #- name: Setup Newman
-      #  uses: matt-ball/newman-action@master
-      #  with:
-      #    collection: ./tools/postman/this_doesnt_matter_its_a_placeholder_but_the_gha_requires_it.json
-
-      #- name: Run Newman Run
-      #  if: success()
-      #  run: |
-      #    newman run '${{ env.COLLECTION_PATH }}' --env-var "ApiEndpoint=${{ env.API_ENDPOINT }}" -n ${{ env.NEWMAN_ITERATIONS }} -k --reporters json --reporter-json-export ./${{ env.FILE_NAME }}
-
-      #- name: Upload to Azure Storage
-      #  if: success()
-      #  run: |
-      #      az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ env.FILE_NAME }} -n "postman/${{ env.FILE_NAME }}" --auth-mode key --verbose
+      - name: Upload to Azure Storage
+        if: success()
+        run: |
+            az storage blob upload --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} --account-name ${{ env.STORAGE_ACCT_NAME }} -c ${{ env.STORAGE_CONTAINER_NAME }} -f ./${{ env.FILE_NAME }} -n "newman/${{ env.FILE_NAME }}" --auth-mode key --verbose
 
 
       - name: Azure logout
