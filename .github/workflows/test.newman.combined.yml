@@ -37,7 +37,6 @@ jobs:
         if: success()
         run: |
           AZURE_RESOURCE_GROUP_TEST_RESULTS="always-on-tests"
-          AZURE_RESOURCE_GROUP_TESTS="always-on-tests-"$GITHUB_RUN_NUMBER
 
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
 
@@ -55,7 +54,6 @@ jobs:
         if: success()
         run: |
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
-          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_TESTS }}
 
       - name: Deploy Storage Account
         if: success()

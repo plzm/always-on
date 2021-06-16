@@ -5,6 +5,8 @@
 [![Infra-ConfigRegion](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml)
 [![App-Build](https://github.com/plzm/always-on/actions/workflows/app.build.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/app.build.yml)
 [![App-Deploy](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml)
+[![Test-Newman](https://github.com/plzm/always-on/actions/workflows/test.newman.combined.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/test.newman.combined.yml)
+[![Test-Locust](https://github.com/plzm/always-on/actions/workflows/test.locust.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/test.locust.yml)
 
 ## SUMMARY
 
