@@ -2,7 +2,7 @@
 
 PREFIX="pz-ao"
 SUFFIX="34"
-location="eastus2"
+location="westus2"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
 resourceGroup="always-on-""$location"
@@ -16,10 +16,6 @@ kubectl config unset users
 #kubectl config view
 
 az aks get-credentials --subscription "$subscriptionId" -g "$resourceGroup" -n "$clusterName" --overwrite-existing --verbose
-
-# Shell to a pod
-pod=ao-fe-86595b789f-twt9z
-kubectl exec --stdin --tty $pod -- /bin/bash
 
 #kubectl get deployments -A -o wide
 #kubectl get nodes -A -o wide
