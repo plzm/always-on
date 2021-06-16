@@ -187,16 +187,16 @@
                           "resourceMetadata": {
                             "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-global/providers/Microsoft.DocumentDB/databaseAccounts/pz-ao"
                           },
-                          "name": "NormalizedRUConsumption",
+                          "name": "ProvisionedThroughput",
                           "aggregationType": 3,
                           "namespace": "microsoft.documentdb/databaseaccounts",
                           "metricVisualization": {
-                            "displayName": "Normalized RU Consumption",
+                            "displayName": "Provisioned Throughput",
                             "resourceDisplayName": "pz-ao"
                           }
                         }
                       ],
-                      "title": "Cosmos DB | pz-ao | Max Normalized RU Consumption",
+                      "title": "Cosmos DB | pz-ao | Max Provisioned Throughput",
                       "titleKind": 2,
                       "visualization": {
                         "chartType": 2,
@@ -216,8 +216,36 @@
                           }
                         },
                         "disablePinning": true
+                      },
+                      "filterCollection": {
+                        "filters": [
+                          {
+                            "key": "CollectionName",
+                            "operator": 1,
+                            "values": [
+                              "__Empty",
+                              "<empty>"
+                            ]
+                          }
+                        ]
+                      },
+                      "grouping": {
+                        "dimension": "CollectionName",
+                        "sort": 1,
+                        "top": 10
                       }
                     }
+                  }
+                }
+              },
+              "filters": {
+                "CollectionName": {
+                  "model": {
+                    "operator": "notEquals",
+                    "values": [
+                      "__Empty",
+                      "<empty>"
+                    ]
                   }
                 }
               }
@@ -1274,23 +1302,23 @@
                 "value": "Past hour"
               },
               "filteredPartIds": [
-                "StartboardPart-UnboundPart-df1d47e2-787f-491d-a514-59ece77f0700",
-                "StartboardPart-MonitorChartPart-df1d47e2-787f-491d-a514-59ece77f09d7",
-                "StartboardPart-MonitorChartPart-df1d47e2-787f-491d-a514-59ece77f0631",
-                "StartboardPart-MonitorChartPart-df1d47e2-787f-491d-a514-59ece77f0912",
-                "StartboardPart-MonitorChartPart-df1d47e2-787f-491d-a514-59ece77f0589",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a8480805",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a8480a34",
-                "StartboardPart-MonitorChartPart-186ee56d-c090-4879-8bba-c5c7c5be83de",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a8480bc9",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a8480d9e",
-                "StartboardPart-MonitorChartPart-186ee56d-c090-4879-8bba-c5c7c5be81fd",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a84808d4",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a8480a40",
-                "StartboardPart-MonitorChartPart-186ee56d-c090-4879-8bba-c5c7c5be8729",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a8480bd5",
-                "StartboardPart-MonitorChartPart-546c7b02-b7bf-449f-b732-d5e2a8480daa",
-                "StartboardPart-MonitorChartPart-186ee56d-c090-4879-8bba-c5c7c5be8229"
+                "StartboardPart-AppMapGalPt-5f032d27-51ee-45bf-910b-bd9c4b7ebb9f",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebba3",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebba5",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebba9",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbab",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbad",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbaf",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbb1",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbb3",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbb5",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbb7",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbb9",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbbb",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbbd",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbbf",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbc1",
+                "StartboardPart-MonitorChartPart-5f032d27-51ee-45bf-910b-bd9c4b7ebbc3"
               ]
             }
           }
