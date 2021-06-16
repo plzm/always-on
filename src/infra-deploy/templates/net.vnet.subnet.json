@@ -73,7 +73,7 @@
 				array(createObject('name', replace(parameters('delegationService'), '/', '.'), 'properties', createObject('serviceName', parameters('delegationService'))))
 			)
 		]",
-		"apiVersionVnet": "2020-07-01"
+		"apiVersionVnet": "2020-11-01"
 	},
 	"resources": [
 		{
