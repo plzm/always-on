@@ -91,7 +91,7 @@ jobs:
           template: ./src/infra-deploy/templates/storage.account.json
           parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} storageAccountName=${{ env.STORAGE_ACCT_NAME }} skuName=${{ env.STORAGE_ACCT_SKU_NAME }} defaultAction=Deny
 
-      - name: Deploy Container for Locust results to test results Storage Account
+      - name: Deploy Container for results to test results Storage Account
         if: success()
         uses: azure/arm-deploy@main
         with:
