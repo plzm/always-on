@@ -144,13 +144,13 @@ jobs:
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE }} --value "${{ env.EVENT_HUB_RECEIVER_BATCH_SIZE }}"
 
 
-      #- name: Set AKS Context
-      #  if: success()
-      #  uses: azure/aks-set-context@v1
-      #  with:
-      #    creds: '${{ secrets.AZURE_CREDENTIALS }}'
-      #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
-      #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
+      - name: Set AKS Context
+        if: success()
+        uses: azure/aks-set-context@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+          resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
+          cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
       #- name: Deploy RBAC Secrets Store Provider Class
       #  if: success()
