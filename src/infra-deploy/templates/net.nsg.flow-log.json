@@ -70,7 +70,7 @@
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "[variables('apiVersionDeployments')]",
-            "name": "DeployFlowLogs",
+            "name": "[concat('FlowLogs-', parameters('location'))]",
             "resourceGroup": "NetworkWatcherRG",
             "properties": {
                 "mode": "Incremental",
