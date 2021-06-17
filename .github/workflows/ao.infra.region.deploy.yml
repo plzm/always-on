@@ -172,11 +172,24 @@ jobs:
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
-      #- name: Create Azure resource group
+      - name: Create NetworkWatcherRG Azure Resource Group
+        if: success()
+        run: |
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name "NetworkWatcherRG"
+
+      #- name: Create Regional Always On Resource Group
       #  if: success()
       #  run: |
       #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
+
+      - name: Deploy Network Watcher
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: "NetworkWatcherRG"
+          template: ./src/infra-deploy/templates/net.network-watcher.json
+          parameters: location=${{ matrix.region }} networkWatcherName="NetworkWatcher_""${{ matrix.region }}"
 
       #- name: Deploy Storage Account for Regional NSG Flow Logs and Event Hub Checkpoint Management
       #  if: success()

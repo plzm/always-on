@@ -10,8 +10,6 @@
 [![AO.Test.Newman.Deploy](https://github.com/plzm/always-on/actions/workflows/ao.test.newman.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.test.newman.deploy.yml)
 [![AO.Test.Locust.Deploy](https://github.com/plzm/always-on/actions/workflows/ao.test.locust.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.test.locust.deploy.yml)
 
-[![Shared.Infra.Deploy](https://github.com/plzm/always-on/actions/workflows/shared.infra.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/shared.infra.deploy.yml)
-
 ## SUMMARY
 
 This solution deploys and configures a highly performant, multi-region application on Azure. All deployments and configurations are performed by github Actions workflows for maximal automation and CI/CD.
