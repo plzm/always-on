@@ -89,10 +89,16 @@ jobs:
 
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
 
+
       - name: Create Azure resource group
         if: success()
         run: |
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+
+      - name: Create NetworkWatcherRG Azure Resource Group
+        if: success()
+        run: |
+          az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ env.AZURE_LOCATION_GLOBAL }} --name "NetworkWatcherRG"
 
 
       - name: Deploy Log Analytics
