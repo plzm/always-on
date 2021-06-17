@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "Azure region"
+            }
+        },
+        "networkWatcherName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "flowLogName": {
+            "type": "string",
+            "defaultValue": ""
+        },
+        "nsgResourceId": {
+			"type": "string",
+			"defaultValue": ""
+        },
+        "storageAccountResourceId": {
+			"type": "string",
+			"defaultValue": ""
+        },
+		"logAnalyticsWorkspaceResourceId": {
+			"type": "string",
+			"defaultValue": ""
+		},
+        "trafficAnalyticsInterval": {
+            "type": "int",
+            "defaultValue": 10,
+            "allowedValues": [
+                10,
+                60
+            ]
+        }
+    },
+    "variables": {
+        "apiVersionNet": "2020-11-01"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkWatchers/flowLogs",
+            "apiVersion": "[variables('apiVersionNet')]",
+            "name": "[concat(parameters('networkWatcherName'), '/', parameters('flowLogName'))]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "targetResourceId": "[parameters('nsgResourceId')]",
+                "storageId": "[parameters('storageAccountResourceId')]",
+                "enabled": true,
+                "flowAnalyticsConfiguration": {
+                    "networkWatcherFlowAnalyticsConfiguration": {
+                        "enabled": true,
+                        "workspaceResourceId": "[parameters('logAnalyticsWorkspaceResourceId')]",
+                        "trafficAnalyticsInterval": "[parameters('trafficAnalyticsInterval')]"
+                    }
+                },
+                "retentionPolicy": {
+                    "days": 0,
+                    "enabled": false
+                },
+                "format": {
+                    "type": "JSON",
+                    "version": 2
+                }
+            }
+        }
+    ]
+}

@@ -18,8 +18,8 @@ subscriptionId="$(az account show -o tsv --query 'id')"
 resourceGroup="always-on-""$location"
 serviceName="$PREFIX""-""$location""-""$SUFFIX"
 
-skuName="Premium"
-#skuName="Developer"
+#skuName="Premium"
+skuName="Developer"
 
 # scaleUnits and availabilityZones for Premium, but will be overridden inside template if Developer set. So, no need to change these to change scale.
 scaleUnits=3

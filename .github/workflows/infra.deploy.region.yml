@@ -118,7 +118,9 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
+          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}${{ matrix.region }}
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+          NETWORK_WATCHER_NAME="NetworkWatcher_"${{ matrix.region }}
           UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APP_NSG_NAME=app-${{ matrix.region }}
           APIM_NSG_NAME=apim-${{ matrix.region }}
@@ -128,7 +130,6 @@ jobs:
           LA_WORKSPACE_NAME=${{ env.PREFIX }}
           APP_INSIGHTS_NAME=${{ env.PREFIX }}
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
-          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ matrix.region }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
           APPGW_NAME=${{ env.PREFIX }}-${{ matrix.region }}
@@ -142,7 +143,9 @@ jobs:
           FRONT_DOOR_NAME=${{ env.PREFIX }}
           FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
+          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME" >> $GITHUB_ENV
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
+          echo "NETWORK_WATCHER_NAME=$NETWORK_WATCHER_NAME" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
           echo "APIM_NSG_NAME=$APIM_NSG_NAME" >> $GITHUB_ENV
@@ -151,7 +154,6 @@ jobs:
           echo "KEY_VAULT_NAME=$KEY_VAULT_NAME" >> $GITHUB_ENV
           echo "APP_INSIGHTS_NAME=$APP_INSIGHTS_NAME" >> $GITHUB_ENV
           echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
-          echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME" >> $GITHUB_ENV
           echo "EVENT_HUB_NS_NAME=$EVENT_HUB_NS_NAME" >> $GITHUB_ENV
           echo "APPGW_PUBLIC_IP_NAME=$APPGW_PUBLIC_IP_NAME" >> $GITHUB_ENV
           echo "APPGW_NAME=$APPGW_NAME" >> $GITHUB_ENV
@@ -176,6 +178,39 @@ jobs:
         if: success()
         run: |
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
+
+
+      - name: Deploy Storage Account for NSG Flow Logs
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.account.json
+          parameters: location=${{ matrix.region }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
+
+      - name: Get Storage Account ID
+        if: success()
+        run: |
+          echo "STORAGE_ACCOUNT_ID=$(az storage account show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy Storage Account Diagnostics
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
+          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+
+      - name: Deploy Network Watcher
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./src/infra-deploy/templates/net.network-watcher.json
+          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }}
 
 
       - name: Deploy User-Assigned MI
@@ -222,6 +257,31 @@ jobs:
           deploymentName: ${{ env.APP_NSG_NAME }}-diag
           template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
           parameters: nsgName=${{ env.APP_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+
+      - name: Get NSG Info
+        if: success()
+        run: |
+          echo "APIM_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_NSG_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "APP_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APP_NSG_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy NSG Flow Logs for APIM NSG
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_NSG_NAME }}-flow
+          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APIM_NSG_NAME }}""-flow" nsgResourceId="${{ env.APIM_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+
+      - name: Deploy NSG Flow Logs for App NSG
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APP_NSG_NAME }}-flow
+          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APP_NSG_NAME }}""-flow" nsgResourceId="${{ env.APP_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+
 
 
       - name: Deploy VNet
@@ -351,33 +411,6 @@ jobs:
             --secret-permissions get \
             --certificate-permissions get
 
-
-      - name: Deploy Storage Account for Event Hub Processor
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
-          template: ./src/infra-deploy/templates/storage.account.json
-          parameters: location=${{ matrix.region }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
-
-      - name: Deploy Storage Container for Event Hub Processor
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
-          template: ./src/infra-deploy/templates/storage.container.json
-          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
-
-      - name: Deploy Storage Account Blob Diagnostics
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
-          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
-          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Grant UAMI Storage Data Contributor on Storage Account
         if: success()
@@ -538,15 +571,15 @@ jobs:
           parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="appgw-${{ env.APPGW_NAME }}" testUrl="http://${{ env.APPGW_FQDN }}"
 
 
-      ### Deploy AKS - ARM Template - but does not support kubelet identity
-      ##- name: Deploy AKS Cluster (ARM)
-      ##  if: success()
-      ##  uses: azure/arm-deploy@main
-      ##  with:
-      ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      ##    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
-      ##    template: ./src/infra-deploy/templates/aks.cluster.json
-      ##    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
+      ## Deploy AKS - ARM Template - but does not support kubelet identity
+      #- name: Deploy AKS Cluster (ARM)
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
+      #    template: ./src/infra-deploy/templates/aks.cluster.json
+      #    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
 
       - name: Install Azure CLI AKS Preview extension
         if: success()
@@ -574,6 +607,22 @@ jobs:
         if: success()
         run: |
           az extension remove --name aks-preview
+
+      - name: Get AKS NSG Info
+        if: success()
+        run: |
+          AKS_NSG_NAME=$(az network nsg list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} -o tsv --query '[0].name')
+          echo "AKS_NSG_NAME=$AKS_NSG_NAME" >> $GITHUB_ENV
+          echo "AKS_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} -n $AKS_NSG_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy NSG Flow Logs for AKS NSG
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_NSG_NAME }}-flow
+          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.AKS_NSG_NAME }}""-flow" nsgResourceId="${{ env.AKS_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
       - name: Deploy AKS Cluster Diagnostics
