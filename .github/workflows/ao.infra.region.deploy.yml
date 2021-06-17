@@ -120,7 +120,6 @@ jobs:
         run: |
           STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}${{ matrix.region }}
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          NETWORK_WATCHER_NAME="NetworkWatcher_"${{ matrix.region }}
           UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APP_NSG_NAME=app-${{ matrix.region }}
           APIM_NSG_NAME=apim-${{ matrix.region }}
@@ -145,7 +144,6 @@ jobs:
 
           echo "STORAGE_ACCOUNT_NAME=$STORAGE_ACCOUNT_NAME" >> $GITHUB_ENV
           echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
-          echo "NETWORK_WATCHER_NAME=$NETWORK_WATCHER_NAME" >> $GITHUB_ENV
           echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
           echo "APP_NSG_NAME=$APP_NSG_NAME" >> $GITHUB_ENV
           echo "APIM_NSG_NAME=$APIM_NSG_NAME" >> $GITHUB_ENV
@@ -174,11 +172,20 @@ jobs:
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
-      - name: Create Azure resource group
+      - name: Create Regional Always On Resource Group
         if: success()
         run: |
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
+
+      - name: Deploy Network Watcher
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: NetworkWatcherRG
+          deploymentName: NetworkWatcher-${{ matrix.region }}
+          template: ./src/infra-deploy/templates/net.network-watcher.json
+          parameters: location=${{ matrix.region }} networkWatcherName="NetworkWatcher_""${{ matrix.region }}"
 
       - name: Deploy Storage Account for Regional NSG Flow Logs and Event Hub Checkpoint Management
         if: success()
@@ -270,8 +277,8 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
-          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APIM_NSG_NAME }}""-flow" nsgResourceId="${{ env.APIM_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+          template: ./src/infra-deploy/templates/net.nsg.flow-log.json
+          parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP }}""-""${{ env.APIM_NSG_NAME }}""-flow" nsgResourceId="${{ env.APIM_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
       - name: Deploy NSG Flow Logs for App NSG
         if: success()
@@ -279,8 +286,8 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APP_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
-          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APP_NSG_NAME }}""-flow" nsgResourceId="${{ env.APP_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+          template: ./src/infra-deploy/templates/net.nsg.flow-log.json
+          parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP }}""-""${{ env.APP_NSG_NAME }}""-flow" nsgResourceId="${{ env.APP_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
 
@@ -619,10 +626,10 @@ jobs:
         if: success()
         uses: azure/arm-deploy@main
         with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
           deploymentName: ${{ env.APIM_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
-          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.AKS_NSG_NAME }}""-flow" nsgResourceId="${{ env.AKS_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+          template: ./src/infra-deploy/templates/net.nsg.flow-log.json
+          parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}""-""${{ env.AKS_NSG_NAME }}""-flow" nsgResourceId="${{ env.AKS_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
       - name: Deploy AKS Cluster Diagnostics
