@@ -1,4 +1,4 @@
-name: Test-Newman-Combined
+name: AO.Test.Newman.Deploy
 
 on: 
   workflow_dispatch:

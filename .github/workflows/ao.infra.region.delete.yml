@@ -1,4 +1,4 @@
-name: Infra-DeleteRegion
+name: AO.Infra.Region.Delete
 
 on: 
   workflow_dispatch:

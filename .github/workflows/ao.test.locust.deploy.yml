@@ -1,4 +1,4 @@
-name: Test-Locust
+name: AO.Test.Locust.Deploy
 
 on: 
   workflow_dispatch:

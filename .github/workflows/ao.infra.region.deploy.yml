@@ -1,4 +1,4 @@
-name: Infra-DeployRegion
+name: AO.Infra.Region.Deploy
 
 on: 
   workflow_dispatch:
@@ -180,7 +180,7 @@ jobs:
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
 
-      - name: Deploy Storage Account for NSG Flow Logs
+      - name: Deploy Storage Account for Regional NSG Flow Logs and Event Hub Checkpoint Management
         if: success()
         uses: azure/arm-deploy@main
         with:
@@ -194,6 +194,15 @@ jobs:
         run: |
           echo "STORAGE_ACCOUNT_ID=$(az storage account show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
+      - name: Deploy Storage Container for regional Event Hub Processors
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.container.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
+
       - name: Deploy Storage Account Diagnostics
         if: success()
         uses: azure/arm-deploy@main
@@ -202,15 +211,6 @@ jobs:
           deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
           template: ./src/infra-deploy/templates/storage.account.diagnostics.json
           parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
-
-
-      - name: Deploy Network Watcher
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./src/infra-deploy/templates/net.network-watcher.json
-          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }}
 
 
       - name: Deploy User-Assigned MI
