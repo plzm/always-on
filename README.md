@@ -1,12 +1,16 @@
 # ALWAYS ON
 
-[![Infra-DeployGlobal](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/infra.deploy.global.yml)
-[![Infra-DeployRegion](https://github.com/plzm/always-on/actions/workflows/infra.deploy.region.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/infra.deploy.region.yml)
-[![Infra-ConfigRegion](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/infra.config.region.yml)
-[![App-Build](https://github.com/plzm/always-on/actions/workflows/app.build.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/app.build.yml)
-[![App-Deploy](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/app.deploy.yml)
-[![Test-Newman](https://github.com/plzm/always-on/actions/workflows/test.newman.combined.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/test.newman.combined.yml)
-[![Test-Locust](https://github.com/plzm/always-on/actions/workflows/test.locust.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/test.locust.yml)
+[![AO.Infra.Global.Deploy](https://github.com/plzm/always-on/actions/workflows/ao.infra.global.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.infra.global.deploy.yml)
+[![AO.Infra.Region.Deploy](https://github.com/plzm/always-on/actions/workflows/ao.infra.region.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.infra.region.deploy.yml)
+[![AO.Infra.Region.Config](https://github.com/plzm/always-on/actions/workflows/ao.infra.region.config.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.infra.region.config.yml)
+
+[![AO.App.Build](https://github.com/plzm/always-on/actions/workflows/ao.app.build.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.app.build.yml)
+[![AO.App.Deploy](https://github.com/plzm/always-on/actions/workflows/ao.app.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.app.deploy.yml)
+
+[![AO.Test.Newman.Deploy](https://github.com/plzm/always-on/actions/workflows/ao.test.newman.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.test.newman.deploy.yml)
+[![AO.Test.Locust.Deploy](https://github.com/plzm/always-on/actions/workflows/ao.test.locust.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/ao.test.locust.deploy.yml)
+
+[![Shared.Infra.Deploy](https://github.com/plzm/always-on/actions/workflows/shared.infra.deploy.yml/badge.svg)](https://github.com/plzm/always-on/actions/workflows/shared.infra.deploy.yml)
 
 ## SUMMARY
 
