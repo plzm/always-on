@@ -118,7 +118,7 @@ jobs:
       - name: Prepare dynamic env vars
         if: success()
         run: |
-          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+          STORAGE_ACCOUNT_NAME=${PREFIX//-/}${{ env.SUFFIX }}${{ matrix.region }}
           AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
           NETWORK_WATCHER_NAME="NetworkWatcher_"${{ matrix.region }}
           UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
@@ -167,7 +167,6 @@ jobs:
           echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
 
-          echo "STORAGE_ACCOUNT_ID=$(az storage account show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $STORAGE_ACCOUNT_NAME -o tsv --query 'id')" >> $GITHUB_ENV
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
           echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'id')" >> $GITHUB_ENV
@@ -179,6 +178,30 @@ jobs:
       #  if: success()
       #  run: |
       #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
+
+
+      - name: Deploy Storage Account for NSG Flow Logs
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
+          template: ./src/infra-deploy/templates/storage.account.json
+          parameters: location=${{ matrix.region }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
+
+      - name: Get Storage Account ID
+        if: success()
+        run: |
+          echo "STORAGE_ACCOUNT_ID=$(az storage account show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.STORAGE_ACCOUNT_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy Storage Account Diagnostics
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
+          template: ./src/infra-deploy/templates/storage.account.diagnostics.json
+          parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
 
       - name: Deploy Network Watcher
