@@ -290,7 +290,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APP_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+          template: ./src/infra-deploy/templates/net.nsg.flow-log.json
           parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP }}""-""${{ env.APP_NSG_NAME }}""-flow" nsgResourceId="${{ env.APP_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
@@ -632,7 +632,7 @@ jobs:
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
           deploymentName: ${{ env.APIM_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+          template: ./src/infra-deploy/templates/net.nsg.flow-log.json
           parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}""-""${{ env.AKS_NSG_NAME }}""-flow" nsgResourceId="${{ env.AKS_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 

@@ -106,7 +106,7 @@
                             "type": "string"
                         },
                         "trafficAnalyticsInterval": {
-                            "type": "string"
+                            "type": "int"
                         }
                     },
                     "variables": {
