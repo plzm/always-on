@@ -144,87 +144,87 @@ jobs:
           az keyvault secret set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --vault-name ${{ env.KEY_VAULT_NAME }} --name ${{ env.SECRET_NAME_EVENT_HUB_RECEIVER_BATCH_SIZE }} --value "${{ env.EVENT_HUB_RECEIVER_BATCH_SIZE }}"
 
 
-      - name: Set AKS Context
-        if: success()
-        uses: azure/aks-set-context@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS }}'
-          resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
-          cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
+      #- name: Set AKS Context
+      #  if: success()
+      #  uses: azure/aks-set-context@v1
+      #  with:
+      #    creds: '${{ secrets.AZURE_CREDENTIALS }}'
+      #    resource-group: '${{ env.AZURE_RESOURCE_GROUP }}'
+      #    cluster-name: '${{ env.AKS_CLUSTER_NAME }}'
 
-      - name: Deploy RBAC Secrets Store Provider Class
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretproviderclass.yaml'
-          kubectl-version: 'latest'
-          force: true
-          namespace: kube-system
+      #- name: Deploy RBAC Secrets Store Provider Class
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretproviderclass.yaml'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: kube-system
 
-      - name: Deploy CSI Driver
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_PATH_ROOT }}csidriver.yaml'
-          kubectl-version: 'latest'
-          force: true
-          namespace: kube-system
+      #- name: Deploy CSI Driver
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_PATH_ROOT }}csidriver.yaml'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: kube-system
 
-      - name: Deploy Secrets Provider Classes
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasses.yaml'
-          kubectl-version: 'latest'
-          force: true
-          namespace: kube-system
+      #- name: Deploy Secrets Provider Classes
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasses.yaml'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: kube-system
 
-      - name: Deploy Secrets Provider Class Pod Statuses
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml'
-          kubectl-version: 'latest'
-          force: true
-          namespace: kube-system
+      #- name: Deploy Secrets Provider Class Pod Statuses
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_PATH_ROOT }}secrets-store.csi.x-k8s.io_secretproviderclasspodstatuses.yaml'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: kube-system
 
-      - name: Deploy Secrets Store CSI Driver
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_PATH_ROOT }}secrets-store-csi-driver.yaml'
-          kubectl-version: 'latest'
-          force: true
-          namespace: kube-system
+      #- name: Deploy Secrets Store CSI Driver
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_PATH_ROOT }}secrets-store-csi-driver.yaml'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: kube-system
 
-      - name: Deploy Secrets Store K8S Secrets Syncing
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretprovidersyncing.yaml'
-          kubectl-version: 'latest'
-          force: true
-          namespace: kube-system
-
-
-      - name: Deploy AKS Provider for Secrets Store CSI Driver
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
-          kubectl-version: 'latest'
-          force: true
-          namespace: default
+      #- name: Deploy Secrets Store K8S Secrets Syncing
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_PATH_ROOT }}rbac-secretprovidersyncing.yaml'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: kube-system
 
 
-      - name: Deploy Customized SecretProviderClass
-        if: success()
-        uses: Azure/k8s-deploy@v1.4
-        with:
-          manifests: '${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
-          kubectl-version: 'latest'
-          force: true
-          namespace: default
+      #- name: Deploy AKS Provider for Secrets Store CSI Driver
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_PATH_ROOT }}provider-azure-installer.yaml'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: default
+
+
+      #- name: Deploy Customized SecretProviderClass
+      #  if: success()
+      #  uses: Azure/k8s-deploy@v1.4
+      #  with:
+      #    manifests: '${{ env.AKS_AKV_PROVIDER_CUSTOM_FILE }}'
+      #    kubectl-version: 'latest'
+      #    force: true
+      #    namespace: default
 
       - name: Restart Daemonset csi-secrets-store-provider-azure in case updated list of AKV secrets
         if: success()
