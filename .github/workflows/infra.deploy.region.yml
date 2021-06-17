@@ -181,13 +181,13 @@ jobs:
       #    az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
 
 
-      - name: Deploy Network Watcher
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
-          template: ./src/infra-deploy/templates/net.network-watcher.json
-          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }}
+      #- name: Deploy Network Watcher
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+      #    template: ./src/infra-deploy/templates/net.network-watcher.json
+      #    parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }}
 
 
       #- name: Deploy User-Assigned MI
@@ -235,29 +235,29 @@ jobs:
       #    template: ./src/infra-deploy/templates/net.nsg.diagnostics.json
       #    parameters: nsgName=${{ env.APP_NSG_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Get NSG Info
-        if: success()
-        run: |
-          echo "APIM_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_NSG_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APP_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APP_NSG_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #- name: Get NSG Info
+      #  if: success()
+      #  run: |
+      #    echo "APIM_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_NSG_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #    echo "APP_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APP_NSG_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Deploy NSG Flow Logs for APIM NSG
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
-          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APIM_NSG_NAME }}""-flow" nsgResourceId="${{ env.APIM_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+      #- name: Deploy NSG Flow Logs for APIM NSG
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_NSG_NAME }}-flow
+      #    template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+      #    parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APIM_NSG_NAME }}""-flow" nsgResourceId="${{ env.APIM_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
-      - name: Deploy NSG Flow Logs for App NSG
-        if: success()
-        uses: azure/arm-deploy@main
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APP_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
-          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APP_NSG_NAME }}""-flow" nsgResourceId="${{ env.APP_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+      #- name: Deploy NSG Flow Logs for App NSG
+      #  if: success()
+      #  uses: azure/arm-deploy@main
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APP_NSG_NAME }}-flow
+      #    template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+      #    parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.APP_NSG_NAME }}""-flow" nsgResourceId="${{ env.APP_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
 
@@ -388,33 +388,6 @@ jobs:
   #          --secret-permissions get \
   #          --certificate-permissions get
 
-
-  #    ##- name: Deploy Storage Account for Event Hub Processor
-  #    ##  if: success()
-  #    ##  uses: azure/arm-deploy@main
-  #    ##  with:
-  #    ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-  #    ##    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
-  #    ##    template: ./src/infra-deploy/templates/storage.account.json
-  #    ##    parameters: location=${{ matrix.region }} storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} defaultAction=Allow
-
-  #    ##- name: Deploy Storage Container for Event Hub Processor
-  #    ##  if: success()
-  #    ##  uses: azure/arm-deploy@main
-  #    ##  with:
-  #    ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-  #    ##    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}
-  #    ##    template: ./src/infra-deploy/templates/storage.container.json
-  #    ##    parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} containerName=${{ env.STORAGE_CONTAINER_NAME }}
-
-  #    ##- name: Deploy Storage Account Blob Diagnostics
-  #    ##  if: success()
-  #    ##  uses: azure/arm-deploy@main
-  #    ##  with:
-  #    ##    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-  #    ##    deploymentName: ${{ env.STORAGE_ACCOUNT_NAME }}-diag
-  #    ##    template: ./src/infra-deploy/templates/storage.account.diagnostics.json
-  #    ##    parameters: storageAccountName=${{ env.STORAGE_ACCOUNT_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
   #    - name: Grant UAMI Storage Data Contributor on Storage Account
   #      if: success()
@@ -611,6 +584,22 @@ jobs:
   #      if: success()
   #      run: |
   #        az extension remove --name aks-preview
+
+      - name: Get AKS NSG Info
+        if: success()
+        run: |
+          AKS_NSG_NAME=$(az network nsg list --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} -o tsv --query '[0].name')
+          echo "AKS_NSG_NAME=$AKS_NSG_NAME" >> $GITHUB_ENV
+          echo "AKS_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} -n $AKS_NSG_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy NSG Flow Logs for AKS NSG
+        if: success()
+        uses: azure/arm-deploy@main
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.APIM_NSG_NAME }}-flow
+          template: ./src/infra-deploy/templates/net.network-watcher.flow-log.json
+          parameters: location=${{ matrix.region }} networkWatcherName=${{ env.NETWORK_WATCHER_NAME }} flowLogName="${{ env.AKS_NSG_NAME }}""-flow" nsgResourceId="${{ env.AKS_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
   #    - name: Deploy AKS Cluster Diagnostics
