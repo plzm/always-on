@@ -57,7 +57,7 @@ jobs:
 
       - name: Deploy Storage Account
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
           deploymentName: ${{ env.STORAGE_ACCT_NAME }}
@@ -66,7 +66,7 @@ jobs:
 
       - name: Grant Exec Context SBDC on Storage Account
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
           deploymentName: ${{ env.STORAGE_ACCT_NAME }}-rbac-sbdc
@@ -75,7 +75,7 @@ jobs:
 
       - name: Deploy Container for results to test results Storage Account
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
           deploymentName: ${{ env.STORAGE_ACCT_NAME }}-${{ env.STORAGE_CONTAINER_NAME }}
@@ -84,7 +84,7 @@ jobs:
 
       - name: Deploy Storage Account Diagnostics
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_TEST_RESULTS }}
           deploymentName: ${{ env.STORAGE_ACCT_NAME }}-diag

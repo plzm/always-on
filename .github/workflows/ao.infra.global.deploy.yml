@@ -103,7 +103,7 @@ jobs:
 
       - name: Deploy Log Analytics
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.json
@@ -111,7 +111,7 @@ jobs:
 
       - name: Deploy Log Analytics Diagnostics
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.diagnostics.json
@@ -125,7 +125,7 @@ jobs:
 
       - name: Deploy DDoS Plan
         if: ${{ success() && (env.VNET_ENABLE_DDOS == 'true') }}
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/net.ddos-plan.json
@@ -134,7 +134,7 @@ jobs:
 
       - name: Deploy Container Registry
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/container-registry.json
@@ -142,7 +142,7 @@ jobs:
 
       - name: Deploy Container Registry Diagnostics
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/container-registry.diagnostics.json
@@ -150,7 +150,7 @@ jobs:
 
       - name: Grant Deploy SP AcrPush on Global Registry
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-push
@@ -160,7 +160,7 @@ jobs:
 
       - name: Deploy App Insights
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/monitor.app-insights.json
@@ -168,7 +168,7 @@ jobs:
 
       - name: Deploy App Insights Diagnostics
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/monitor.app-insights.diagnostics.json
@@ -177,7 +177,7 @@ jobs:
 
       - name: Deploy Cosmos DB Account
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.account.json
@@ -185,7 +185,7 @@ jobs:
 
       - name: Deploy Cosmos DB Diagnostics
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.diagnostics.json
@@ -193,7 +193,7 @@ jobs:
 
       - name: Deploy Cosmos DB Database
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.sql.database.json
@@ -201,7 +201,7 @@ jobs:
 
       - name: Deploy Cosmos DB Container - Profiles
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
@@ -209,7 +209,7 @@ jobs:
 
       - name: Deploy Cosmos DB Container - Progress
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.sql.container.json
@@ -218,7 +218,7 @@ jobs:
 
       - name: Deploy Front Door WAF Policy
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/fd.waf-policy.json
@@ -226,7 +226,7 @@ jobs:
 
       - name: Deploy Front Door Profile
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/fd.profile.json
@@ -234,7 +234,7 @@ jobs:
 
       - name: Deploy Front Door Diagnostics
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/fd.diagnostics.json
@@ -242,7 +242,7 @@ jobs:
 
       - name: Deploy Front Door Endpoint
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/fd.endpoint.json
@@ -250,7 +250,7 @@ jobs:
 
       - name: Deploy Front Door Security Policy
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/fd.security-policy.json
@@ -258,7 +258,7 @@ jobs:
 
       - name: Deploy Front Door Origin Group
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/fd.origin-group.json
@@ -272,7 +272,7 @@ jobs:
 
       - name: Deploy App Insights Availability Test for Front Door Endpoint URI
         if: success()
-        uses: azure/arm-deploy@main
+        uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
           deploymentName: ${{ env.FRONT_DOOR_NAME }}-avl-test
