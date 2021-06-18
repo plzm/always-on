@@ -1,0 +1,110 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"location": {
+			"type": "string",
+			"defaultValue": "[resourceGroup().location]",
+			"metadata": {
+				"description": "Azure region"
+			}
+		},
+		"networkWatcherName": {
+			"type": "string",
+			"defaultValue": "[concat('NetworkWatcher_', parameters('location'))]"
+		},
+		"connectionMonitorName": {
+			"type": "string",
+			"defaultValue": ""
+		}
+	},
+	"variables": {
+		"sourceId": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-ops/providers/Microsoft.Compute/virtualMachines/pz-ao-netops",
+		"logAnalyticsWorkspaceResourceId": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-ops/providers/Microsoft.OperationalInsights/workspaces/pz-ops-eastus2",
+		"apiVersionNet": "2020-11-01"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Network/networkWatchers/connectionMonitors",
+			"apiVersion": "[variables('apiVersionNet')]",
+			"name": "[concat(parameters('networkWatcherName'), '/', parameters('connectionMonitorName'))]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"endpoints": [
+                    {
+                        "name": "always-on-ops-pz-ao-netops",
+                        "resourceId": "[variables('sourceId')]",
+                        "type": "AzureVM"
+                    },
+					{
+						"name": "appgw-eastus2",
+						"type": "ExternalAddress",
+						"address": "pz-ao-appgw-eastus2.eastus2.cloudapp.azure.com"
+					},
+					{
+						"name": "appgw-westus2",
+						"type": "ExternalAddress",
+						"address": "pz-ao-appgw-westus2.westus2.cloudapp.azure.com"
+					}
+				],
+				"testConfigurations": [
+					{
+						"name": "test-config-1",
+						"testFrequencySec": 30,
+						"protocol": "HTTP",
+						"successThreshold": {
+							"checksFailedPercent": 5,
+							"roundTripTimeMs": null
+						},
+						"httpConfiguration": {
+							"port": 80,
+							"method": "GET",
+							"path": "",
+							"requestHeaders": [],
+							"validStatusCodeRanges": [],
+							"preferHTTPS": false
+						}
+					},
+					{
+						"name": "test-config-1-network-test",
+						"testFrequencySec": 30,
+						"protocol": "TCP",
+						"successThreshold": {
+							"checksFailedPercent": 5,
+							"roundTripTimeMs": null
+						},
+						"tcpConfiguration": {
+							"port": 80,
+							"disableTraceRoute": false
+						}
+					}
+				],
+				"testGroups": [
+					{
+						"name": "test-group-1",
+						"sources": [
+							"always-on-ops-pz-ao-netops"
+						],
+						"destinations": [
+							"appgw-eastus2",
+							"appgw-westus2"
+						],
+						"testConfigurations": [
+							"test-config-1",
+							"test-config-1-network-test"
+						],
+						"disable": false
+					}
+				],
+				"outputs": [
+					{
+						"type": "Workspace",
+						"workspaceSettings": {
+							"workspaceResourceId": "[variables('logAnalyticsWorkspaceResourceId')]"
+						}
+					}
+				]
+			}
+		}
+	]
+}
