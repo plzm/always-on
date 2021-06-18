@@ -30,7 +30,7 @@ vmVersion="latest"
 vmSize="Standard_D4s_v3"
 provisionVmAgent="true"
 
-enableAcceleratedNetworking=false
+enableAcceleratedNetworking="true"
 privateIpAllocationMethod="Dynamic"
 ipConfigName="ipConfig1"
 
@@ -50,47 +50,47 @@ autoShutdownNotificationWebhookURL="" # Provide if set enableAutoShutdownNotific
 autoShutdownNotificationMinutesBefore=15
 # ==========
 
-echo "Create Resource Group"
-az group create --subscription "$subscriptionId" -n "$resourceGroupOps" -l "$location" --verbose
+#echo "Create Resource Group"
+#az group create --subscription "$subscriptionId" -n "$resourceGroupOps" -l "$location" --verbose
 
-echo "Create NSG"
-az deployment group create --subscription "$subscriptionId" -n "NSG-""$location" --verbose \
-	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.nsg.json" \
-	--parameters location="$location" nsgName="$nsgName" nsgRuleInbound100Src="$nsgRuleInbound100Src"
-#
-echo "Create VNet"
-az deployment group create --subscription "$subscriptionId" -n "VNet-""$location" --verbose \
-	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.vnet.json" \
-	--parameters \
-	location="$location" \
-	vnetName="$vnetName" \
-	vnetPrefix="$vnetPrefix" \
-	enableDdosProtection="false" \
-	enableVmProtection="false"
-#
-echo "Create Subnet"
-az deployment group create --subscription "$subscriptionId" -n "VNet-Subnet-""$location" --verbose \
-	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.vnet.subnet.json" \
-	--parameters \
-	vnetName="$vnetName" \
-	subnetName="$subnetName" \
-	subnetPrefix="$subnetPrefix" \
-	nsgResourceGroup="$resourceGroupOps" \
-	nsgName="$nsgName" \
-	serviceEndpoints="" \
-	privateEndpointNetworkPolicies="Enabled" \
-	privateLinkServiceNetworkPolicies="Enabled"
-#
-echo "Deploy VM Public IP"
-az deployment group create --subscription "$subscriptionId" -n "VM-PIP-""$location" --verbose \
-	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.public-ip.json" \
-	--parameters \
-	location="$location" \
-	publicIpName="$vmPublicIpName" \
-	publicIpType="$vmPublicIpType" \
-	publicIpSku="$vmPublicIpSku" \
-	domainNameLabel="$vmName"
-#
+#echo "Create NSG"
+#az deployment group create --subscription "$subscriptionId" -n "NSG-""$location" --verbose \
+#	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.nsg.json" \
+#	--parameters location="$location" nsgName="$nsgName" nsgRuleInbound100Src="$nsgRuleInbound100Src"
+##
+#echo "Create VNet"
+#az deployment group create --subscription "$subscriptionId" -n "VNet-""$location" --verbose \
+#	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.vnet.json" \
+#	--parameters \
+#	location="$location" \
+#	vnetName="$vnetName" \
+#	vnetPrefix="$vnetPrefix" \
+#	enableDdosProtection="false" \
+#	enableVmProtection="false"
+##
+#echo "Create Subnet"
+#az deployment group create --subscription "$subscriptionId" -n "VNet-Subnet-""$location" --verbose \
+#	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.vnet.subnet.json" \
+#	--parameters \
+#	vnetName="$vnetName" \
+#	subnetName="$subnetName" \
+#	subnetPrefix="$subnetPrefix" \
+#	nsgResourceGroup="$resourceGroupOps" \
+#	nsgName="$nsgName" \
+#	serviceEndpoints="" \
+#	privateEndpointNetworkPolicies="Enabled" \
+#	privateLinkServiceNetworkPolicies="Enabled"
+##
+#echo "Deploy VM Public IP"
+#az deployment group create --subscription "$subscriptionId" -n "VM-PIP-""$location" --verbose \
+#	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.public-ip.json" \
+#	--parameters \
+#	location="$location" \
+#	publicIpName="$vmPublicIpName" \
+#	publicIpType="$vmPublicIpType" \
+#	publicIpSku="$vmPublicIpSku" \
+#	domainNameLabel="$vmName"
+##
 echo "Deploy VM NIC"
 az deployment group create --subscription "$subscriptionId" -n "VM-NIC-""$location" --verbose \
 	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/net.network-interface.json" \
@@ -105,33 +105,33 @@ az deployment group create --subscription "$subscriptionId" -n "VM-NIC-""$locati
 	publicIpResourceGroup="$resourceGroupOps" \
 	publicIpName="$vmPublicIpName" \
 	ipConfigName="$ipConfigName"
-#
-echo "Deploy VM"
-az deployment group create --subscription "$subscriptionId" -n "VM-""$location" --verbose \
-	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/vm.json" \
-	--parameters \
-	location="$location" \
-	virtualMachineName="$vmName" \
-	virtualMachineSize="$vmSize" \
-	publisher="$vmPublisher" \
-	offer="$vmOffer" \
-	sku="$vmSku" \
-	version="$vmVersion" \
-	provisionVmAgent="$provisionVmAgent" \
-	adminUsername="$vmAdminUsername" \
-	adminSshPublicKey="$vmAdminUserSshPublicKey" \
-	virtualMachineTimeZone="$vmTimeZone" \
-	osDiskStorageType="$osDiskStorageType" \
-	osDiskSizeInGB="$osDiskSizeInGB" \
-	dataDiskStorageType="$dataDiskStorageType" \
-	dataDiskCount="$dataDiskCount" \
-	dataDiskSizeInGB="$dataDiskSizeInGB" \
-	vmAutoShutdownTime="$vmAutoShutdownTime" \
-	enableAutoShutdownNotification="$enableAutoShutdownNotification" \
-	autoShutdownNotificationWebhookURL="$autoShutdownNotificationWebhookURL" \
-	autoShutdownNotificationMinutesBefore="$autoShutdownNotificationMinutesBefore" \
-	resourceGroupNameNetworkInterface="$resourceGroupOps" \
-	networkInterfaceName="$vmNicName"
-#
-echo "Deploy Network Watcher Extension to VM"
-az vm extension set -g "$resourceGroupOps" --vm-name "$vmName" --name NetworkWatcherAgentLinux --publisher Microsoft.Azure.NetworkWatcher --version 1.4
+##
+#echo "Deploy VM"
+#az deployment group create --subscription "$subscriptionId" -n "VM-""$location" --verbose \
+#	-g "$resourceGroupOps" --template-file "../infra-deploy/templates/vm.json" \
+#	--parameters \
+#	location="$location" \
+#	virtualMachineName="$vmName" \
+#	virtualMachineSize="$vmSize" \
+#	publisher="$vmPublisher" \
+#	offer="$vmOffer" \
+#	sku="$vmSku" \
+#	version="$vmVersion" \
+#	provisionVmAgent="$provisionVmAgent" \
+#	adminUsername="$vmAdminUsername" \
+#	adminSshPublicKey="$vmAdminUserSshPublicKey" \
+#	virtualMachineTimeZone="$vmTimeZone" \
+#	osDiskStorageType="$osDiskStorageType" \
+#	osDiskSizeInGB="$osDiskSizeInGB" \
+#	dataDiskStorageType="$dataDiskStorageType" \
+#	dataDiskCount="$dataDiskCount" \
+#	dataDiskSizeInGB="$dataDiskSizeInGB" \
+#	vmAutoShutdownTime="$vmAutoShutdownTime" \
+#	enableAutoShutdownNotification="$enableAutoShutdownNotification" \
+#	autoShutdownNotificationWebhookURL="$autoShutdownNotificationWebhookURL" \
+#	autoShutdownNotificationMinutesBefore="$autoShutdownNotificationMinutesBefore" \
+#	resourceGroupNameNetworkInterface="$resourceGroupOps" \
+#	networkInterfaceName="$vmNicName"
+##
+#echo "Deploy Network Watcher Extension to VM"
+#az vm extension set -g "$resourceGroupOps" --vm-name "$vmName" --name NetworkWatcherAgentLinux --publisher Microsoft.Azure.NetworkWatcher --version 1.4
