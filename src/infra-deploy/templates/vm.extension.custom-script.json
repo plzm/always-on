@@ -1,0 +1,64 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"location": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "The Azure region within which to deploy. Examples: 'eastus2', 'centralus', etc. See https://azure.microsoft.com/regions/."
+			}
+		},
+		"virtualMachineName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Virtual Machine name",
+				"description": "The VM name. Should be unique within the resource group."
+			}
+		},
+		"script": {
+			"type": "securestring",
+			"defaultValue": ""
+		},
+		"managedIdentity": {
+			"type": "securestring",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Managed Identity Object ID or Principal ID",
+				"description": "Optional. If needed for file retrieval etc. provide Object ID or Principal ID of Managed Identity. You can get it using az identity show -o tsv --query 'principalId'."
+			}
+		}
+	},
+	"variables": {
+		"managedIdentity": "[
+			if
+			(
+				empty(trim(parameters('managedIdentity'))),
+				json('{}'),
+				createObject(parameters('managedIdentity'), json('{}'))
+			)
+		]",
+		"apiVersion": "2020-06-01"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('virtualMachineName'), '/CustomScript')]",
+            "type": "Microsoft.Compute/virtualMachines/extensions",
+			"apiVersion": "[variables('apiVersion')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"autoUpgradeMinorVersion": true,
+				"publisher": "Microsoft.Azure.Extensions",
+				"type": "CustomScript",
+				"typeHandlerVersion": "2.1",
+				"settings": {
+				},
+				"protectedSettings": {
+					"commandToExecute": "[parameters('script')]",
+					"managedIdentity": "[variables('managedIdentity')]"
+				}
+			}
+		}
+	],
+	"outputs": {}
+}

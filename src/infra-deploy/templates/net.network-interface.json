@@ -1,0 +1,119 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"location": {
+			"type": "string",
+			"defaultValue": "",
+			"metadata": {
+				"displayName": "Azure region",
+				"description": "See https://azure.microsoft.com/regions/."
+			}
+		},
+		"networkInterfaceName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Network Interface Name",
+				"description": ""
+			}
+		},
+		"vnetResourceGroup": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Virtual Network Resource Group",
+				"description": ""
+			}
+		},
+		"vnetName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Virtual Network Name",
+				"description": ""
+			}
+		},
+		"subnetName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Subnet Name",
+				"description": ""
+			}
+		},
+		"enableAcceleratedNetworking": {
+			"type": "bool",
+			"defaultValue": false,
+			"metadata": {
+				"displayName": "Enable accelerated networking",
+				"description": "Check whether your VM SKU supports accelerated networking before setting this to true."
+			}
+		},
+		"privateIpAllocationMethod": {
+			"type": "string",
+			"defaultValue": "Dynamic",
+			"allowedValues": [
+				"Dynamic",
+				"Static"
+			],
+			"metadata": {
+				"displayName": "Private IP Allocation Method",
+				"description": ""
+			}
+		},
+		"publicIpResourceGroup": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Public IP Address Resource Group",
+				"description": "If not specified, this NIC will be deployed without a public IP"
+			}
+		},
+		"publicIpName": {
+			"type": "string",
+			"metadata": {
+				"displayName": "Public IP Address Name",
+				"description": "If not specified, this NIC will be deployed without a public IP"
+			}
+		},
+		"ipConfigName": {
+			"type": "string",
+			"defaultValue": "ipConfig1",
+			"metadata": {
+				"displayName": "IP Configuration Name",
+				"description": ""
+			}
+		}
+	},
+	"variables": {
+		"vnetId": "[resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+		"subnetId": "[concat(variables('vnetId'), '/subnets/', parameters('subnetName'))]",
+		"apiVersionNetwork": "2020-11-01"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Network/networkInterfaces",
+			"apiVersion": "[variables('apiVersionNetwork')]",
+			"name": "[parameters('networkInterfaceName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"ipConfigurations": [
+					{
+						"name": "[parameters('ipConfigName')]",
+						"properties": {
+							"subnet": {
+								"id": "[variables('subnetId')]"
+							},
+							"privateIPAllocationMethod": "[parameters('privateIpAllocationMethod')]",
+							"publicIpAddress": "[
+								if
+								(
+									or( empty(parameters('publicIpResourceGroup')), empty(parameters('publicIpName')) ),
+									json('null'),
+									createObject('id', resourceId(parameters('publicIpResourceGroup'), 'Microsoft.Network/publicIpAddresses', parameters('publicIpName')))
+								)
+							]"
+						}
+					}
+				],
+				"enableAcceleratedNetworking": "[parameters('enableAcceleratedNetworking')]"
+			}
+		}
+	]
+}
