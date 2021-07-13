@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '34'
+  SUFFIX: '40'
 
   RBAC_ROLE_ID_ACR_PUSH: '8311e382-0749-4cb8-b61a-304f252e45ec'
 
@@ -29,7 +29,7 @@ env:
   COSMOS_DB_CONTAINER_2_NAME: 'progress'
   COSMOS_DB_CONTAINER_2_PARTITION_KEY: '/Handle'
   COSMOS_DB_CONTAINER_2_PROVISIONED_THROUGHPUT: '400'
-  COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT: '10000'
+  COSMOS_DB_CONTAINER_2_AUTOSCALE_MAX_THROUGHPUT: '4000'
 
   FRONT_DOOR_ORIGIN_TIMEOUT: '16'
   FRONT_DOOR_SECPOL_NAME: 'secpol1'
@@ -77,10 +77,10 @@ jobs:
           echo "FRONT_DOOR_WAF_POLICY_NAME=$FRONT_DOOR_WAF_POLICY_NAME" >> $GITHUB_ENV
           echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
 
-          LA_WORKSPACE_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME
-          APP_INSIGHTS_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.insights/components/$APP_INSIGHTS_NAME
-          FRONT_DOOR_WAF_POLICY_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/frontdoorwebapplicationfirewallpolicies/$FRONT_DOOR_WAF_POLICY_NAME
-          FRONT_DOOR_ORIGIN_GROUP_ID=/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Cdn/profiles/$FRONT_DOOR_NAME/originGroups/${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}
+          LA_WORKSPACE_ID="/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.operationalinsights/workspaces/$LA_WORKSPACE_NAME"
+          APP_INSIGHTS_ID="/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/microsoft.insights/components/$APP_INSIGHTS_NAME"
+          FRONT_DOOR_WAF_POLICY_ID="/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Network/frontdoorwebapplicationfirewallpolicies/$FRONT_DOOR_WAF_POLICY_NAME"
+          FRONT_DOOR_ORIGIN_GROUP_ID="/subscriptions/${{secrets.AZURE_SUBSCRIPTION_ID}}/resourcegroups/${{env.AZURE_RESOURCE_GROUP_GLOBAL}}/providers/Microsoft.Cdn/profiles/$FRONT_DOOR_NAME/originGroups/${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}"
 
           echo "LA_WORKSPACE_ID=$LA_WORKSPACE_ID" >> $GITHUB_ENV
           echo "APP_INSIGHTS_ID=$APP_INSIGHTS_ID" >> $GITHUB_ENV

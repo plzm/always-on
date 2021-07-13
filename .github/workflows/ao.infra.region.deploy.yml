@@ -5,7 +5,7 @@ on:
 
 env:
   PREFIX: 'pz-ao'
-  SUFFIX: '34'
+  SUFFIX: '40'
 
   RBAC_ROLE_ID_CONTRIBUTOR: 'b24988ac-6180-42a0-ab88-20f7382dd24c'
   RBAC_ROLE_ID_READER: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
@@ -54,6 +54,7 @@ env:
   AKS_POD_CIDR: '10.241.0.0/16'
   AKS_DOCKER_BRIDGE_ADDRESS: '172.17.0.1/16'
 
+  AKS_ENABLE_RBAC: 'true'
   AKS_POD_IDENTITY_ENABLED: 'true'
   AKS_POD_IDENTITY_KUBENET_ENABLED: 'true'
   AKS_POD_IDENTITY_NAMESPACE: 'default'
@@ -79,6 +80,7 @@ env:
   APPGW_SKU_NAME: 'WAF_v2'
   #APPGW_SKU_NAME: 'Standard_v2'
 
+  APIM_DEPLOY: 'false'
   APIM_SKU_NAME: 'Developer'
   #APIM_SKU_NAME: 'Premium'
   APIM_PUBLIC_IP_INFIX: '-apim-d-'  # d or p (Developer or Premium) for clarity in scaling operations, where we need separate PIP to change APIM SKU
@@ -126,8 +128,10 @@ jobs:
           DDOS_PLAN_NAME=${{ env.PREFIX }}
           VNET_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           KEY_VAULT_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
-          LA_WORKSPACE_NAME=${{ env.PREFIX }}
-          APP_INSIGHTS_NAME=${{ env.PREFIX }}
+
+          LA_WORKSPACE_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+          APP_INSIGHTS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+
           REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
           EVENT_HUB_NS_NAME=${{ env.PREFIX }}-${{ matrix.region }}
           APPGW_PUBLIC_IP_NAME=${{ env.PREFIX }}-appgw-${{ matrix.region }}
@@ -166,9 +170,6 @@ jobs:
           echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
 
           echo "AZURE_CRED_SP_OBJECT_ID=$(az ad sp show --id ${{ secrets.SP_CLIENT_ID }} -o tsv --query 'objectId')" >> $GITHUB_ENV
-          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} -n $LA_WORKSPACE_NAME -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }} --app $APP_INSIGHTS_NAME -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
           echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
 
@@ -176,6 +177,51 @@ jobs:
         if: success()
         run: |
           az group create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --location ${{ matrix.region }} --name ${{ env.AZURE_RESOURCE_GROUP }}
+
+
+      - name: Deploy Log Analytics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.json
+          parameters: location=${{ matrix.region }} workspaceName=${{env.LA_WORKSPACE_NAME}}
+
+      - name: Get Log Analytics Workspace ID
+        if: success()
+        run: |
+          echo "LA_WORKSPACE_ID=$(az monitor log-analytics workspace show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{env.LA_WORKSPACE_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy Log Analytics Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./src/infra-deploy/templates/monitor.log-analytics-workspace.diagnostics.json
+          parameters: workspaceName=${{env.LA_WORKSPACE_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+
+      - name: Deploy App Insights
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./src/infra-deploy/templates/monitor.app-insights.json
+          parameters: location=${{ matrix.region }} appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
+
+      - name: Get App Insights Info
+        if: success()
+        run: |
+          echo "APP_INSIGHTS_ID=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --app $APP_INSIGHTS_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+          echo "APP_INSIGHTS_INSTRUMENTATION_KEY=$(az monitor app-insights component show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} --app $APP_INSIGHTS_NAME -o tsv --query 'instrumentationKey')" >> $GITHUB_ENV
+
+      - name: Deploy App Insights Diagnostics
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{env.AZURE_RESOURCE_GROUP}}
+          template: ./src/infra-deploy/templates/monitor.app-insights.diagnostics.json
+          parameters: appInsightsName=${{env.APP_INSIGHTS_NAME}} logAnalyticsWorkspaceResourceId="${{env.LA_WORKSPACE_ID}}"
 
 
       - name: Deploy Network Watcher
@@ -578,42 +624,42 @@ jobs:
           parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="appgw-${{ env.APPGW_NAME }}" testUrl="http://${{ env.APPGW_FQDN }}"
 
 
-      ## Deploy AKS - ARM Template - but does not support kubelet identity
-      #- name: Deploy AKS Cluster (ARM)
+      # Deploy AKS - ARM Template
+      - name: Deploy AKS Cluster (ARM)
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+          deploymentName: ${{ env.AKS_CLUSTER_NAME }}
+          template: ./src/infra-deploy/templates/aks.cluster.json
+          parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} enableRBAC=${{ env.AKS_ENABLE_RBAC }} systemPoolName=${{ env.AKS_SYSTEM_POOL_NAME }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
+
+      #- name: Install Azure CLI AKS Preview extension
       #  if: success()
-      #  uses: azure/arm-deploy@v1
-      #  with:
-      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
-      #    template: ./src/infra-deploy/templates/aks.cluster.json
-      #    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
+      #  run: |
+      #    az extension add --name aks-preview
 
-      - name: Install Azure CLI AKS Preview extension
-        if: success()
-        run: |
-          az extension add --name aks-preview
+      ## Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
+      #- name: Deploy AKS Cluster (CLI)
+      #  if: success()
+      #  run: |
+      #    az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
+      #      -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
+      #      --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
+      #      --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
+      #      --nodepool-name "${{ env.AKS_SYSTEM_POOL_NAME }}" \
+      #      --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
+      #      --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
+      #      --network-plugin ${{ env.AKS_NET_PLUGIN }} \
+      #      --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
+      #      --enable-cluster-autoscaler --vm-set-type VirtualMachineScaleSets \
+      #      --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
+      #      --skip-subnet-role-assignment
 
-      # Deploy AKS - az cli since that is current support for kubelet identity - replace this with ARM template when that supports kubelet identity
-      - name: Deploy AKS Cluster (CLI)
-        if: success()
-        run: |
-          az aks create --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -l ${{ matrix.region }} --verbose \
-            -n ${{ env.AKS_CLUSTER_NAME }} --zones ${{ env.AKS_ZONES_FOR_CLI }} --kubernetes-version ${{ env.AKS_VERSION }} --dns-name-prefix ${{ env.AKS_DNS_PREFIX }} \
-            --enable-managed-identity --assign-identity "${{ env.UAMI_ID }}" --assign-kubelet-identity "${{ env.UAMI_ID }}" \
-            --node-resource-group "${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}" --node-vm-size "${{ env.AKS_SYSTEM_POOL_NODE_SIZE }}" \
-            --nodepool-name "${{ env.AKS_SYSTEM_POOL_NAME }}" \
-            --admin-username ${{ secrets.ADMIN_USERNAME }} --ssh-key-value "${{ secrets.SSH_KEY }}" \
-            --vnet-subnet-id "${{ env.APP_SUBNET_ID }}" \
-            --network-plugin ${{ env.AKS_NET_PLUGIN }} \
-            --service-cidr "${{ env.AKS_SERVICE_CIDR }}" --dns-service-ip "${{ env.AKS_DNS_SERVICE_IP }}" --pod-cidr "${{ env.AKS_POD_CIDR }}" --docker-bridge-address "${{ env.AKS_DOCKER_BRIDGE_ADDRESS }}" \
-            --enable-cluster-autoscaler --vm-set-type VirtualMachineScaleSets \
-            --min-count=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} --max-count ${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} \
-            --skip-subnet-role-assignment
-
-      - name: Remove Azure CLI AKS Preview extension
-        if: success()
-        run: |
-          az extension remove --name aks-preview
+      #- name: Remove Azure CLI AKS Preview extension
+      #  if: success()
+      #  run: |
+      #    az extension remove --name aks-preview
 
       - name: Get AKS NSG Info
         if: success()
@@ -682,22 +728,22 @@ jobs:
         if: success()
         run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
-      - name: Install Azure CLI AKS Preview extension for Pod Identity
-        if: success()
-        run: |
-          az extension add --name aks-preview
+      #- name: Install Azure CLI AKS Preview extension for Pod Identity
+      #  if: success()
+      #  run: |
+      #    az extension add --name aks-preview
 
-      - name: Enable Pod Identity
-        if: success()
-        run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
+      #- name: Enable Pod Identity
+      #  if: success()
+      #  run: az aks update --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} --enable-pod-identity --enable-pod-identity-with-kubenet
 
-      - name: Deploy Pod Identity
-        if: success()
-        run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --identity-resource-id ${{ env.UAMI_ID }}
+      #- name: Deploy Pod Identity
+      #  if: success()
+      #  run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --identity-resource-id ${{ env.UAMI_ID }}
 
 
       - name: Deploy Public IP for APIM Service
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
@@ -706,7 +752,7 @@ jobs:
           parameters: location=${{ matrix.region }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
 
       - name: Deploy Public IP for APIM Service Diagnostics
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
@@ -715,7 +761,7 @@ jobs:
           parameters: publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy APIM Service
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
@@ -724,7 +770,7 @@ jobs:
           parameters: location=${{ matrix.region }} apimServiceName=${{ env.APIM_SERVICE_NAME }} skuName=${{ env.APIM_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} scaleUnits=${{ env.APIM_SCALE_UNITS }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} virtualNetworkType=${{ env.APIM_VNET_TYPE }} subnetResourceId=${{ env.APIM_SUBNET_ID }}
 
       - name: Deploy APIM Service Diagnostics
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
@@ -733,7 +779,7 @@ jobs:
           parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Deploy APIM Logger
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
@@ -742,13 +788,13 @@ jobs:
           parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
 
       - name: Get APIM Info
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         run: |
           echo "APIM_SERVICE_ID=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
           echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
 
       - name: Import API from Swagger
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         run: |
           az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.APIM_SERVICE_NAME }}" --verbose \
             --api-id "${{ env.APIM_API_ID }}" --display-name "${{ env.APIM_API_DISPLAY_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
@@ -758,7 +804,7 @@ jobs:
 
 
       - name: Deploy App Insights Availability Test for APIM
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
@@ -822,7 +868,7 @@ jobs:
           parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
       - name: Deploy Front Door Origin
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
@@ -831,7 +877,7 @@ jobs:
           parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
 
       - name: Deploy Front Door Route
-        if: success()
+        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
           resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
