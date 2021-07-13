@@ -340,7 +340,6 @@ jobs:
           parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP }}""-""${{ env.APP_NSG_NAME }}""-flow" nsgResourceId="${{ env.APP_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
-
       - name: Deploy VNet
         if: success()
         uses: azure/arm-deploy@v1
@@ -622,10 +621,10 @@ jobs:
         if: success()
         uses: azure/arm-deploy@v1
         with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APPGW_NAME }}-avl-test
           template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
-          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="appgw-${{ env.APPGW_NAME }}" testUrl="http://${{ env.APPGW_FQDN }}"
+          parameters: location=${{ matrix.region }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="appgw-${{ env.APPGW_NAME }}" testUrl="http://${{ env.APPGW_FQDN }}"
 
 
       # Deploy AKS - ARM Template
@@ -811,10 +810,10 @@ jobs:
         if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
         uses: azure/arm-deploy@v1
         with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
           deploymentName: ${{ env.APIM_SERVICE_NAME }}-avl-test
           template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
-          parameters: location=${{ env.AZURE_LOCATION_GLOBAL }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="apim-${{ env.APIM_SERVICE_NAME }}" testUrl="https://${{ env.APIM_SERVICE_HOSTNAME }}"
+          parameters: location=${{ matrix.region }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="apim-${{ env.APIM_SERVICE_NAME }}" testUrl="https://${{ env.APIM_SERVICE_HOSTNAME }}"
 
 
       - name: Azure logout
