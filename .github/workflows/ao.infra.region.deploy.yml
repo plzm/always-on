@@ -114,8 +114,7 @@ jobs:
       - name: Install Azure CLI Extensions
         if: success()
         run: |
-          az extension add --name application-insights
-          az extension add --name front-door
+          az config set extension.use_dynamic_install=yes_without_prompt
 
       - name: Prepare dynamic env vars
         if: success()
@@ -627,15 +626,14 @@ jobs:
       #    parameters: location=${{ matrix.region }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="appgw-${{ env.APPGW_NAME }}" testUrl="http://${{ env.APPGW_FQDN }}"
 
 
-      # Deploy AKS - ARM Template
-      - name: Deploy AKS Cluster (ARM)
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.AKS_CLUSTER_NAME }}
-          template: ./src/infra-deploy/templates/aks.cluster.json
-          parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityName=${{ env.UAMI_NAME }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} enableRBAC=${{ env.AKS_ENABLE_RBAC }} systemPoolName=${{ env.AKS_SYSTEM_POOL_NAME }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
+      #- name: Deploy AKS Cluster (ARM)
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}
+      #    template: ./src/infra-deploy/templates/aks.cluster.json
+      #    parameters: location=${{ matrix.region }} k8sversion=${{ env.AKS_VERSION }} clusterName=${{ env.AKS_CLUSTER_NAME }} dnsPrefix=${{ env.AKS_DNS_PREFIX }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityName=${{ env.UAMI_NAME }} identityResourceId=${{ env.UAMI_ID }} identityClientId=${{ env.UAMI_CLIENT_ID }} identityObjectId=${{ env.UAMI_PRINCIPAL_ID }} availabilityZones=${{ env.AVL_ZONES }} nodeResourceGroup=${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} enableRBAC=${{ env.AKS_ENABLE_RBAC }} systemPoolName=${{ env.AKS_SYSTEM_POOL_NAME }} nodeCount=${{ env.AKS_SYSTEM_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_SYSTEM_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_SYSTEM_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_SYSTEM_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_SYSTEM_POOL_NODE_DISK_SIZE_GB }} nodeAdminUsername=${{ secrets.ADMIN_USERNAME }} sshRSAPublicKey="${{ secrets.SSH_KEY }}" subnetResourceId=${{ env.APP_SUBNET_ID }} networkPlugin=${{ env.AKS_NET_PLUGIN }} serviceCidr=${{ env.AKS_SERVICE_CIDR }} dnsServiceIp=${{ env.AKS_DNS_SERVICE_IP }} podCidr=${{ env.AKS_POD_CIDR }} dockerBridgeCidr=${{ env.AKS_DOCKER_BRIDGE_ADDRESS }} podIdentityEnabled=${{ env.AKS_POD_IDENTITY_ENABLED }} podIdentityKubenetEnabled=${{ env.AKS_POD_IDENTITY_KUBENET_ENABLED }} podIdentityNamespace=${{ env.AKS_POD_IDENTITY_NAMESPACE }} podIdentityBindingSelector=${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }}
 
       ## Deploy AKS with Azure CLI. Used this as an alternative before ARM supported kubelet and pod identity.
       #- name: Deploy AKS Cluster (CLI)
@@ -662,65 +660,65 @@ jobs:
           echo "AKS_NSG_NAME=$AKS_NSG_NAME" >> $GITHUB_ENV
           echo "AKS_NSG_ID=$(az network nsg show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }} -n $AKS_NSG_NAME -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Deploy NSG Flow Logs for AKS NSG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.APIM_NSG_NAME }}-flow
-          template: ./src/infra-deploy/templates/net.nsg.flow-log.json
-          parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}""-""${{ env.AKS_NSG_NAME }}""-flow" nsgResourceId="${{ env.AKS_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
+      #- name: Deploy NSG Flow Logs for AKS NSG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      #    deploymentName: ${{ env.APIM_NSG_NAME }}-flow
+      #    template: ./src/infra-deploy/templates/net.nsg.flow-log.json
+      #    parameters: location=${{ matrix.region }} flowLogName="${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}""-""${{ env.AKS_NSG_NAME }}""-flow" nsgResourceId="${{ env.AKS_NSG_ID }}" storageAccountResourceId="${{ env.STORAGE_ACCOUNT_ID }}" logAnalyticsWorkspaceResourceId="${{ env.LA_WORKSPACE_ID }}"  
 
 
-      - name: Deploy AKS Cluster Diagnostics
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.AKS_CLUSTER_NAME }}-diag
-          template: ./src/infra-deploy/templates/aks.cluster.diagnostics.json
-          parameters: clusterName=${{ env.AKS_CLUSTER_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      #- name: Deploy AKS Cluster Diagnostics
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}-diag
+      #    template: ./src/infra-deploy/templates/aks.cluster.diagnostics.json
+      #    parameters: clusterName=${{ env.AKS_CLUSTER_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
       - name: Get AKS Cluster Resource ID
         if: success()
         run: echo "AKS_CLUSTER_ID=$(az aks show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      # Contributor on AKS Nodes RG is automatically granted by cluster create. Adding a couple more explicitly here due to AAD pod identity reqs.
-      - name: Grant UAMI Managed Identity Operator on AKS Nodes RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      ## Contributor on AKS Nodes RG is automatically granted by cluster create. Adding a couple more explicitly here due to AAD pod identity reqs.
+      #- name: Grant UAMI Managed Identity Operator on AKS Nodes RG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-mio
+      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_MANAGED_ID_OPERATOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
-      - name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
+      #- name: Grant UAMI Virtual Machine Contributor on AKS Nodes RG
+      #  if: success()
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}
+      #    deploymentName: ${{ env.AZURE_RESOURCE_GROUP_AKS_NODES }}-vm-contrib
+      #    template: ./src/infra-deploy/templates/authorization.role-assignment.json
+      #    parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_VM_CONTRIBUTOR }} principalId=${{ env.UAMI_PRINCIPAL_ID }}
 
 
-      - name: Deploy AKS User Node Pool
-        if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NAME }}
-          template: ./src/infra-deploy/templates/aks.node-pool.json
-          parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }} nodeLabels="${{ env.AKS_USER_POOL_NODE_LABELS }}"
+      #- name: Deploy AKS User Node Pool
+      #  if: ${{ success() && (env.AKS_USER_POOL_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.AKS_CLUSTER_NAME }}-${{ env.AKS_USER_POOL_NAME }}
+      #    template: ./src/infra-deploy/templates/aks.node-pool.json
+      #    parameters: location=${{ matrix.region }} clusterName=${{ env.AKS_CLUSTER_NAME }} availabilityZones=${{ env.AVL_ZONES }} nodePoolMode=User nodePoolName=${{ env.AKS_USER_POOL_NAME }} nodeCount=${{ env.AKS_USER_POOL_NODE_COUNT }} enableNodeAutoscale=${{ env.AKS_USER_POOL_AUTOSCALE }} nodeCountMin=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MIN }} nodeCountMax=${{ env.AKS_USER_POOL_AUTOSCALE_COUNT_MAX }} nodeVmSize=${{ env.AKS_USER_POOL_NODE_SIZE }} osDiskSizeGB=${{ env.AKS_USER_POOL_NODE_DISK_SIZE_GB }} subnetResourceId=${{ env.APP_SUBNET_ID }} nodeLabels="${{ env.AKS_USER_POOL_NODE_LABELS }}"
 
-      - name: Deploy AKS Add-ons - Monitoring
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
+      #- name: Deploy AKS Add-ons - Monitoring
+      #  if: success()
+      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a monitoring --workspace-resource-id ${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy AKS Add-ons - AGIC
-        if: success()
-        run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
+      #- name: Deploy AKS Add-ons - AGIC
+      #  if: success()
+      #  run: az aks enable-addons --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.AKS_CLUSTER_NAME }} -a ingress-appgw --appgw-id ${{ env.APPGW_ID }}
 
       #- name: Install Azure CLI AKS Preview extension for Pod Identity
       #  if: success()
@@ -736,75 +734,75 @@ jobs:
         run: az aks pod-identity add -g ${{ env.AZURE_RESOURCE_GROUP }} --cluster-name ${{ env.AKS_CLUSTER_NAME }} --namespace ${{ env.AKS_POD_IDENTITY_NAMESPACE }} --name ${{ env.UAMI_NAME }} --binding-selector ${{ env.AKS_POD_IDENTITY_BINDING_SELECTOR }} --identity-resource-id ${{ env.UAMI_ID }}
 
 
-      - name: Deploy Public IP for APIM Service
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}
-          template: ./src/infra-deploy/templates/net.public-ip.json
-          parameters: location=${{ matrix.region }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
+      #- name: Deploy Public IP for APIM Service
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}
+      #    template: ./src/infra-deploy/templates/net.public-ip.json
+      #    parameters: location=${{ matrix.region }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} availabilityZones=${{ env.AVL_ZONES }} publicIpType="Static" publicIpSku="Standard" domainNameLabel=${{ env.APIM_PUBLIC_IP_NAME }}
 
-      - name: Deploy Public IP for APIM Service Diagnostics
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}-diag
-          template: ./src/infra-deploy/templates/net.public-ip.diagnostics.json
-          parameters: publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      #- name: Deploy Public IP for APIM Service Diagnostics
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_PUBLIC_IP_NAME }}-diag
+      #    template: ./src/infra-deploy/templates/net.public-ip.diagnostics.json
+      #    parameters: publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy APIM Service
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}
-          template: ./src/infra-deploy/templates/apim.service.json
-          parameters: location=${{ matrix.region }} apimServiceName=${{ env.APIM_SERVICE_NAME }} skuName=${{ env.APIM_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} scaleUnits=${{ env.APIM_SCALE_UNITS }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} virtualNetworkType=${{ env.APIM_VNET_TYPE }} subnetResourceId=${{ env.APIM_SUBNET_ID }}
+      #- name: Deploy APIM Service
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}
+      #    template: ./src/infra-deploy/templates/apim.service.json
+      #    parameters: location=${{ matrix.region }} apimServiceName=${{ env.APIM_SERVICE_NAME }} skuName=${{ env.APIM_SKU_NAME }} availabilityZones=${{ env.AVL_ZONES }} scaleUnits=${{ env.APIM_SCALE_UNITS }} managedIdentityType=${{ env.IDENTITY_TYPE }} identityResourceId=${{ env.UAMI_ID }} publicIpResourceGroup=${{ env.AZURE_RESOURCE_GROUP }} publicIpName=${{ env.APIM_PUBLIC_IP_NAME }} virtualNetworkType=${{ env.APIM_VNET_TYPE }} subnetResourceId=${{ env.APIM_SUBNET_ID }}
 
-      - name: Deploy APIM Service Diagnostics
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-diag
-          template: ./src/infra-deploy/templates/apim.service.diagnostics.json
-          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
+      #- name: Deploy APIM Service Diagnostics
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-diag
+      #    template: ./src/infra-deploy/templates/apim.service.diagnostics.json
+      #    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} logAnalyticsWorkspaceResourceId=${{ env.LA_WORKSPACE_ID }}
 
-      - name: Deploy APIM Logger
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
-          template: ./src/infra-deploy/templates/apim.logger.json
-          parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
+      #- name: Deploy APIM Logger
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-logger
+      #    template: ./src/infra-deploy/templates/apim.logger.json
+      #    parameters: apimServiceName=${{ env.APIM_SERVICE_NAME }} loggerName=${{ env.APP_INSIGHTS_NAME }} logTargetResourceId=${{ env.APP_INSIGHTS_ID }} appInsightsTargetInstrumentationKey=${{ env.APP_INSIGHTS_INSTRUMENTATION_KEY }}
 
-      - name: Get APIM Info
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        run: |
-          echo "APIM_SERVICE_ID=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
+      #- name: Get APIM Info
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  run: |
+      #    echo "APIM_SERVICE_ID=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+      #    echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n ${{ env.APIM_SERVICE_NAME }} -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
 
-      - name: Import API from Swagger
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        run: |
-          az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.APIM_SERVICE_NAME }}" --verbose \
-            --api-id "${{ env.APIM_API_ID }}" --display-name "${{ env.APIM_API_DISPLAY_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
-            --api-revision "${{ env.APIM_API_VERSION }}" --service-url "http://${{ env.APPGW_FQDN }}" --path "${{ env.APIM_API_SERVICE_PATH }}" \
-            --subscription-required false --protocols http https \
-            --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json"
+      #- name: Import API from Swagger
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  run: |
+      #    az apim api import --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.AZURE_RESOURCE_GROUP }} -n "${{ env.APIM_SERVICE_NAME }}" --verbose \
+      #      --api-id "${{ env.APIM_API_ID }}" --display-name "${{ env.APIM_API_DISPLAY_NAME }}" --description "${{ env.APIM_API_DESCRIPTION }}" \
+      #      --api-revision "${{ env.APIM_API_VERSION }}" --service-url "http://${{ env.APPGW_FQDN }}" --path "${{ env.APIM_API_SERVICE_PATH }}" \
+      #      --subscription-required false --protocols http https \
+      #      --specification-format "OpenApiJson" --specification-path "./src/workload/alwayson/ao.fe/swagger.json"
 
 
-      - name: Deploy App Insights Availability Test for APIM
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
-          deploymentName: ${{ env.APIM_SERVICE_NAME }}-avl-test
-          template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
-          parameters: location=${{ matrix.region }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="apim-${{ env.APIM_SERVICE_NAME }}" testUrl="https://${{ env.APIM_SERVICE_HOSTNAME }}"
+      #- name: Deploy App Insights Availability Test for APIM
+      #  if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+      #  uses: azure/arm-deploy@v1
+      #  with:
+      #    resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP }}
+      #    deploymentName: ${{ env.APIM_SERVICE_NAME }}-avl-test
+      #    template: ./src/infra-deploy/templates/monitor.app-insights.web-test.json
+      #    parameters: location=${{ matrix.region }} appInsightsName=${{ env.APP_INSIGHTS_NAME }} webTestName="apim-${{ env.APIM_SERVICE_NAME }}" testUrl="https://${{ env.APIM_SERVICE_HOSTNAME }}"
 
 
       - name: Azure logout
@@ -812,73 +810,73 @@ jobs:
           az logout
 
 
-  global-config:
-    runs-on: ubuntu-latest
-    needs: deploy-region
-    strategy:
-      matrix:
-        region: [eastus2,westus2]
-      max-parallel: 1
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  #global-config:
+  #  runs-on: ubuntu-latest
+  #  needs: deploy-region
+  #  strategy:
+  #    matrix:
+  #      region: [eastus2,westus2]
+  #    max-parallel: 1
+  #  steps:
+  #    - name: Checkout repository
+  #      uses: actions/checkout@v2
 
-      - name: Azure login
-        if: success()
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #    - name: Azure login
+  #      if: success()
+  #      uses: azure/login@v1
+  #      with:
+  #        creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Prepare dynamic env vars
-        if: success()
-        run: |
-          AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
-          UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
-          REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
-          APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
-          FRONT_DOOR_NAME=${{ env.PREFIX }}
-          FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
+  #    - name: Prepare dynamic env vars
+  #      if: success()
+  #      run: |
+  #        AZURE_RESOURCE_GROUP=always-on-${{ matrix.region }}
+  #        UAMI_NAME=${{ env.PREFIX }}-${{ matrix.region }}
+  #        REGISTRY_NAME=${PREFIX//-/}${{ env.SUFFIX }}
+  #        APIM_SERVICE_NAME=${{ env.PREFIX }}-${{ matrix.region }}-${{ env.SUFFIX }}
+  #        FRONT_DOOR_NAME=${{ env.PREFIX }}
+  #        FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_NAME
 
-          echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
-          echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
-          echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
-          echo "APIM_SERVICE_NAME=$APIM_SERVICE_NAME" >> $GITHUB_ENV
-          echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
-          echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
+  #        echo "AZURE_RESOURCE_GROUP=$AZURE_RESOURCE_GROUP" >> $GITHUB_ENV
+  #        echo "UAMI_NAME=$UAMI_NAME" >> $GITHUB_ENV
+  #        echo "REGISTRY_NAME=$REGISTRY_NAME" >> $GITHUB_ENV
+  #        echo "APIM_SERVICE_NAME=$APIM_SERVICE_NAME" >> $GITHUB_ENV
+  #        echo "FRONT_DOOR_NAME=$FRONT_DOOR_NAME" >> $GITHUB_ENV
+  #        echo "FRONT_DOOR_ENDPOINT_NAME=$FRONT_DOOR_ENDPOINT_NAME" >> $GITHUB_ENV
 
-          echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
-          echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
-          echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'clientId')" >> $GITHUB_ENV
-          echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $APIM_SERVICE_NAME -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
-          echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
+  #        echo "UAMI_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'id')" >> $GITHUB_ENV
+  #        echo "UAMI_PRINCIPAL_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'principalId')" >> $GITHUB_ENV
+  #        echo "UAMI_CLIENT_ID=$(az identity show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $UAMI_NAME -o tsv --query 'clientId')" >> $GITHUB_ENV
+  #        echo "APIM_SERVICE_HOSTNAME=$(az apim show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g $AZURE_RESOURCE_GROUP -n $APIM_SERVICE_NAME -o tsv --query 'hostnameConfigurations[0].hostName')" >> $GITHUB_ENV
+  #        echo "FRONT_DOOR_ORIGIN_GROUP_ID=$(az afd origin-group show --subscription ${{secrets.AZURE_SUBSCRIPTION_ID}} -g ${{env.AZURE_RESOURCE_GROUP_GLOBAL}} --profile-name $FRONT_DOOR_NAME --origin-group-name ${{env.FRONT_DOOR_ORIGIN_GROUP_NAME}} -o tsv --query 'id')" >> $GITHUB_ENV
 
-      - name: Grant UAMI ACRPull on Global Registry
-        if: success()
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
-          template: ./src/infra-deploy/templates/authorization.role-assignment.json
-          parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
+  #    - name: Grant UAMI ACRPull on Global Registry
+  #      if: success()
+  #      uses: azure/arm-deploy@v1
+  #      with:
+  #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+  #        deploymentName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}-rbac-acr-pull
+  #        template: ./src/infra-deploy/templates/authorization.role-assignment.json
+  #        parameters: roleDefinitionId=${{ env.RBAC_ROLE_ID_ACR_PULL }} principalId=${{ env.UAMI_PRINCIPAL_ID }} resourceType="Microsoft.ContainerRegistry/registries" resourceName=${{ env.REGISTRY_NAME }}
 
-      - name: Deploy Front Door Origin
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
-          template: ./src/infra-deploy/templates/fd.origin.json
-          parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
+  #    - name: Deploy Front Door Origin
+  #      if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+  #      uses: azure/arm-deploy@v1
+  #      with:
+  #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+  #        deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}-${{ matrix.region }}
+  #        template: ./src/infra-deploy/templates/fd.origin.json
+  #        parameters: frontDoorName="${{ env.FRONT_DOOR_NAME }}" originGroupName="${{ env.FRONT_DOOR_ORIGIN_GROUP_NAME }}" originName=${{ matrix.region }} hostName=${{ env.APIM_SERVICE_HOSTNAME }}
 
-      - name: Deploy Front Door Route
-        if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
-        uses: azure/arm-deploy@v1
-        with:
-          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
-          deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
-          template: ./src/infra-deploy/templates/fd.route.json
-          parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
+  #    - name: Deploy Front Door Route
+  #      if: ${{ success() && (env.APIM_DEPLOY == 'true') }}
+  #      uses: azure/arm-deploy@v1
+  #      with:
+  #        resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_GLOBAL }}
+  #        deploymentName: ${{ env.FRONT_DOOR_NAME }}-${{ env.FRONT_DOOR_ENDPOINT_NAME }}-${{ env.FRONT_DOOR_ROUTE_NAME }}-${{ matrix.region }}
+  #        template: ./src/infra-deploy/templates/fd.route.json
+  #        parameters: frontDoorName="${{env.FRONT_DOOR_NAME}}" endpointName="${{env.FRONT_DOOR_ENDPOINT_NAME}}" routeName="${{ env.FRONT_DOOR_ROUTE_NAME }}" originGroupId="${{ env.FRONT_DOOR_ORIGIN_GROUP_ID }}"
 
-      - name: Azure logout
-        run: |
-          az logout
+  #    - name: Azure logout
+  #      run: |
+  #        az logout
