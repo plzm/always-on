@@ -80,7 +80,7 @@ env:
   APPGW_SKU_NAME: 'WAF_v2'
   #APPGW_SKU_NAME: 'Standard_v2'
 
-  APIM_DEPLOY: 'false'
+  APIM_DEPLOY: 'true'
   APIM_SKU_NAME: 'Developer'
   #APIM_SKU_NAME: 'Premium'
   APIM_PUBLIC_IP_INFIX: '-apim-d-'  # d or p (Developer or Premium) for clarity in scaling operations, where we need separate PIP to change APIM SKU
