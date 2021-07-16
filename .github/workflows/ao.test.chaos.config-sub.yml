@@ -16,19 +16,24 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Register Microsoft.Chaos Resource Provider on Subscription
-        if: success()
-        run: |
-          az provider register --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --namespace 'Microsoft.Chaos' --wait
+      #- name: Register Microsoft.Chaos Resource Provider on Subscription
+      #  if: success()
+      #  run: |
+      #    az provider register --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --namespace 'Microsoft.Chaos' --wait
 
-      - name: Create Chaos Provider Configurations on Subscription
+      - name: Debug Script File Permissions
         if: success()
         run: |
-          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureVmChaos"
-          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureVmssVmChaos"
-          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "ChaosMeshAKSChaos"
-          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureCosmosDbChaos"
-          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureNetworkSecurityGroupChaos"
+          ls -l ./src/scripts/chaos-testing/create-provider-config.sh
+
+      #- name: Create Chaos Provider Configurations on Subscription
+      #  if: success()
+      #  run: |
+      #    ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureVmChaos"
+      #    ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureVmssVmChaos"
+      #    ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "ChaosMeshAKSChaos"
+      #    ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureCosmosDbChaos"
+      #    ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureNetworkSecurityGroupChaos"
 
       - name: Azure logout
         run: |
