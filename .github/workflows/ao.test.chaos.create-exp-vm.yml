@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_RESOURCE_GROUP_EXPERIMENTS: 'chaos-test'
+  AZURE_RESOURCE_GROUP_EXPERIMENTS: 'test-chaos'
   AZURE_LOCATION_EXPERIMENTS: 'eastus2euap'
 
   EXPERIMENT_NAME: 'chaos-vm-20210716-01'
