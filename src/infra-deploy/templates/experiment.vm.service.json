@@ -1,0 +1,89 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus2euap",
+      "allowedValues": [
+        "eastus2euap",
+        "centraluseuap"
+      ]
+    },
+    "experimentName": {
+      "type": "string"
+    },
+    "restartWhenComplete": {
+      "type": "string",
+      "defaultValue": "true"
+    },
+    "skipShutdown": {
+      "type": "string",
+      "defaultValue": "true"
+    },
+    "targetResourceIds": {
+      "type": "string"
+    }
+  },
+  "variables": {
+    "targetResourceIds": "[split(parameters('targetResourceIds'), ',')]",
+    "apiVersion": "2021-06-07-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Chaos/chaosExperiments",
+      "name": "[parameters('experimentName')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "selectors": [
+          {
+            "type": "List",
+            "id": "vmTargets",
+            "copy": [
+              {
+                "name": "targets",
+                "count": "[length(variables('targetResourceIds'))]",
+                "input": {
+                  "id": "[variables('targetResourceIds')[copyIndex('targets')]]",
+                  "type": "ResourceId"
+                }
+              }
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "name": "Step 1",
+            "branches": [
+              {
+                "name": "Branch 1",
+                "actions": [
+                  {
+                    "type": "continuous",
+                    "selectorId": "vmTargets",
+                    "duration": "PT1M",
+                    "parameters": [
+                      {
+                        "key": "restartWhenComplete",
+                        "value": "[parameters('restartWhenComplete')]"
+                      },
+                      {
+                        "key": "skipShutdown",
+                        "value": "[parameters('skipShutdown')]"
+                      }
+                    ],
+                    "name": "urn:provider:Azure-virtualMachine:Microsoft.Azure.Chaos.Fault.AzureVmShutdown"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

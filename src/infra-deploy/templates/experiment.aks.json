@@ -1,0 +1,94 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "eastus2euap",
+      "allowedValues": [
+        "eastus2euap",
+        "centraluseuap"
+      ]
+    },
+    "experimentName": {
+      "type": "string"
+    },
+    "targetResourceIds": {
+      "type": "string"
+    },
+    "chaosMeshFaultType": {
+      "type": "string",
+      "allowedValues": [
+        "NetworkChaos",
+        "PodChaos",
+        "StressChaos",
+        "IoChaos",
+        "TimeChaos",
+        "KernelChaos"
+      ]
+    },
+    "chaosMeshSpec": {
+      "type": "string",
+      "metadata": {
+        "description": "Escaped JSON spec"
+      }
+    }
+  },
+  "variables": {
+    "targetResourceIds": "[split(parameters('targetResourceIds'), ',')]",
+    "apiVersion": "2021-06-07-preview"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Chaos/chaosExperiments",
+      "name": "[parameters('experimentName')]",
+      "apiVersion": "[variables('apiVersion')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "selectors": [
+          {
+            "type": "List",
+            "id": "aksTargets",
+            "copy": [
+              {
+                "name": "targets",
+                "count": "[length(variables('targetResourceIds'))]",
+                "input": {
+                  "id": "[variables('targetResourceIds')[copyIndex('targets')]]",
+                  "type": "ResourceId"
+                }
+              }
+            ]
+          }
+        ],
+        "steps": [
+          {
+            "name": "Step 1",
+            "branches": [
+              {
+                "name": "Branch 1",
+                "actions": [
+                  {
+                    "type": "continuous",
+                    "selectorId": "aksTargets",
+                    "duration": "PT2M",
+                    "parameters": [
+                      {
+                        "key": "spec",
+                        "value": "[parameters('chaosMeshSpec')]"
+                      }
+                    ],
+                    "name": "[concat('urn:provider:Azure-kubernetesClusterChaosMesh:ChaosMesh.', parameters('chaosMeshFaultType'))]"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

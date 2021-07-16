@@ -116,7 +116,7 @@ jobs:
       - name: Install Azure CLI Extensions
         if: success()
         run: |
-          az extension add --name front-door
+          az config set extension.use_dynamic_install=yes_without_prompt
 
       - name: Prepare dynamic env vars
         if: success()

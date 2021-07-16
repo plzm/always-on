@@ -1,0 +1,35 @@
+name: AO.Test.Chaos.ConfigureSubscription
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Register Microsoft.Chaos Resource Provider on Subscription
+        if: success()
+        run: |
+          az provider register --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} --namespace 'Microsoft.Chaos' --wait
+
+      - name: Create Chaos Provider Configurations on Subscription
+        if: success()
+        run: |
+          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureVmChaos"
+          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureVmssVmChaos"
+          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "ChaosMeshAKSChaos"
+          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureCosmosDbChaos"
+          ./src/scripts/chaos-testing/create-provider-config.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} "AzureNetworkSecurityGroupChaos"
+
+      - name: Azure logout
+        run: |
+          az logout
