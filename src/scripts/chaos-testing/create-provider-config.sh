@@ -3,6 +3,9 @@
 subscriptionId=$1
 chaosProviderType=$2
 
+echo $subscriptionId
+echo $chaosProviderType
+
 if [ -z "$subscriptionId" ] || [ -z "$chaosProviderType" ]
 then
 	echo "Usage: ./create-provider-config.sh YOUR_AZURE_SUBSCRIPTION_ID YOUR_CHAOS_PROVIDER_TYPE"
