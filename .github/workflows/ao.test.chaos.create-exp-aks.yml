@@ -90,7 +90,7 @@ jobs:
       - name: Configure Chaos Experiment System Managed Identity RBAC Permissions
         if: success()
         run: |
-          ./src/scripts/chaos-testing/create-experiment-mi-role-assignment.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} ${{ env.EXPERIMENT_RESOURCE_GROUP }} ${{ env.EXPERIMENT_NAME }} ${{ env.TARGET_RESOURCE_GROUP }} ${{ env.RBAC_ROLE_NAME }}
+          ./src/scripts/chaos-testing/create-experiment-mi-role-assignment.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} ${{ env.EXPERIMENT_RESOURCE_GROUP }} ${{ env.EXPERIMENT_NAME }} ${{ env.TARGET_RESOURCE_GROUP }} "${{ env.RBAC_ROLE_NAME }}"
 
       - name: Azure logout
         run: |

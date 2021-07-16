@@ -26,4 +26,4 @@ targetRGResourceId="$(az group show --name ""$targetResourceGroup"" -o tsv --que
 url="https://management.azure.com/subscriptions/""$subscriptionId""/resourceGroups/""$experimentResourceGroup""/providers/Microsoft.Chaos/chaosExperiments/""$experimentName""?api-version=""$apiVersion"
 experimentPrincipalId="$(az rest --method get --url ""$url"" -o tsv --query 'identity.principalId')"
 
-az role assignment create --role "$rbacRoleName" --scope "$targetRGResourceId" --assignee-object-id "$experimentPrincipalId"
+az role assignment create --role "$rbacRoleName" --scope "$targetRGResourceId" --assignee-object-id "$experimentPrincipalId" --assignee-principal-type "ServicePrincipal"
