@@ -1,0 +1,15 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: TimeChaos
+metadata:
+  name: time-shift
+  namespace: chaos-testing
+spec:
+  mode: one
+  value: ''
+  selector:
+    namespaces:
+      - default
+  timeOffset: "-10m100ns"
+  clockIds:
+    - CLOCK_REALTIME
+  duration: "30s"

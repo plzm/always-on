@@ -1,0 +1,16 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: IoChaos
+metadata:
+  name: io-delay
+spec:
+  action: latency
+  mode: one
+  value: ''
+  selector:
+    namespaces:
+      - default
+  volumePath: /var/run/etcd
+  path: '/var/run/etcd/**/*'
+  delay: '100ms'
+  percent: 50
+  duration: '30s'

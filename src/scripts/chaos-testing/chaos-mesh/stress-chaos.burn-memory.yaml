@@ -1,0 +1,15 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: burn-memory
+  namespace: chaos-testing
+spec:
+  mode: one
+  value: ''
+  selector:
+    namespaces:
+      - default
+  stressors:
+    memory:
+      workers: 1
+  duration: "30s"

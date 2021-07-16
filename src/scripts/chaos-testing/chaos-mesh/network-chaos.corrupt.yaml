@@ -1,0 +1,16 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-corrupt
+  namespace: chaos-testing
+spec:
+  action: corrupt
+  mode: one
+  value: ''
+  selector:
+    namespaces:
+      - default
+  corrupt:
+    corrupt: "40"
+    correlation: "25"
+  duration: "10s"

@@ -1,0 +1,15 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: KernelChaos
+metadata:
+  name: kernel-chaos
+  namespace: chaos-testing
+spec:
+  mode: one
+  value: ''
+  selector:
+    namespaces:
+      - default
+  failKernRequest:
+    callchain:
+      - funcname: '__x64_sys_mount'
+    failtype: 0

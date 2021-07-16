@@ -14,7 +14,10 @@
       "type": "string"
     },
     "targetResourceIds": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Comma-delimited string of target Resource IDs"
+      }
     },
     "chaosMeshFaultType": {
       "type": "string",
@@ -30,7 +33,14 @@
     "chaosMeshSpec": {
       "type": "string",
       "metadata": {
-        "description": "Escaped JSON spec"
+        "description": "Escaped JSON spec for a specific action in the specified Chaos Mesh Fault Type"
+      }
+    },
+    "duration": {
+      "type": "string",
+      "defaultValue": "PT1M",
+      "metadata": {
+        "description": "ISO 8601 duration format"
       }
     }
   },
@@ -74,7 +84,7 @@
                   {
                     "type": "continuous",
                     "selectorId": "aksTargets",
-                    "duration": "PT2M",
+                    "duration": "[parameters('duration')]",
                     "parameters": [
                       {
                         "key": "spec",

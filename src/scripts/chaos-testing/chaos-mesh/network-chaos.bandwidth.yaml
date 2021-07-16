@@ -1,0 +1,19 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: network-bandwidth
+  namespace: chaos-testing
+spec:
+  action: bandwidth
+  mode: one
+  value: ''
+  selector:
+    namespaces:
+      - default
+  bandwidth:
+    rate: 1mbps
+    limit: 100
+    buffer: 10000
+    peakrate: 1000000
+    minburst: 1000000
+  duration: "10s"

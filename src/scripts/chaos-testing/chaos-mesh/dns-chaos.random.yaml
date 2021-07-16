@@ -1,0 +1,17 @@
+apiVersion: chaos-mesh.org/v1alpha1
+kind: DNSChaos
+metadata:
+  name: dns-chaos
+  namespace: chaos-testing
+spec:
+  action: random
+  mode: all
+  patterns:
+    - google.com
+    - chaos-mesh.*
+    - github.?om
+    - microsoft.com
+  selector:
+    namespaces:
+      - default
+  duration: "90s"

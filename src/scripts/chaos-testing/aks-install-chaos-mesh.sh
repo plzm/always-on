@@ -43,11 +43,8 @@ then
 	# 3. Create Chaos Mesh namespace on AKS cluster
 	kubectl create ns chaos-testing
 
-	# 4. Install Chaos Mesh - Helm v3
-	helm install chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-testing --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock
-
-  # 5. Install DNS Server for use by DNSChaos
-	helm upgrade chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-testing --set dnsServer.create=true
+	# 4. Install Chaos Mesh with DNS Server for DNSChaos - Helm v3
+	helm upgrade chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-testing --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dnsServer.create=true --install
 
 fi
 # ##################################################

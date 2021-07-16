@@ -22,7 +22,17 @@
       "defaultValue": "true"
     },
     "targetResourceIds": {
-      "type": "string"
+      "type": "string",
+      "metadata": {
+        "description": "Comma-delimited string of target Resource IDs"
+      }
+    },
+    "duration": {
+      "type": "string",
+      "defaultValue": "PT1M",
+      "metadata": {
+        "description": "ISO 8601 duration format"
+      }
     }
   },
   "variables": {
@@ -65,7 +75,7 @@
                   {
                     "type": "continuous",
                     "selectorId": "vmTargets",
-                    "duration": "PT1M",
+                    "duration": "[parameters('duration')]",
                     "parameters": [
                       {
                         "key": "restartWhenComplete",
