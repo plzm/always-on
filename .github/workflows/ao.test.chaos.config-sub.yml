@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  prep:
+  configure-subscription:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,6 +24,8 @@ jobs:
       - name: Debug Script File Permissions
         if: success()
         run: |
+          ls -l ./src/scripts/chaos-testing/create-provider-config.sh
+          chmod +x ./src/scripts/chaos-testing/create-provider-config.sh
           ls -l ./src/scripts/chaos-testing/create-provider-config.sh
 
       #- name: Create Chaos Provider Configurations on Subscription
