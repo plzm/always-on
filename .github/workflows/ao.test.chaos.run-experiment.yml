@@ -1,0 +1,37 @@
+name: AO.Test.Chaos.RunExperiment
+
+on: 
+  workflow_dispatch:
+
+env:
+  EXPERIMENT_RESOURCE_GROUP: 'test-chaos'
+  EXPERIMENT_LOCATION: 'eastus2euap'
+
+  EXPERIMENT_NAME: 'chaos-vm-20210716-02'
+
+jobs:
+  run-experiment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Make Script File Executable
+        if: success()
+        run: |
+          chmod +x ./src/scripts/chaos-testing/run-experiment.sh
+
+      - name: Run Chaos Experiment
+        if: success()
+        run: |
+          ./src/scripts/chaos-testing/run-experiment.sh ${{ secrets.AZURE_SUBSCRIPTION_ID }} ${{ env.EXPERIMENT_RESOURCE_GROUP }} ${{ env.EXPERIMENT_NAME }}
+
+      - name: Azure logout
+        run: |
+          az logout
