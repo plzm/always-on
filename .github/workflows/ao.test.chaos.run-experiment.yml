@@ -7,7 +7,7 @@ env:
   EXPERIMENT_RESOURCE_GROUP: 'test-chaos'
   EXPERIMENT_LOCATION: 'eastus2euap'
 
-  EXPERIMENT_NAME: 'chaos-aks-20210716-01'
+  EXPERIMENT_NAME: 'chaos-aks-20210716-03'
 
 jobs:
   run-experiment:
