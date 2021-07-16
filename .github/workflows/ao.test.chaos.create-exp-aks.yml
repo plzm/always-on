@@ -52,11 +52,19 @@ jobs:
           curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
           helm repo add chaos-mesh https://charts.chaos-mesh.org
 
-      - name: Install Chaos Mesh on AKS so Experiment can run
+      - name: Connect to AKS Cluster
         if: success()
         run: |
           az aks get-credentials --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}" -g "${{ env.TARGET_RESOURCE_GROUP }}" -n "${{ env.TARGET_NAME }}" --overwrite-existing --verbose
-          kubectl create ns "${{ env.CHAOS_NAMESPACE }}"
+
+      - name: Create AKS Namespace
+        if: success()
+        run: |
+          kubectl create namespace "${{ env.CHAOS_NAMESPACE }}" --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Install Chaos Mesh on AKS so Experiment can run
+        if: success()
+        run: |
           helm upgrade chaos-mesh chaos-mesh/chaos-mesh --namespace=chaos-testing --set chaosDaemon.runtime=containerd --set chaosDaemon.socketPath=/run/containerd/containerd.sock --set dnsServer.create=true --install
 
       - name: Prepare AKS Chaos Experiment JSON Fault Spec
