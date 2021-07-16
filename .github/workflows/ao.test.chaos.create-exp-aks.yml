@@ -7,12 +7,12 @@ env:
   EXPERIMENT_RESOURCE_GROUP: 'test-chaos'
   EXPERIMENT_LOCATION: 'eastus2euap'
 
-  EXPERIMENT_NAME: 'chaos-aks-20210716-01'
+  EXPERIMENT_NAME: 'chaos-aks-20210716-02'
 
   TARGET_RESOURCE_GROUP: 'always-on-eastus2'
   TARGET_NAME: 'pz-ao-eastus2'
 
-  RBAC_ROLE_NAME: 'Contributor'
+  RBAC_ROLE_NAME: 'Azure Kubernetes Service Cluster User Role'
 
   FAULT_TYPE: 'PodChaos'
   DURATION: 'PT2M'
