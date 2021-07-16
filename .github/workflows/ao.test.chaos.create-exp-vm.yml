@@ -1,0 +1,43 @@
+name: AO.Test.Chaos.ConfigureSubscription
+
+on: 
+  workflow_dispatch:
+
+env:
+  AZURE_RESOURCE_GROUP_EXPERIMENTS: 'chaos-test'
+  AZURE_LOCATION_EXPERIMENTS: 'eastus2euap'
+
+  EXPERIMENT_NAME: 'chaos-vm-20210716-01'
+
+  TARGET_VM_RESOURCE_GROUP: 'always-on-ops'
+  TARGET_VM_NAME: 'pz-ao-ops-1'
+
+jobs:
+  configure-subscription:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure login
+        if: success()
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Prepare dynamic env vars
+        if: success()
+        run: |
+          echo "TARGET_VM_ID=$(az vm show --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }} -g ${{ env.TARGET_VM_RESOURCE_GROUP }} -n ${{ env.TARGET_VM_NAME }} -o tsv --query 'id')" >> $GITHUB_ENV
+
+      - name: Deploy Chaos Experiment Targeting VMs
+        if: success()
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ env.AZURE_RESOURCE_GROUP_EXPERIMENTS }}
+          template: ./src/infra-deploy/templates/experiment.vm.service.json
+          parameters: location=${{ env.AZURE_LOCATION_EXPERIMENTS }} experimentName=${{ env.EXPERIMENT_NAME }} targetResourceIds="${{ env.TARGET_VM_ID }}"
+
+      - name: Azure logout
+        run: |
+          az logout
