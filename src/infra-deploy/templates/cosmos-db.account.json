@@ -63,11 +63,51 @@
         "isVirtualNetworkFilterEnabled": {
             "type": "bool",
             "defaultValue": false
+        },
+        "backupPolicyType": {
+            "type": "string",
+            "defaultValue": "Continuous",
+            "allowedValues": [
+                "Continuous",
+                "Periodic"
+            ]
+        },
+        "backupIntervalInMinutes": {
+            "type": "int",
+            "defaultValue": 240,
+            "minValue": 60,
+            "maxValue": 1440
+        },
+        "backupRetentionIntervalInHours": {
+            "type": "int",
+            "defaultValue": 8,
+            "minValue": 2,
+            "maxValue": 720
         }
 	},
     "variables": {
         "locations": "[split(parameters('locations'), ',')]",
-        "apiVersionCosmosDb": "2021-04-15"
+		"backupPolicy": "[
+			if
+			(
+				equals(toLower(parameters('backupPolicyType')), 'periodic'),
+				createObject
+				(
+                    'type', parameters('backupPolicyType'),
+					'periodicModeProperties',
+					createObject
+                    (
+                        'backupIntervalInMinutes', parameters('backupIntervalInMinutes'),
+                        'backupRetentionIntervalInHours', parameters('backupRetentionIntervalInHours')
+                    )
+				),
+				createObject
+                (
+                   'type', parameters('backupPolicyType') 
+                )
+			)
+		]",
+        "apiVersionCosmosDb": "2021-06-15"
     },
     "resources": [
         {
@@ -99,6 +139,7 @@
                         }
                     }
                 ],
+                "backupPolicy": "[variables('backupPolicy')]",
                 "capabilities": [
                 ]
             }
