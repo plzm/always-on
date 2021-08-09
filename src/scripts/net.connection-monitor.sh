@@ -1,7 +1,7 @@
 #!/bin/bash
 
 prefix="pz-ao"
-suffix="34"
+suffix="43"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
 location="eastus2"

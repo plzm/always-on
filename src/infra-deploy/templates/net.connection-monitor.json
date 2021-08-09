@@ -19,8 +19,8 @@
 		}
 	},
 	"variables": {
-		"sourceId": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-ops/providers/Microsoft.Compute/virtualMachines/pz-ao-netops",
-		"logAnalyticsWorkspaceResourceId": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-ops/providers/Microsoft.OperationalInsights/workspaces/pz-ops-eastus2",
+		"sourceId": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-ops/providers/Microsoft.Compute/virtualMachines/pz-ao-ops-1",
+		"logAnalyticsWorkspaceResourceId": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourcegroups/always-on-global/providers/microsoft.operationalinsights/workspaces/pz-ao",
 		"apiVersionNet": "2020-11-01"
 	},
 	"resources": [
@@ -31,11 +31,11 @@
 			"location": "[parameters('location')]",
 			"properties": {
 				"endpoints": [
-                    {
-                        "name": "always-on-ops-pz-ao-netops",
-                        "resourceId": "[variables('sourceId')]",
-                        "type": "AzureVM"
-                    },
+					{
+						"name": "pz-ao-ops-vm",
+						"resourceId": "[variables('sourceId')]",
+						"type": "AzureVM"
+					},
 					{
 						"name": "appgw-eastus2",
 						"type": "ExternalAddress",
@@ -83,7 +83,7 @@
 					{
 						"name": "test-group-1",
 						"sources": [
-							"always-on-ops-pz-ao-netops"
+							"pz-ao-ops-vm"
 						],
 						"destinations": [
 							"appgw-eastus2",
