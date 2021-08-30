@@ -21,76 +21,76 @@
 				"description": "Host to test URI"
 			}
 		},
-        "numberOfWorkers": {
-            "type": "int",
+		"numberOfWorkers": {
+			"type": "int",
 			"defaultValue": 5,
-            "metadata": {
-                "description": "Number of Locust workers (Container Group instances) to deploy"
-            }
-        },
-        "numberOfUsers": {
-            "type": "int",
+			"metadata": {
+				"description": "Number of Locust workers (Container Group instances) to deploy"
+			}
+		},
+		"numberOfUsers": {
+			"type": "int",
 			"defaultValue": 50,
-            "metadata": {
-                "description": "Number of simulated users"
-            }
-        },
-        "numberOfUsersToSpawnPerSecond": {
-            "type": "int",
+			"metadata": {
+				"description": "Number of simulated users"
+			}
+		},
+		"numberOfUsersToSpawnPerSecond": {
+			"type": "int",
 			"defaultValue": 10,
-            "metadata": {
-                "description": "Number of simulated users to spawn per second"
-            }
-        },
+			"metadata": {
+				"description": "Number of simulated users to spawn per second"
+			}
+		},
 		"runtime": {
 			"type": "string",
 			"defaultValue": "5m",
-            "metadata": {
-                "description": "Runtime"
-            }
+			"metadata": {
+				"description": "Runtime"
+			}
 		},
 		"storageAccountResourceGroup": {
 			"type": "string",
 			"defaultValue": "",
-            "metadata": {
-                "description": "Resource group where storage account is deployed"
-            }
+			"metadata": {
+				"description": "Resource group where storage account is deployed"
+			}
 		},
 		"storageAccountName": {
 			"type": "string",
 			"defaultValue": "",
-            "metadata": {
-                "description": "Name of existing storage account"
-            }
+			"metadata": {
+				"description": "Name of existing storage account"
+			}
 		},
-        "fileShareName": {
-            "type": "string",
-            "metadata": {
-                "description": "Name of existing file share to be mounted in containers"
-            }
-        },
+		"fileShareName": {
+			"type": "string",
+			"metadata": {
+				"description": "Name of existing file share to be mounted in containers"
+			}
+		},
 		"workerLocations": {
 			"type": "array",
-			"defaultValue": ["eastus2", "centralus", "southcentralus", "westus2", "canadacentral", "northeurope", "westeurope", "francecentral", "germanywestcentral", "uksouth", "australiaeast", "southeastasia", "japaneast", "brazilsouth"]
+			"defaultValue": [ "eastus2", "centralus", "southcentralus", "westus2", "canadacentral", "northeurope", "westeurope", "francecentral", "germanywestcentral", "uksouth", "australiaeast", "southeastasia", "japaneast", "brazilsouth" ]
 		}
 	},
 	"variables": {
-        "image": "locustio/locust:1.5.3",
-        "masterCpuCores": "2",
-        "workerCpuCores": "1",
-        "masterMemoryInGb": "2",
-        "workerMemoryInGb": "1",
-        "masterContainerGroupName": "locust-master",
-        "containerName": "[concat('locust-', parameters('location'))]",
+		"image": "locustio/locust:1.5.3",
+		"masterCpuCores": "2",
+		"workerCpuCores": "1",
+		"masterMemoryInGb": "2",
+		"workerMemoryInGb": "1",
+		"masterContainerGroupName": "locust-master",
+		"containerName": "[concat('locust-', parameters('location'))]",
 		"volumeMountName": "locust",
 		"volumeMountPath": "/home/locust/locust",
 		"locustFileName": "locustfile.py",
 		"locustFilePath": "[concat(variables('volumeMountPath'), '/', variables('locustFileName'))]",
 		"htmlResultsFileName": "[concat('locust_report_', parameters('timestamp'), '.html')]",
 		"htmlResultsFilePath": "[concat(variables('volumeMountPath'), '/', variables('htmlResultsFileName'))]",
-        "storageAccountId": "[resourceId(parameters('storageAccountResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+		"storageAccountId": "[resourceId(parameters('storageAccountResourceGroup'), 'Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
 		"apiVersionContainerGroups": "2019-12-01",
-        "apiVersionStorage": "2021-04-01"
+		"apiVersionStorage": "2021-04-01"
 	},
 	"resources": [
 		{

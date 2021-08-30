@@ -482,18 +482,18 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-eastus2/providers/Microsoft.ApiManagement/service/pz-ao-eastus2-34"
+                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-eastus2/providers/Microsoft.ApiManagement/service/pz-ao-eastus2-44"
                           },
                           "name": "Capacity",
                           "aggregationType": 4,
                           "namespace": "microsoft.apimanagement/service",
                           "metricVisualization": {
                             "displayName": "Capacity",
-                            "resourceDisplayName": "pz-ao-eastus2-34"
+                            "resourceDisplayName": "pz-ao-eastus2-44"
                           }
                         }
                       ],
-                      "title": "APIM | pz-ao-eastus2-34 | Avg Capacity %",
+                      "title": "APIM | pz-ao-eastus2-44 | Avg Capacity %",
                       "titleKind": 2,
                       "visualization": {
                         "chartType": 2,
@@ -826,18 +826,18 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-eastus2/providers/Microsoft.KeyVault/vaults/pz-ao-eastus2-34"
+                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-eastus2/providers/Microsoft.KeyVault/vaults/pz-ao-eastus2-44"
                           },
                           "name": "Availability",
                           "aggregationType": 4,
                           "namespace": "microsoft.keyvault/vaults",
                           "metricVisualization": {
                             "displayName": "Overall Vault Availability",
-                            "resourceDisplayName": "pz-ao-eastus2-34"
+                            "resourceDisplayName": "pz-ao-eastus2-44"
                           }
                         }
                       ],
-                      "title": "AKV | pz-ao-eastus2-34 | Overall Availability %",
+                      "title": "AKV | pz-ao-eastus2-44 | Overall Availability %",
                       "titleKind": 2,
                       "visualization": {
                         "chartType": 2,
@@ -890,18 +890,18 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-westus2/providers/Microsoft.ApiManagement/service/pz-ao-westus2-34"
+                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-westus2/providers/Microsoft.ApiManagement/service/pz-ao-westus2-44"
                           },
                           "name": "Capacity",
                           "aggregationType": 4,
                           "namespace": "microsoft.apimanagement/service",
                           "metricVisualization": {
                             "displayName": "Capacity",
-                            "resourceDisplayName": "pz-ao-westus2-34"
+                            "resourceDisplayName": "pz-ao-westus2-44"
                           }
                         }
                       ],
-                      "title": "APIM | pz-ao-westus2-34 | Avg Capacity %",
+                      "title": "APIM | pz-ao-westus2-44 | Avg Capacity %",
                       "titleKind": 2,
                       "visualization": {
                         "chartType": 2,
@@ -1234,18 +1234,18 @@
                       "metrics": [
                         {
                           "resourceMetadata": {
-                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-westus2/providers/Microsoft.KeyVault/vaults/pz-ao-westus2-34"
+                            "id": "/subscriptions/e61e4c75-268b-4c94-ad48-237aa3231481/resourceGroups/always-on-westus2/providers/Microsoft.KeyVault/vaults/pz-ao-westus2-44"
                           },
                           "name": "Availability",
                           "aggregationType": 4,
                           "namespace": "microsoft.keyvault/vaults",
                           "metricVisualization": {
                             "displayName": "Overall Vault Availability",
-                            "resourceDisplayName": "pz-ao-westus2-34"
+                            "resourceDisplayName": "pz-ao-westus2-44"
                           }
                         }
                       ],
-                      "title": "AKV | pz-ao-westus2-34 | Overall Availability %",
+                      "title": "AKV | pz-ao-westus2-44 | Overall Availability %",
                       "titleKind": 2,
                       "visualization": {
                         "chartType": 2,
@@ -1328,7 +1328,7 @@
   },
   "name": "Always-On",
   "type": "Microsoft.Portal/dashboards",
-  "location": "INSERT LOCATION",
+  "location": "eastus2",
   "tags": {
     "hidden-title": "Always-On"
   },

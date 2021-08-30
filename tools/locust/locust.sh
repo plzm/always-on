@@ -1,7 +1,6 @@
 #!/bin/bash
 
 PREFIX="pz-ao"
-SUFFIX="31"
 
 subscriptionId="$(az account show -o tsv --query 'id')"
 resourceGroup="always-on-tests"
