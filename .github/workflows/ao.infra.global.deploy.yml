@@ -180,7 +180,7 @@ jobs:
         with:
           resourceGroupName: ${{env.AZURE_RESOURCE_GROUP_GLOBAL}}
           template: ./src/infra-deploy/templates/cosmos-db.account.json
-          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}}
+          parameters: location=${{env.AZURE_LOCATION_GLOBAL}} accountName=${{env.COSMOS_DB_ACCT_NAME}} locations=${{env.AZURE_LOCATIONS}} enableMultipleWriteLocations=${{env.COSMOS_DB_MULTI_REGION_WRITE}} backupPolicyType="Periodic"
 
       - name: Deploy Cosmos DB Diagnostics
         if: success()
