@@ -2,16 +2,16 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 		<DockerfileRunEnvironmentFiles>docker.local.env</DockerfileRunEnvironmentFiles>
 		<Version>1.0.1</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.18.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="5.0.0" />
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.11.1" />
+		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.21.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
 	</ItemGroup>
 
 	<ItemGroup>
